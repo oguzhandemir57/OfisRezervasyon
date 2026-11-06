@@ -623,6 +623,26 @@ body {
     transform: translateY(-2px);
 }
 
+/* CHECK-IN VERIFICATION ICON ON SEAT */
+.seat-verified-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #10B981;
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    border: 2px solid #FFFFFF;
+    z-index: 2;
+}
+
 .rooms-section-divider {
     margin: 20px 0 12px;
     text-align: center;
@@ -1027,6 +1047,150 @@ body {
 .ai-chat-input-bar input:focus {
     outline: none;
     border-color: var(--ray-blue);
+}
+
+/* Chatbot In-Bubble Action Buttons */
+.chat-action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.chat-action-btn {
+    padding: 7px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    font-family: inherit;
+    transition: all 0.16s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.chat-action-btn.blue {
+    background: #0135EB;
+    color: #FFFFFF;
+    box-shadow: 0 3px 8px rgba(1, 53, 235, 0.22);
+}
+.chat-action-btn.blue:hover {
+    background: #0028B8;
+    transform: translateY(-1px);
+}
+
+.chat-action-btn.red {
+    background: var(--ray-red-soft);
+    color: var(--ray-red);
+    border-color: rgba(255, 0, 37, 0.25);
+}
+.chat-action-btn.red:hover {
+    background: #FF0025;
+    color: #FFFFFF;
+}
+
+.chat-action-btn.outline {
+    background: var(--bg-subtle);
+    color: var(--text-main);
+    border-color: var(--border-strong);
+}
+.chat-action-btn.outline:hover {
+    border-color: var(--ray-blue);
+    color: var(--ray-blue);
+}
+
+/* Calendar Export Buttons */
+.calendar-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.btn-calendar {
+    flex: 1;
+    min-width: 140px;
+    padding: 9px 12px;
+    border-radius: 11px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    border: 1.5px solid var(--border-color);
+    background: var(--bg-subtle);
+    color: var(--text-main);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: all 0.16s ease;
+}
+
+.btn-calendar.google:hover {
+    border-color: #0135EB;
+    background: var(--ray-blue-soft);
+    color: var(--ray-blue);
+}
+
+.btn-calendar.outlook:hover {
+    border-color: #0078D4;
+    background: rgba(0, 120, 212, 0.1);
+    color: #0078D4;
+}
+
+/* POP-UP MODAL (ACTION COMPLETED & CHANGE DESK CONFIRMATION) */
+.popup-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(9, 13, 22, 0.62);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 120;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.popup-card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--bg-surface);
+    border: 1.5px solid var(--border-color);
+    border-radius: 26px;
+    padding: 28px 26px;
+    text-align: center;
+    box-shadow: var(--shadow-float);
+    animation: popupIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popupIn {
+    from { opacity: 0; transform: scale(0.92) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.popup-icon-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 22px;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 900;
+}
+
+.popup-icon-circle.success {
+    background: var(--green-soft);
+    color: var(--green-live);
+}
+
+.popup-icon-circle.warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #F59E0B;
 }
 
 /* ==================== MOBILE RESPONSIVE ==================== */

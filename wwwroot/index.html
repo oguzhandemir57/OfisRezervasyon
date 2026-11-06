@@ -125,11 +125,11 @@
 
         <main class="main-content">
 
-            <!-- DAY SELECTOR BAR (Used across Floorplan, Office Presence, and Admin) -->
+            <!-- DAY SELECTOR BAR -->
             <div class="date-bar" ng-if="activeTab !== 'checkIn'">
                 <div>
                     <div style="font-size: 11.5px; font-weight: 800; color: var(--ray-blue); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
-                        Günü Seçin
+                        Günü Seçin (Her Kullanıcı 1 Günde 1 Masa Ayırtabilir)
                     </div>
                     <div class="day-strip">
                         <div class="day-pill"
@@ -148,7 +148,7 @@
                 </div>
             </div>
 
-            <!-- ==================== TAB 1: SEAT RESERVATION (PRIVACY PROTECTED) ==================== -->
+            <!-- ==================== TAB 1: SEAT RESERVATION (WITH CHECK-IN VERIFICATION ICON) ==================== -->
             <div ng-if="activeTab === 'floorplan'">
                 <div class="reservation-grid">
 
@@ -159,7 +159,8 @@
                             <p style="font-size: 13px; color: var(--text-secondary);">
                                 Seçili Gün: <strong style="color: var(--ray-blue);">{{selectedDate}}</strong> &bull;
                                 Boş: <strong style="color: var(--green-live);">{{summary.available}}</strong> &bull;
-                                Dolu: <strong style="color: var(--ray-red);">{{summary.reserved}}</strong>
+                                Dolu: <strong style="color: var(--ray-red);">{{summary.reserved}}</strong> &bull;
+                                Check-In Doğrulanan: <strong style="color: var(--green-live);">{{summary.checkedIn || getCheckedInCount()}}</strong>
                             </p>
                         </div>
 
@@ -174,7 +175,11 @@
                             </div>
                             <div class="legend-box">
                                 <span class="legend-seat-sample selected"></span>
-                                <span style="color: var(--ray-blue);">Seçiminiz / Sizin Yeriniz</span>
+                                <span style="color: var(--ray-blue);">Sizin Yeriniz</span>
+                            </div>
+                            <div class="legend-box">
+                                <span style="width:20px;height:20px;border-radius:50%;background:#10B981;color:#fff;font-size:11px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;">✓</span>
+                                <span style="color: var(--green-live);">Check-In Doğrulandı</span>
                             </div>
                         </div>
 
@@ -193,11 +198,18 @@
                                              ng-repeat="seat in row.leftDesk.seats"
                                              ng-class="getBusSeatClass(seat)"
                                              ng-click="selectWorkspace(seat)">
+                                            <!-- Verification Icon when Check-In is completed -->
+                                            <span class="seat-verified-badge"
+                                                  ng-if="seat.isReserved && seat.reservation.status === 'CheckedIn'"
+                                                  title="Ofis Check-In Doğrulandı">✓</span>
                                             <div class="seat-number">{{seat.code}}</div>
-                                            <!-- Privacy rule: Normal users do NOT see who reserved other seats during booking -->
                                             <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
-                                            <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN YERİNİZ</div>
-                                            <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">DOLU</div>
+                                            <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">
+                                                {{seat.reservation.status === 'CheckedIn' ? 'DOĞRULANDI' : 'SİZİN YERİNİZ'}}
+                                            </div>
+                                            <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">
+                                                {{seat.reservation.status === 'CheckedIn' ? 'OFİSTE' : 'DOLU'}}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -212,10 +224,17 @@
                                              ng-repeat="seat in row.rightDesk.seats"
                                              ng-class="getBusSeatClass(seat)"
                                              ng-click="selectWorkspace(seat)">
+                                            <span class="seat-verified-badge"
+                                                  ng-if="seat.isReserved && seat.reservation.status === 'CheckedIn'"
+                                                  title="Ofis Check-In Doğrulandı">✓</span>
                                             <div class="seat-number">{{seat.code}}</div>
                                             <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
-                                            <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN YERİNİZ</div>
-                                            <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">DOLU</div>
+                                            <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">
+                                                {{seat.reservation.status === 'CheckedIn' ? 'DOĞRULANDI' : 'SİZİN YERİNİZ'}}
+                                            </div>
+                                            <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">
+                                                {{seat.reservation.status === 'CheckedIn' ? 'OFİSTE' : 'DOLU'}}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -230,6 +249,9 @@
                                      ng-repeat="room in meetingRooms"
                                      ng-class="getBusSeatClass(room)"
                                      ng-click="selectWorkspace(room)">
+                                    <span class="seat-verified-badge"
+                                          ng-if="room.isReserved && room.reservation.status === 'CheckedIn'"
+                                          title="Ofis Check-In Doğrulandı">✓</span>
                                     <div class="seat-number" style="font-size: 13.5px;">{{room.code}}</div>
                                     <div class="seat-subtext" ng-if="!room.isReserved">BOŞ ({{room.capacity}}K)</div>
                                     <div class="seat-subtext" ng-if="room.isReserved && isMyReservation(room)">SİZİN ODANIZ</div>
@@ -262,7 +284,10 @@
                                     <strong>Durum:</strong>
                                     <span ng-if="!selectedItem.isReserved" style="color: var(--green-live); font-weight: 800;">Müsait (Boş)</span>
                                     <span ng-if="selectedItem.isReserved && isMyReservation(selectedItem)" style="color: var(--ray-blue); font-weight: 800;">Sizin Rezervasyonunuz</span>
-                                    <span ng-if="selectedItem.isReserved && !isMyReservation(selectedItem)" style="color: var(--ray-red); font-weight: 800;">Dolu (Başka Bir Çalışan Tarafından Ayrılmış)</span>
+                                    <span ng-if="selectedItem.isReserved && !isMyReservation(selectedItem)" style="color: var(--ray-red); font-weight: 800;">Dolu</span>
+                                </div>
+                                <div ng-if="selectedItem.isReserved && selectedItem.reservation.status === 'CheckedIn'" style="margin-top: 6px; color: var(--green-live); font-weight: 800;">
+                                    ✓ Ofis Check-In Doğrulaması Yapılmış
                                 </div>
                             </div>
 
@@ -291,16 +316,28 @@
                                     </div>
                                     <div style="color: var(--text-secondary);">
                                         {{selectedItem.reservation.status === 'CheckedIn'
-                                            ? 'Masanız doğrulandı, şu anda ofiste aktif görünüyorsunuz.'
+                                            ? 'Masanız doğrulandı, haritada ✓ ikonu ile aktif görünüyorsunuz.'
                                             : 'Ofise ulaştığınızda Check-In yaparak masanızı doğrulayabilirsiniz.'}}
+                                    </div>
+
+                                    <!-- Calendar Export Buttons -->
+                                    <div class="calendar-btn-group">
+                                        <button type="button" class="btn-calendar google"
+                                                ng-click="addToGoogleCalendar({code: selectedItem.code, name: selectedItem.name, date: selectedItem.reservation.date, timeSlot: selectedItem.reservation.timeSlot})">
+                                            📅 Google Takvime Ekle
+                                        </button>
+                                        <button type="button" class="btn-calendar outlook"
+                                                ng-click="addToOutlookCalendar({code: selectedItem.code, name: selectedItem.name, date: selectedItem.reservation.date, timeSlot: selectedItem.reservation.timeSlot})">
+                                            📆 Outlook Takvime Ekle
+                                        </button>
                                     </div>
                                 </div>
 
                                 <div style="display: flex; flex-direction: column; gap: 10px;">
                                     <button class="btn btn-ray-blue btn-lg"
                                             ng-if="selectedItem.reservation.status !== 'CheckedIn'"
-                                            ng-click="switchTab('checkIn')">
-                                        Check-In Ekranına Git
+                                            ng-click="checkInReservation(selectedItem.reservation.id)">
+                                        📍 Şimdi Check-In Yap (Doğrula)
                                     </button>
                                     <button class="btn btn-soft-red"
                                             ng-click="cancelReservation(selectedItem.reservation.id)">
@@ -309,7 +346,7 @@
                                 </div>
                             </div>
 
-                            <!-- RESERVED BY SOMEONE ELSE (PRIVACY PROTECTED FOR NORMAL USERS) -->
+                            <!-- RESERVED BY SOMEONE ELSE -->
                             <div ng-if="selectedItem.isReserved && !isMyReservation(selectedItem)">
                                 <div style="padding: 16px; border-radius: 14px; background: var(--ray-red-soft); text-align: center;">
                                     <div style="font-size: 14px; font-weight: 800; color: var(--ray-red); margin-bottom: 4px;">
@@ -359,7 +396,7 @@
                                     Tarih: {{r.date}}
                                 </span>
                                 <span ng-if="r.status === 'CheckedIn'" style="font-size: 12px; font-weight: 800; color: var(--green-live);">
-                                    ● Doğrulandı (Ofiste)
+                                    ✓ Doğrulandı (Ofiste)
                                 </span>
                                 <span ng-if="r.status !== 'CheckedIn'" style="font-size: 12px; font-weight: 800; color: #F59E0B;">
                                     ● Check-In Bekleniyor
@@ -374,7 +411,6 @@
                                 {{r.workspaceName}}
                             </div>
 
-                            <!-- 3-Step Verification Progress -->
                             <div class="pass-steps">
                                 <span class="step-dot done"></span>
                                 <span>1. Masa Ayrıldı</span>
@@ -384,6 +420,16 @@
                                 <span style="opacity: 0.4;">&rarr;</span>
                                 <span class="step-dot" ng-class="r.status === 'CheckedIn' ? 'done' : ''"></span>
                                 <span>3. Onaylandı</span>
+                            </div>
+
+                            <!-- Google & Outlook Calendar Export Buttons -->
+                            <div class="calendar-btn-group">
+                                <button type="button" class="btn-calendar google" ng-click="addToGoogleCalendar(r)">
+                                    📅 Google Takvime Ekle
+                                </button>
+                                <button type="button" class="btn-calendar outlook" ng-click="addToOutlookCalendar(r)">
+                                    📆 Outlook Takvime Ekle
+                                </button>
                             </div>
                         </div>
 
@@ -439,7 +485,6 @@
                     Seçili günde henüz ofise Check-In yapmış çalışan bulunmuyor.
                 </div>
 
-                <!-- Minimalist Visual Avatar Grid -->
                 <div class="presence-minimal-grid">
                     <div class="person-bubble-card" ng-repeat="p in getFilteredPresence()">
                         <div class="person-avatar-wrap">
@@ -457,7 +502,7 @@
                         </div>
                         <div style="font-size: 11px; font-weight: 700;"
                              ng-style="{'color': p.status === 'CheckedIn' ? 'var(--green-live)' : '#F59E0B'}">
-                            {{p.status === 'CheckedIn' ? '● Ofiste Doğrulandı' : '○ Check-In Bekleniyor'}}
+                            {{p.status === 'CheckedIn' ? '✓ Ofiste Doğrulandı' : '○ Check-In Bekleniyor'}}
                         </div>
                     </div>
                 </div>
@@ -540,19 +585,73 @@
 
         </main>
 
+        <!-- ==================== POP-UP 1: OPERATION COMPLETED & CALENDAR EXPORT ==================== -->
+        <div class="popup-backdrop" ng-if="resultPopup.visible">
+            <div class="popup-card">
+                <div class="popup-icon-circle success">✓</div>
+                <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 8px; color: var(--text-main);">
+                    {{resultPopup.title}}
+                </h3>
+                <p style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 18px;">
+                    {{resultPopup.message}}
+                </p>
+
+                <!-- Calendar Export Buttons when a desk/room is reserved -->
+                <div ng-if="resultPopup.reservedItem" style="background: var(--bg-subtle); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 18px;">
+                    <div style="font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">
+                        Takviminize Ekleyin
+                    </div>
+                    <div class="calendar-btn-group" style="margin-top: 0;">
+                        <button type="button" class="btn-calendar google" ng-click="addToGoogleCalendar(resultPopup.reservedItem)">
+                            📅 Google Takvime Ekle
+                        </button>
+                        <button type="button" class="btn-calendar outlook" ng-click="addToOutlookCalendar(resultPopup.reservedItem)">
+                            📆 Outlook Takvimine Ekle
+                        </button>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-ray-blue btn-lg" style="width: 100%;" ng-click="closeResultPopup()">
+                    Tamam
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== POP-UP 2: 2ND DESK CHANGE CONFIRMATION ==================== -->
+        <div class="popup-backdrop" ng-if="changeConfirmPopup.visible">
+            <div class="popup-card">
+                <div class="popup-icon-circle warning">⇄</div>
+                <h3 style="font-size: 19px; font-weight: 800; margin-bottom: 8px; color: var(--text-main);">
+                    Masanızı Değiştirmek İster misiniz?
+                </h3>
+                <p style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 20px;">
+                    <strong>{{changeConfirmPopup.date}}</strong> tarihinde zaten <strong>{{changeConfirmPopup.existingCode}}</strong> masasında rezervasyonunuz bulunuyor.<br><br>
+                    Bir günde 1 masa rezerve edebilirsiniz. Mevcut masanızı <strong>{{changeConfirmPopup.newCode}}</strong> ile değiştirmek ister misiniz?
+                </p>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-soft-red btn-lg" style="flex: 1;" ng-click="closeChangeConfirmPopup()">
+                        Hayır, Vazgeç
+                    </button>
+                    <button type="button" class="btn btn-ray-blue btn-lg" style="flex: 1;" ng-click="confirmReplaceDesk()">
+                        🔄 Evet, Değiştir
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- ==================== RAY AI CHATBOT FLOATING WIDGET ==================== -->
         <button type="button" class="ai-fab-btn" ng-click="toggleAiChat()">
             <span class="ai-fab-pulse"></span>
-            <span>{{aiChatOpen ? '✕ Asistanı Kapat' : '🤖 RAY AI Asistan'}}</span>
+            <span>{{aiState.open ? '✕ Asistanı Kapat' : '🤖 RAY AI Asistan'}}</span>
         </button>
 
-        <div class="ai-chat-window" ng-if="aiChatOpen">
+        <div class="ai-chat-window" ng-show="aiState.open">
             <div class="ai-chat-header">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div class="ai-avatar-badge">🤖</div>
                     <div>
                         <div style="font-size: 14.5px; font-weight: 800;">RAY Yapay Zeka Asistanı</div>
-                        <div style="font-size: 11px; opacity: 0.85;">Konuşarak Rezervasyon &amp; Check-In</div>
+                        <div style="font-size: 11px; opacity: 0.85;">Konuşarak &amp; Butonlarla Rezervasyon</div>
                     </div>
                 </div>
                 <button type="button" class="btn btn-sm" style="background: rgba(255,255,255,0.16); color: #fff; padding: 5px 10px;" ng-click="toggleAiChat()">✕</button>
@@ -560,21 +659,50 @@
 
             <div class="ai-chat-messages" id="aiChatMessagesBox">
                 <div class="chat-msg" ng-repeat="m in aiMessages track by $index" ng-class="m.sender">
-                    {{m.text}}
-                </div>
-                <div class="chat-msg bot" ng-if="aiTyping" style="font-style: italic; opacity: 0.75;">
-                    RAY AI düşünüyor...
-                </div>
-            </div>
+                    <!-- User Message -->
+                    <div ng-if="m.sender === 'user'">
+                        <div>{{m.text}}</div>
+                        <div style="font-size: 10px; opacity: 0.8; text-align: right; margin-top: 3px;">✓ Gönderildi {{m.time}}</div>
+                    </div>
 
-            <div class="ai-suggestions-strip">
-                <button type="button" class="ai-chip" ng-repeat="s in aiSuggestions track by $index" ng-click="sendAiQuickChip(s)">
-                    {{s}}
-                </button>
+                    <!-- Bot Message with HTML (bold desk codes) & Action Buttons -->
+                    <div ng-if="m.sender === 'bot'">
+                        <div ng-bind-html="m.html"></div>
+
+                        <!-- Calendar Links inside Bot Bubble if Reserved -->
+                        <div class="calendar-btn-group" ng-if="m.reservedItem">
+                            <button type="button" class="btn-calendar google" ng-click="addToGoogleCalendar(m.reservedItem)">
+                                📅 Google Takvime Ekle
+                            </button>
+                            <button type="button" class="btn-calendar outlook" ng-click="addToOutlookCalendar(m.reservedItem)">
+                                📆 Outlook Takvime Ekle
+                            </button>
+                        </div>
+
+                        <!-- Interactive Action / Seat Selection Buttons -->
+                        <div class="chat-action-buttons" ng-if="m.buttons && m.buttons.length > 0">
+                            <button type="button"
+                                    class="chat-action-btn"
+                                    ng-repeat="btn in m.buttons track by $index"
+                                    ng-class="btn.style || 'blue'"
+                                    ng-click="clickAiActionButton(btn)">
+                                {{btn.label}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-msg bot" ng-if="aiState.typing" style="font-style: italic; opacity: 0.75;">
+                    RAY AI yazıyor...
+                </div>
             </div>
 
             <form class="ai-chat-input-bar" ng-submit="sendAiMessage()">
-                <input type="text" ng-model="aiInputText" placeholder="Örn: Yarın 4A koltuğunu ayırt veya Check-In yap..." autocomplete="off">
+                <input type="text"
+                       id="aiChatInputField"
+                       ng-model="aiState.inputText"
+                       placeholder="Bana boş masa ayırt, Check-In yap..."
+                       autocomplete="off">
                 <button type="submit" class="btn btn-ray-blue btn-sm" style="padding: 0 16px;">Gönder</button>
             </form>
         </div>

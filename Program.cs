@@ -61,11 +61,7 @@ app.MapGet("/api/workspaces", (string? date, ReservationStore store) =>
 app.MapPost("/api/reservations", (CreateReservationRequest req, ReservationStore store) =>
 {
     var result = store.CreateReservation(req);
-    if (!result.Success)
-    {
-        return Results.BadRequest(new { success = false, message = result.Message });
-    }
-    return Results.Ok(new { success = true, message = result.Message, reservation = result.Data });
+    return Results.Ok(result);
 });
 
 // Check-In to a Reservation

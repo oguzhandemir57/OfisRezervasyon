@@ -53,6 +53,7 @@ public class CreateReservationRequest
     public string Date { get; set; } = string.Empty;
     public string TimeSlot { get; set; } = "Tam Gün (09:00 - 18:00)";
     public string Note { get; set; } = string.Empty;
+    public bool ReplaceExisting { get; set; } = false;
 }
 
 public class SaveWorkspaceRequest
@@ -72,4 +73,13 @@ public class AiChatRequest
     public int UserId { get; set; }
     public string Message { get; set; } = string.Empty;
     public string SelectedDate { get; set; } = string.Empty;
+    public bool ReplaceExisting { get; set; } = false;
+}
+
+public class AiActionButton
+{
+    public string Label { get; set; } = string.Empty;
+    public string Command { get; set; } = string.Empty;
+    public string Style { get; set; } = "blue"; // "blue", "red", "outline"
+    public bool ReplaceExisting { get; set; } = false;
 }
