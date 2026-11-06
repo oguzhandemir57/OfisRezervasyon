@@ -17,7 +17,7 @@
         $scope.selectedDateObj = new Date();
 
         $scope.workspaces = [];
-        $scope.deskRows = []; // 5 rows, each with leftDesk and rightDesk (each desk has 2 seats)
+        $scope.deskRows = [];
         $scope.meetingRooms = [];
         $scope.summary = { total: 0, available: 0, reserved: 0, occupancyRate: 0 };
 
@@ -37,6 +37,57 @@
         $scope.adminData = null;
         $scope.adminSearch = '';
         $scope.toasts = [];
+
+        // ==================== LOCAL FALLBACK STORE (FOR GITHUB PAGES / STATIC HOSTING) ====================
+        function getFallbackStore() {
+            var raw = localStorage.getItem('ray_ofis_static_db_v2');
+            if (raw) {
+                try { return JSON.parse(raw); } catch (e) {}
+            }
+            var today = formatDateISO(new Date());
+            var tmrDate = new Date(); tmrDate.setDate(tmrDate.getDate() + 1);
+            var tomorrow = formatDateISO(tmrDate);
+
+            var users = [
+                { id: 1, username: 'admin', password: '123', fullName: 'Fatih Yayla', department: 'Yönetim', title: 'Sistem Yöneticisi', role: 'Admin', avatarInitials: 'FY' },
+                { id: 2, username: 'ahmet', password: '123', fullName: 'Ahmet Yılmaz', department: 'Yazılım', title: '.NET Geliştirici', role: 'Employee', avatarInitials: 'AY' },
+                { id: 3, username: 'zeynep', password: '123', fullName: 'Zeynep Kaya', department: 'Tasarım', title: 'UI/UX Tasarımcısı', role: 'Employee', avatarInitials: 'ZK' },
+                { id: 4, username: 'murat', password: '123', fullName: 'Murat Demir', department: 'Veri Analitiği', title: 'Veri Bilimci', role: 'Employee', avatarInitials: 'MD' },
+                { id: 5, username: 'elif', password: '123', fullName: 'Elif Şahin', department: 'İnsan Kaynakları', title: 'İK Uzmanı', role: 'Employee', avatarInitials: 'EŞ' },
+                { id: 6, username: 'can', password: '123', fullName: 'Caner Özkan', department: 'Pazarlama', title: 'Pazarlama Uzmanı', role: 'Employee', avatarInitials: 'CÖ' }
+            ];
+
+            var workspaces = [];
+            var idCounter = 1;
+            for (var deskNo = 1; deskNo <= 10; deskNo++) {
+                var row = Math.floor((deskNo - 1) / 2) + 1;
+                var side = (deskNo % 2 === 1) ? 1 : 2;
+                workspaces.push({ id: idCounter++, code: deskNo + 'A', name: 'Masa ' + deskNo + ' - Sol Koltuk (' + deskNo + 'A)', type: 'Masa', zone: 'Masa ' + deskNo, capacity: 1, gridX: side, gridY: row, gridW: deskNo, gridH: 1, isActive: true });
+                workspaces.push({ id: idCounter++, code: deskNo + 'B', name: 'Masa ' + deskNo + ' - Sağ Koltuk (' + deskNo + 'B)', type: 'Masa', zone: 'Masa ' + deskNo, capacity: 1, gridX: side, gridY: row, gridW: deskNo, gridH: 2, isActive: true });
+            }
+            workspaces.push({ id: idCounter++, code: 'ODA-1', name: 'Toplantı Odası 1', type: 'Oda', zone: 'Toplantı Odaları', capacity: 6, isActive: true });
+            workspaces.push({ id: idCounter++, code: 'ODA-2', name: 'Toplantı Odası 2', type: 'Oda', zone: 'Toplantı Odaları', capacity: 8, isActive: true });
+            workspaces.push({ id: idCounter++, code: 'ODA-3', name: 'Toplantı Odası 3', type: 'Oda', zone: 'Toplantı Odaları', capacity: 4, isActive: true });
+            workspaces.push({ id: idCounter++, code: 'ODA-4', name: 'Büyük Konferans Odası', type: 'Oda', zone: 'Toplantı Odaları', capacity: 12, isActive: true });
+
+            var reservations = [
+                { id: 1, workspaceItemId: 1, userId: 2, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Günlük çalışma', status: 'Active' },
+                { id: 2, workspaceItemId: 4, userId: 3, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Tasarım', status: 'Active' },
+                { id: 3, workspaceItemId: 5, userId: 4, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Analiz', status: 'Active' },
+                { id: 4, workspaceItemId: 6, userId: 5, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'İK Görüşmeleri', status: 'Active' },
+                { id: 5, workspaceItemId: 11, userId: 6, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Pazarlama', status: 'Active' },
+                { id: 6, workspaceItemId: 21, userId: 1, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Haftalık Değerlendirme', status: 'Active' },
+                { id: 7, workspaceItemId: 2, userId: 2, date: tomorrow, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Sprint', status: 'Active' }
+            ];
+
+            var db = { users: users, workspaces: workspaces, reservations: reservations };
+            localStorage.setItem('ray_ofis_static_db_v2', JSON.stringify(db));
+            return db;
+        }
+
+        function saveFallbackStore(db) {
+            localStorage.setItem('ray_ofis_static_db_v2', JSON.stringify(db));
+        }
 
         $scope.showToast = function (message, isError) {
             var toast = { id: Date.now() + Math.random(), message: message, isError: !!isError };
@@ -115,6 +166,8 @@
             buildDaysStrip();
             $http.get('/api/users').then(function (res) {
                 $scope.demoUsers = res.data;
+            }).catch(function () {
+                $scope.demoUsers = getFallbackStore().users;
             });
 
             var savedUser = localStorage.getItem('ray_ofis_user');
@@ -142,23 +195,39 @@
                 .then(function (res) {
                     $scope.isLoading = false;
                     if (res.data && res.data.success) {
-                        $scope.currentUser = res.data.user;
-                        localStorage.setItem('ray_ofis_user', JSON.stringify($scope.currentUser));
-                        $scope.activeTab = 'floorplan';
-                        $scope.showToast(res.data.message, false);
-                        loadWorkspaces();
-                        loadMyReservations();
-                        if ($scope.currentUser.role === 'Admin') {
-                            loadAdminDashboard();
-                        }
+                        onLoginSuccess(res.data.user, res.data.message);
                     }
                 })
                 .catch(function (err) {
                     $scope.isLoading = false;
-                    var msg = (err.data && err.data.message) ? err.data.message : 'Giriş yapılamadı.';
-                    $scope.showToast(msg, true);
+                    if (err.status === 401 && err.data && err.data.message) {
+                        $scope.showToast(err.data.message, true);
+                        return;
+                    }
+                    // Static / GitHub Pages fallback
+                    var db = getFallbackStore();
+                    var u = db.users.find(function (x) {
+                        return x.username.toLowerCase() === $scope.loginData.username.trim().toLowerCase() && x.password === $scope.loginData.password;
+                    });
+                    if (u) {
+                        onLoginSuccess(u, 'Hoş geldiniz, ' + u.fullName + '!');
+                    } else {
+                        $scope.showToast('Kullanıcı adı veya şifre hatalı!', true);
+                    }
                 });
         };
+
+        function onLoginSuccess(user, msg) {
+            $scope.currentUser = user;
+            localStorage.setItem('ray_ofis_user', JSON.stringify($scope.currentUser));
+            $scope.activeTab = 'floorplan';
+            $scope.showToast(msg, false);
+            loadWorkspaces();
+            loadMyReservations();
+            if ($scope.currentUser.role === 'Admin') {
+                loadAdminDashboard();
+            }
+        }
 
         $scope.quickLogin = function (username) {
             $scope.loginData.username = username;
@@ -202,21 +271,54 @@
             }
         };
 
+        function applyWorkspacesData(items, summary) {
+            $scope.workspaces = items || [];
+            $scope.summary = summary || {};
+            buildBusLayout($scope.workspaces);
+
+            if ($scope.selectedItem) {
+                var updated = $scope.workspaces.find(function (w) { return w.id === $scope.selectedItem.id; });
+                $scope.selectedItem = updated || null;
+            } else if ($scope.workspaces.length > 0) {
+                var firstFree = $scope.workspaces.find(function (w) { return w.isActive && !w.isReserved; });
+                $scope.selectedItem = firstFree || $scope.workspaces[0];
+            }
+        }
+
         function loadWorkspaces() {
             if (!$scope.currentUser) return;
             $http.get('/api/workspaces?date=' + encodeURIComponent($scope.selectedDate))
                 .then(function (res) {
-                    $scope.workspaces = res.data.items || [];
-                    $scope.summary = res.data.summary || {};
-                    buildBusLayout($scope.workspaces);
-
-                    if ($scope.selectedItem) {
-                        var updated = $scope.workspaces.find(function (w) { return w.id === $scope.selectedItem.id; });
-                        $scope.selectedItem = updated || null;
-                    } else if ($scope.workspaces.length > 0) {
-                        var firstFree = $scope.workspaces.find(function (w) { return w.isActive && !w.isReserved; });
-                        $scope.selectedItem = firstFree || $scope.workspaces[0];
-                    }
+                    applyWorkspacesData(res.data.items, res.data.summary);
+                })
+                .catch(function () {
+                    var db = getFallbackStore();
+                    var dayRes = db.reservations.filter(function (r) { return r.date === $scope.selectedDate && r.status !== 'Cancelled'; });
+                    var items = db.workspaces.map(function (w) {
+                        var res = dayRes.find(function (r) { return r.workspaceItemId === w.id; });
+                        var u = res ? db.users.find(function (x) { return x.id === res.userId; }) : null;
+                        return angular.extend({}, w, {
+                            isReserved: !!res,
+                            reservation: res ? {
+                                id: res.id,
+                                userId: res.userId,
+                                userFullName: u ? u.fullName : 'Dolu',
+                                userDepartment: u ? u.department : '',
+                                date: res.date,
+                                timeSlot: res.timeSlot,
+                                note: res.note,
+                                status: res.status
+                            } : null
+                        });
+                    });
+                    var reserved = items.filter(function (i) { return i.isReserved; }).length;
+                    var avail = items.length - reserved;
+                    applyWorkspacesData(items, {
+                        total: items.length,
+                        available: avail,
+                        reserved: reserved,
+                        occupancyRate: Math.round((reserved / items.length) * 100)
+                    });
                 });
         }
 
@@ -256,13 +358,29 @@
                     $scope.bookingForm.note = '';
                     loadWorkspaces();
                     loadMyReservations();
-                    if ($scope.currentUser.role === 'Admin') {
-                        loadAdminDashboard();
-                    }
+                    if ($scope.currentUser.role === 'Admin') loadAdminDashboard();
                 })
                 .catch(function (err) {
-                    var msg = (err.data && err.data.message) ? err.data.message : 'Rezervasyon yapılamadı.';
-                    $scope.showToast(msg, true);
+                    if (err.status === 400 && err.data && err.data.message) {
+                        $scope.showToast(err.data.message, true);
+                        return;
+                    }
+                    var db = getFallbackStore();
+                    var nextId = db.reservations.length > 0 ? Math.max.apply(null, db.reservations.map(function (r) { return r.id; })) + 1 : 1;
+                    db.reservations.push({
+                        id: nextId,
+                        workspaceItemId: payload.workspaceItemId,
+                        userId: payload.userId,
+                        date: payload.date,
+                        timeSlot: payload.timeSlot,
+                        note: payload.note || 'Ofis Çalışması',
+                        status: 'Active'
+                    });
+                    saveFallbackStore(db);
+                    $scope.showToast($scope.selectedItem.name + ' rezerve edildi!', false);
+                    loadWorkspaces();
+                    loadMyReservations();
+                    if ($scope.currentUser.role === 'Admin') loadAdminDashboard();
                 });
         };
 
@@ -273,13 +391,17 @@
                     $scope.showToast(res.data.message, false);
                     loadWorkspaces();
                     loadMyReservations();
-                    if ($scope.currentUser.role === 'Admin') {
-                        loadAdminDashboard();
-                    }
+                    if ($scope.currentUser.role === 'Admin') loadAdminDashboard();
                 })
-                .catch(function (err) {
-                    var msg = (err.data && err.data.message) ? err.data.message : 'İptal edilemedi.';
-                    $scope.showToast(msg, true);
+                .catch(function () {
+                    var db = getFallbackStore();
+                    var r = db.reservations.find(function (x) { return x.id === reservationId; });
+                    if (r) r.status = 'Cancelled';
+                    saveFallbackStore(db);
+                    $scope.showToast('Rezervasyon iptal edildi.', false);
+                    loadWorkspaces();
+                    loadMyReservations();
+                    if ($scope.currentUser.role === 'Admin') loadAdminDashboard();
                 });
         };
 
@@ -288,6 +410,23 @@
             $http.get('/api/my-reservations?userId=' + $scope.currentUser.id)
                 .then(function (res) {
                     $scope.myReservations = res.data || [];
+                })
+                .catch(function () {
+                    var db = getFallbackStore();
+                    $scope.myReservations = db.reservations
+                        .filter(function (r) { return r.userId === $scope.currentUser.id && r.status !== 'Cancelled'; })
+                        .map(function (r) {
+                            var ws = db.workspaces.find(function (w) { return w.id === r.workspaceItemId; });
+                            return {
+                                id: r.id,
+                                workspaceCode: ws ? ws.code : '',
+                                workspaceName: ws ? ws.name : '',
+                                date: r.date,
+                                timeSlot: r.timeSlot,
+                                note: r.note,
+                                status: r.status
+                            };
+                        });
                 });
         }
 
@@ -295,6 +434,36 @@
             $http.get('/api/admin/dashboard?date=' + encodeURIComponent($scope.selectedDate))
                 .then(function (res) {
                     $scope.adminData = res.data;
+                })
+                .catch(function () {
+                    var db = getFallbackStore();
+                    var dayRes = db.reservations.filter(function (r) { return r.date === $scope.selectedDate && r.status !== 'Cancelled'; });
+                    var allDetailed = db.reservations.slice().reverse().map(function (r) {
+                        var u = db.users.find(function (x) { return x.id === r.userId; });
+                        var w = db.workspaces.find(function (x) { return x.id === r.workspaceItemId; });
+                        return {
+                            id: r.id,
+                            date: r.date,
+                            timeSlot: r.timeSlot,
+                            note: r.note,
+                            status: r.status,
+                            userFullName: u ? u.fullName : 'Bilinmeyen',
+                            userDepartment: u ? u.department : '-',
+                            workspaceCode: w ? w.code : '-',
+                            workspaceName: w ? w.name : '-'
+                        };
+                    });
+                    $scope.adminData = {
+                        kpis: {
+                            occupancyRate: Math.round((dayRes.length / db.workspaces.length) * 100),
+                            reservedDesks: dayRes.filter(function (r) { return r.workspaceItemId <= 20; }).length,
+                            totalDesks: 20,
+                            reservedRooms: dayRes.filter(function (r) { return r.workspaceItemId > 20; }).length,
+                            totalRooms: 4,
+                            availableToday: db.workspaces.length - dayRes.length
+                        },
+                        allReservations: allDetailed
+                    };
                 });
         }
 
