@@ -1,0 +1,575 @@
+{
+  "Users": [
+    {
+      "Id": 1,
+      "Username": "admin",
+      "Password": "123",
+      "FullName": "Fatih Yayla",
+      "Department": "Y\u00F6netim \u0026 \u0130dari \u0130\u015Fler",
+      "Title": "Ofis \u0026 Sistem Y\u00F6neticisi",
+      "Role": "Admin",
+      "AvatarInitials": "FY"
+    },
+    {
+      "Id": 2,
+      "Username": "ahmet",
+      "Password": "123",
+      "FullName": "Ahmet Y\u0131lmaz",
+      "Department": "Yaz\u0131l\u0131m Geli\u015Ftirme",
+      "Title": "K\u0131demli .NET Geli\u015Ftirici",
+      "Role": "Employee",
+      "AvatarInitials": "AY"
+    },
+    {
+      "Id": 3,
+      "Username": "zeynep",
+      "Password": "123",
+      "FullName": "Zeynep Kaya",
+      "Department": "\u00DCr\u00FCn \u0026 Tasar\u0131m",
+      "Title": "UI/UX Tasar\u0131mc\u0131s\u0131",
+      "Role": "Employee",
+      "AvatarInitials": "ZK"
+    },
+    {
+      "Id": 4,
+      "Username": "murat",
+      "Password": "123",
+      "FullName": "Murat Demir",
+      "Department": "Veri Analiti\u011Fi",
+      "Title": "Veri Bilimci",
+      "Role": "Employee",
+      "AvatarInitials": "MD"
+    },
+    {
+      "Id": 5,
+      "Username": "elif",
+      "Password": "123",
+      "FullName": "Elif \u015Eahin",
+      "Department": "\u0130nsan Kaynaklar\u0131",
+      "Title": "\u0130K Uzman\u0131",
+      "Role": "Employee",
+      "AvatarInitials": "E\u015E"
+    },
+    {
+      "Id": 6,
+      "Username": "can",
+      "Password": "123",
+      "FullName": "Caner \u00D6zkan",
+      "Department": "Pazarlama \u0026 Kurumsal",
+      "Title": "Dijital Pazarlama Uzman\u0131",
+      "Role": "Employee",
+      "AvatarInitials": "C\u00D6"
+    }
+  ],
+  "Workspaces": [
+    {
+      "Id": 1,
+      "Code": "M-101",
+      "Name": "Masa 101",
+      "Type": "Masa",
+      "Zone": "A Blok - A\u00E7\u0131k Ofis",
+      "Capacity": 1,
+      "Features": [
+        "\u00C7ift Monit\u00F6r",
+        "Pencere Kenar\u0131",
+        "Type-C Dock"
+      ],
+      "GridX": 1,
+      "GridY": 1,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 2,
+      "Code": "M-102",
+      "Name": "Masa 102",
+      "Type": "Masa",
+      "Zone": "A Blok - A\u00E7\u0131k Ofis",
+      "Capacity": 1,
+      "Features": [
+        "\u00C7ift Monit\u00F6r",
+        "Type-C Dock"
+      ],
+      "GridX": 2,
+      "GridY": 1,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 3,
+      "Code": "M-103",
+      "Name": "Masa 103",
+      "Type": "Masa",
+      "Zone": "A Blok - A\u00E7\u0131k Ofis",
+      "Capacity": 1,
+      "Features": [
+        "Geni\u015F Ekran 34\u0022",
+        "Ergonomik Koltuk"
+      ],
+      "GridX": 3,
+      "GridY": 1,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 4,
+      "Code": "M-104",
+      "Name": "Masa 104",
+      "Type": "Masa",
+      "Zone": "A Blok - A\u00E7\u0131k Ofis",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Ergonomik Koltuk"
+      ],
+      "GridX": 4,
+      "GridY": 1,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 5,
+      "Code": "M-105",
+      "Name": "Masa 105",
+      "Type": "Masa",
+      "Zone": "A Blok - A\u00E7\u0131k Ofis",
+      "Capacity": 1,
+      "Features": [
+        "\u00C7ift Monit\u00F6r",
+        "Pencere Kenar\u0131"
+      ],
+      "GridX": 1,
+      "GridY": 2,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 6,
+      "Code": "M-106",
+      "Name": "Masa 106",
+      "Type": "Masa",
+      "Zone": "A Blok - A\u00E7\u0131k Ofis",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Type-C Dock"
+      ],
+      "GridX": 2,
+      "GridY": 2,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 7,
+      "Code": "M-107",
+      "Name": "Masa 107",
+      "Type": "Masa",
+      "Zone": "A Blok - A\u00E7\u0131k Ofis",
+      "Capacity": 1,
+      "Features": [
+        "\u00C7ift Monit\u00F6r",
+        "Y\u00FCkseklik Ayarl\u0131"
+      ],
+      "GridX": 3,
+      "GridY": 2,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 8,
+      "Code": "M-108",
+      "Name": "Masa 108",
+      "Type": "Masa",
+      "Zone": "A Blok - A\u00E7\u0131k Ofis",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Yaz\u0131c\u0131ya Yak\u0131n"
+      ],
+      "GridX": 4,
+      "GridY": 2,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 9,
+      "Code": "M-201",
+      "Name": "Masa 201",
+      "Type": "Masa",
+      "Zone": "B Blok - Teknoloji",
+      "Capacity": 1,
+      "Features": [
+        "4K Monit\u00F6r",
+        "Pencere Kenar\u0131",
+        "Mac/PC Dock"
+      ],
+      "GridX": 1,
+      "GridY": 4,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 10,
+      "Code": "M-202",
+      "Name": "Masa 202",
+      "Type": "Masa",
+      "Zone": "B Blok - Teknoloji",
+      "Capacity": 1,
+      "Features": [
+        "\u00C7ift Monit\u00F6r",
+        "Mac/PC Dock"
+      ],
+      "GridX": 2,
+      "GridY": 4,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 11,
+      "Code": "M-203",
+      "Name": "Masa 203",
+      "Type": "Masa",
+      "Zone": "B Blok - Teknoloji",
+      "Capacity": 1,
+      "Features": [
+        "\u00C7ift Monit\u00F6r",
+        "Y\u00FCkseklik Ayarl\u0131"
+      ],
+      "GridX": 3,
+      "GridY": 4,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 12,
+      "Code": "M-204",
+      "Name": "Masa 204",
+      "Type": "Masa",
+      "Zone": "B Blok - Teknoloji",
+      "Capacity": 1,
+      "Features": [
+        "4K Monit\u00F6r",
+        "Ergonomik Koltuk"
+      ],
+      "GridX": 4,
+      "GridY": 4,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 13,
+      "Code": "M-205",
+      "Name": "Masa 205",
+      "Type": "Masa",
+      "Zone": "B Blok - Teknoloji",
+      "Capacity": 1,
+      "Features": [
+        "\u00C7ift Monit\u00F6r",
+        "Pencere Kenar\u0131"
+      ],
+      "GridX": 1,
+      "GridY": 5,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 14,
+      "Code": "M-206",
+      "Name": "Masa 206",
+      "Type": "Masa",
+      "Zone": "B Blok - Teknoloji",
+      "Capacity": 1,
+      "Features": [
+        "\u00C7ift Monit\u00F6r",
+        "Ethernet Port"
+      ],
+      "GridX": 2,
+      "GridY": 5,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 15,
+      "Code": "M-207",
+      "Name": "Masa 207",
+      "Type": "Masa",
+      "Zone": "B Blok - Teknoloji",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Sessiz K\u00F6\u015Fe"
+      ],
+      "GridX": 3,
+      "GridY": 5,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 16,
+      "Code": "M-208",
+      "Name": "Masa 208",
+      "Type": "Masa",
+      "Zone": "B Blok - Teknoloji",
+      "Capacity": 1,
+      "Features": [
+        "\u00C7ift Monit\u00F6r",
+        "Y\u00FCkseklik Ayarl\u0131"
+      ],
+      "GridX": 4,
+      "GridY": 5,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": false
+    },
+    {
+      "Id": 17,
+      "Code": "K-01",
+      "Name": "Odak Kabini 1",
+      "Type": "Kabin",
+      "Zone": "Sessiz Alan",
+      "Capacity": 1,
+      "Features": [
+        "Ses Yal\u0131t\u0131ml\u0131",
+        "Video G\u00F6r\u00FC\u015Fme I\u015F\u0131\u011F\u0131",
+        "Havaland\u0131rma"
+      ],
+      "GridX": 6,
+      "GridY": 1,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 18,
+      "Code": "K-02",
+      "Name": "Odak Kabini 2",
+      "Type": "Kabin",
+      "Zone": "Sessiz Alan",
+      "Capacity": 1,
+      "Features": [
+        "Ses Yal\u0131t\u0131ml\u0131",
+        "Monit\u00F6r",
+        "H\u0131zl\u0131 \u015Earj"
+      ],
+      "GridX": 6,
+      "GridY": 2,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 19,
+      "Code": "K-03",
+      "Name": "\u0130kili \u00C7al\u0131\u015Fma Podu",
+      "Type": "Kabin",
+      "Zone": "Sessiz Alan",
+      "Capacity": 2,
+      "Features": [
+        "Ses Yal\u0131t\u0131ml\u0131",
+        "Beyaz Tahta",
+        "HDMI Ekran"
+      ],
+      "GridX": 6,
+      "GridY": 4,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 20,
+      "Code": "K-04",
+      "Name": "Bireysel Odak Masas\u0131",
+      "Type": "Masa",
+      "Zone": "Sessiz Alan",
+      "Capacity": 1,
+      "Features": [
+        "Akustik Panel",
+        "34\u0022 UltraWide"
+      ],
+      "GridX": 6,
+      "GridY": 5,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 21,
+      "Code": "ODA-A",
+      "Name": "Ray Vizyon Toplant\u0131 Odas\u0131",
+      "Type": "Oda",
+      "Zone": "Toplant\u0131 Kat\u0131",
+      "Capacity": 10,
+      "Features": [
+        "75\u0022 Ak\u0131ll\u0131 Ekran",
+        "Polycom Video Konferans",
+        "Cam Yaz\u0131 Tahtas\u0131",
+        "Kahve Makinesi"
+      ],
+      "GridX": 8,
+      "GridY": 1,
+      "GridW": 2,
+      "GridH": 2,
+      "IsActive": true
+    },
+    {
+      "Id": 22,
+      "Code": "ODA-B",
+      "Name": "\u0130novasyon Odas\u0131",
+      "Type": "Oda",
+      "Zone": "Toplant\u0131 Kat\u0131",
+      "Capacity": 6,
+      "Features": [
+        "65\u0022 TV",
+        "Kablosuz Sunum",
+        "Beyaz Tahta"
+      ],
+      "GridX": 8,
+      "GridY": 3,
+      "GridW": 2,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 23,
+      "Code": "ODA-C",
+      "Name": "\u00C7evik (Agile) Sprint Odas\u0131",
+      "Type": "Oda",
+      "Zone": "Toplant\u0131 Kat\u0131",
+      "Capacity": 8,
+      "Features": [
+        "Projeksiyon",
+        "Kanban Duvar\u0131",
+        "Video Konferans"
+      ],
+      "GridX": 8,
+      "GridY": 4,
+      "GridW": 2,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 24,
+      "Code": "ODA-D",
+      "Name": "H\u0131zl\u0131 G\u00F6r\u00FC\u015Fme Odas\u0131",
+      "Type": "Oda",
+      "Zone": "Toplant\u0131 Kat\u0131",
+      "Capacity": 4,
+      "Features": [
+        "55\u0022 Ekran",
+        "Ses Yal\u0131t\u0131m\u0131"
+      ],
+      "GridX": 8,
+      "GridY": 5,
+      "GridW": 2,
+      "GridH": 1,
+      "IsActive": true
+    }
+  ],
+  "Reservations": [
+    {
+      "Id": 1,
+      "WorkspaceItemId": 1,
+      "UserId": 2,
+      "Date": "2026-11-06",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Backend API geli\u015Ftirme sprinti",
+      "Status": "Cancelled",
+      "CreatedAt": "2026-11-06T19:16:18.6039967+03:00"
+    },
+    {
+      "Id": 2,
+      "WorkspaceItemId": 3,
+      "UserId": 3,
+      "Date": "2026-11-06",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Tasar\u0131m sistemi revizyonu",
+      "Status": "Cancelled",
+      "CreatedAt": "2026-11-06T20:16:18.6040391+03:00"
+    },
+    {
+      "Id": 3,
+      "WorkspaceItemId": 10,
+      "UserId": 4,
+      "Date": "2026-11-06",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Veri modeli e\u011Fitimi",
+      "Status": "CheckedIn",
+      "CreatedAt": "2026-11-06T18:16:18.6040397+03:00"
+    },
+    {
+      "Id": 4,
+      "WorkspaceItemId": 17,
+      "UserId": 5,
+      "Date": "2026-11-06",
+      "TimeSlot": "\u00D6\u011Fleden \u00D6nce (09:00 - 13:00)",
+      "Note": "Aday m\u00FClakat g\u00F6r\u00FC\u015Fmeleri",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T21:16:18.6040399+03:00"
+    },
+    {
+      "Id": 5,
+      "WorkspaceItemId": 21,
+      "UserId": 1,
+      "Date": "2026-11-06",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Haftal\u0131k Y\u00F6netim \u0026 Strateji Toplant\u0131s\u0131",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T17:16:18.6040401+03:00"
+    },
+    {
+      "Id": 6,
+      "WorkspaceItemId": 23,
+      "UserId": 6,
+      "Date": "2026-11-06",
+      "TimeSlot": "\u00D6\u011Fleden Sonra (13:30 - 18:00)",
+      "Note": "Q4 Kampanya Planlama Sunumu",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T21:31:18.6040408+03:00"
+    },
+    {
+      "Id": 7,
+      "WorkspaceItemId": 2,
+      "UserId": 2,
+      "Date": "2026-11-07",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Kod inceleme g\u00FCn\u00FC",
+      "Status": "Cancelled",
+      "CreatedAt": "2026-11-06T21:46:18.6040432+03:00"
+    },
+    {
+      "Id": 8,
+      "WorkspaceItemId": 22,
+      "UserId": 3,
+      "Date": "2026-11-07",
+      "TimeSlot": "\u00D6\u011Fleden \u00D6nce (09:00 - 13:00)",
+      "Note": "UI/UX Tasar\u0131m Kritik Toplant\u0131s\u0131",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T21:56:18.6040434+03:00"
+    },
+    {
+      "Id": 9,
+      "WorkspaceItemId": 9,
+      "UserId": 4,
+      "Date": "2026-11-08",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Raporlama \u00E7al\u0131\u015Fmas\u0131",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T22:01:18.6040437+03:00"
+    }
+  ]
+}

@@ -1,0 +1,650 @@
+:root {
+    --ray-red: #FF0025;
+    --ray-red-hover: #D90020;
+    --ray-red-soft: rgba(255, 0, 37, 0.1);
+    --ray-blue: #0135EB;
+    --ray-blue-hover: #0028B8;
+    --ray-blue-soft: rgba(1, 53, 235, 0.1);
+
+    --bg-body: #F1F5F9;
+    --bg-surface: #FFFFFF;
+    --bg-subtle: #F8FAFC;
+    --text-main: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --border-color: #E2E8F0;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.05);
+    --shadow-md: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 20px 40px -12px rgba(15, 23, 42, 0.16);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    line-height: 1.5;
+    min-height: 100vh;
+}
+
+[ng\:cloak], [ng-cloak], .ng-cloak {
+    display: none !important;
+}
+
+/* ==================== BRAND LOGO ==================== */
+.ray-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    user-select: none;
+}
+
+.ray-logo-mark {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--ray-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(1, 53, 235, 0.25);
+    overflow: hidden;
+}
+
+.ray-logo-mark::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    background: var(--ray-red);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2.5px #fff;
+}
+
+.ray-logo-mark span {
+    color: #fff;
+    font-weight: 900;
+    font-size: 19px;
+    z-index: 1;
+}
+
+.ray-logo-title {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text-main);
+}
+
+.ray-logo-title .brand-ray { color: var(--ray-blue); }
+.ray-logo-title .brand-dot { color: var(--ray-red); }
+.ray-logo-subtitle {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+/* ==================== BUTTONS ==================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.18s ease;
+    font-family: inherit;
+}
+
+.btn-ray-blue {
+    background-color: var(--ray-blue);
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(1, 53, 235, 0.25);
+}
+.btn-ray-blue:hover { background-color: var(--ray-blue-hover); transform: translateY(-1px); }
+
+.btn-ray-red {
+    background-color: var(--ray-red);
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(255, 0, 37, 0.25);
+}
+.btn-ray-red:hover { background-color: var(--ray-red-hover); transform: translateY(-1px); }
+
+.btn-outline-red {
+    background-color: var(--ray-red-soft);
+    color: var(--ray-red);
+    border-color: rgba(255, 0, 37, 0.25);
+}
+.btn-outline-red:hover { background-color: var(--ray-red); color: #FFFFFF; }
+
+.btn-outline-blue {
+    background-color: var(--ray-blue-soft);
+    color: var(--ray-blue);
+    border-color: rgba(1, 53, 235, 0.25);
+}
+.btn-outline-blue:hover { background-color: var(--ray-blue); color: #FFFFFF; }
+
+.btn-ghost {
+    background-color: #FFFFFF;
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+.btn-ghost:hover { background-color: var(--bg-subtle); color: var(--text-main); }
+
+.btn-sm { padding: 6px 12px; font-size: 12.5px; }
+.btn-lg { padding: 13px 22px; font-size: 15px; border-radius: var(--radius-md); }
+
+/* ==================== LOGIN SCREEN ==================== */
+.login-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 460px;
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    padding: 36px 32px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+}
+
+.form-group { margin-bottom: 14px; }
+.form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-color);
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--bg-subtle);
+}
+.form-control:focus {
+    outline: none;
+    border-color: var(--ray-blue);
+    background: #FFFFFF;
+}
+
+.demo-chips {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.demo-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg-subtle);
+    cursor: pointer;
+    text-align: left;
+}
+.demo-chip:hover { border-color: var(--ray-blue); background: var(--ray-blue-soft); }
+.demo-chip.admin-chip:hover { border-color: var(--ray-red); background: var(--ray-red-soft); }
+
+.demo-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--ray-blue);
+    color: #fff;
+    font-weight: 700;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.demo-chip.admin-chip .demo-avatar { background: var(--ray-red); }
+
+/* ==================== NAVBAR ==================== */
+.top-navbar {
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+}
+
+.navbar-inner {
+    max-width: 1260px;
+    margin: 0 auto;
+    padding: 0 20px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.nav-tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--bg-subtle);
+    padding: 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.nav-tab {
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+.nav-tab.active {
+    background: var(--ray-blue);
+    color: #FFFFFF;
+}
+.nav-tab.admin-tab.active {
+    background: var(--ray-red);
+    color: #FFFFFF;
+}
+
+.main-content {
+    max-width: 1260px;
+    margin: 0 auto;
+    padding: 22px 20px;
+}
+
+/* ==================== DAY SELECTOR BAR ==================== */
+.date-bar {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    box-shadow: var(--shadow-sm);
+}
+
+.day-strip {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+}
+
+.day-pill {
+    min-width: 76px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border-color);
+    background: var(--bg-subtle);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+}
+.day-pill:hover { border-color: var(--ray-blue); }
+.day-pill.active {
+    background: var(--ray-blue);
+    border-color: var(--ray-blue);
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(1, 53, 235, 0.25);
+}
+
+/* ==================== BUS-STYLE SEAT SELECTION LAYOUT ==================== */
+.reservation-grid {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 22px;
+    align-items: start;
+}
+
+.bus-container-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Seat Color Legend (Just like Bus Ticket websites) */
+.seat-legend-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 12px 18px;
+    background: var(--bg-subtle);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: 24px;
+}
+
+.legend-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.legend-seat-sample {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    border: 2px solid #CBD5E1;
+}
+.legend-seat-sample.empty {
+    background: #FFFFFF;
+    border-color: #94A3B8;
+}
+.legend-seat-sample.reserved {
+    background: var(--ray-red);
+    border-color: #B91C1C;
+}
+.legend-seat-sample.selected {
+    background: var(--ray-blue);
+    border-color: #1E3A8A;
+}
+
+/* The Bus / Office Cabin Frame */
+.bus-cabin {
+    max-width: 720px;
+    margin: 0 auto;
+    background: #F8FAFC;
+    border: 3px solid #CBD5E1;
+    border-radius: 28px;
+    padding: 24px 26px;
+    position: relative;
+}
+
+.bus-front-banner {
+    text-align: center;
+    padding: 8px 16px;
+    background: #E2E8F0;
+    color: #475569;
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-radius: 12px;
+    margin-bottom: 22px;
+}
+
+/* 5 Rows: Left 2-Person Table | Corridor | Right 2-Person Table */
+.bus-row {
+    display: grid;
+    grid-template-columns: 1fr 56px 1fr;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.bus-corridor {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94A3B8;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    user-select: none;
+}
+
+/* 2-Person Desk Unit (Her Masa 2 Kişilik) */
+.two-person-desk {
+    background: #FFFFFF;
+    border: 2px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 12px 14px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.desk-label-bar {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-secondary);
+    background: #F1F5F9;
+    padding: 4px 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.desk-seats-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* Bus Seat Button */
+.bus-seat {
+    position: relative;
+    height: 74px;
+    border-radius: 12px 12px 10px 10px;
+    border: 2.5px solid #94A3B8;
+    background: #FFFFFF;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    transition: all 0.16s ease;
+    user-select: none;
+}
+
+/* Top headrest bar to look like a real seat */
+.bus-seat::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    width: 55%;
+    height: 6px;
+    border-radius: 6px 6px 0 0;
+    background: #94A3B8;
+    transition: all 0.16s ease;
+}
+
+/* BOŞ KOLTUK */
+.bus-seat.seat-empty:hover {
+    border-color: var(--ray-blue);
+    background: #EFF6FF;
+    transform: translateY(-2px);
+}
+.bus-seat.seat-empty:hover::before {
+    background: var(--ray-blue);
+}
+
+.seat-number {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--text-main);
+    line-height: 1.1;
+}
+
+.seat-subtext {
+    font-size: 11px;
+    font-weight: 700;
+    color: #10B981;
+    margin-top: 3px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* DOLU / REZERVASYONLU KOLTUK -> KIRMIZI (#FF0025) */
+.bus-seat.seat-reserved {
+    background: var(--ray-red);
+    border-color: #B91C1C;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(255, 0, 37, 0.28);
+}
+.bus-seat.seat-reserved::before {
+    background: #991B1B;
+}
+.bus-seat.seat-reserved .seat-number {
+    color: #FFFFFF;
+}
+.bus-seat.seat-reserved .seat-subtext {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+/* SEÇİLİ KOLTUK -> RAY MAVİSİ (#0135EB) */
+.bus-seat.seat-selected {
+    background: var(--ray-blue) !important;
+    border-color: #001F8E !important;
+    color: #FFFFFF !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(1, 53, 235, 0.35);
+}
+.bus-seat.seat-selected::before {
+    background: #001F8E !important;
+}
+.bus-seat.seat-selected .seat-number,
+.bus-seat.seat-selected .seat-subtext {
+    color: #FFFFFF !important;
+}
+
+/* MEETING ROOMS SECTION AT BOTTOM OF CABIN */
+.rooms-section-divider {
+    margin: 22px 0 14px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #475569;
+    background: #E2E8F0;
+    padding: 7px;
+    border-radius: 10px;
+}
+
+.rooms-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+/* ==================== RIGHT ACTION CARD ==================== */
+.booking-side-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    box-shadow: var(--shadow-md);
+    position: sticky;
+    top: 88px;
+}
+
+/* ==================== ADMIN & TABLES ==================== */
+.summary-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+}
+.stat-card h4 { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+.stat-card .stat-val { font-size: 24px; font-weight: 800; }
+
+.panel-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.ray-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+.ray-table th {
+    text-align: left;
+    padding: 11px 12px;
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    font-size: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+.ray-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.toast-container {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.ray-toast {
+    padding: 13px 18px;
+    border-radius: 10px;
+    background: #0F172A;
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-left: 5px solid var(--ray-blue);
+    box-shadow: var(--shadow-lg);
+}
+.ray-toast.error { border-left-color: var(--ray-red); }
+
+@media (max-width: 960px) {
+    .reservation-grid { grid-template-columns: 1fr; }
+    .bus-row { grid-template-columns: 1fr; }
+    .bus-corridor { display: none; }
+    .rooms-row { grid-template-columns: repeat(2, 1fr); }
+    .summary-strip { grid-template-columns: repeat(2, 1fr); }
+}

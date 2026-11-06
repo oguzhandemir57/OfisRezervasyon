@@ -1,0 +1,575 @@
+{
+  "Users": [
+    {
+      "Id": 1,
+      "Username": "admin",
+      "Password": "123",
+      "FullName": "Fatih Yayla",
+      "Department": "Y\u00F6netim",
+      "Title": "Sistem Y\u00F6neticisi",
+      "Role": "Admin",
+      "AvatarInitials": "FY"
+    },
+    {
+      "Id": 2,
+      "Username": "ahmet",
+      "Password": "123",
+      "FullName": "Ahmet Y\u0131lmaz",
+      "Department": "Yaz\u0131l\u0131m",
+      "Title": ".NET Geli\u015Ftirici",
+      "Role": "Employee",
+      "AvatarInitials": "AY"
+    },
+    {
+      "Id": 3,
+      "Username": "zeynep",
+      "Password": "123",
+      "FullName": "Zeynep Kaya",
+      "Department": "Tasar\u0131m",
+      "Title": "UI/UX Tasar\u0131mc\u0131s\u0131",
+      "Role": "Employee",
+      "AvatarInitials": "ZK"
+    },
+    {
+      "Id": 4,
+      "Username": "murat",
+      "Password": "123",
+      "FullName": "Murat Demir",
+      "Department": "Veri Analiti\u011Fi",
+      "Title": "Veri Bilimci",
+      "Role": "Employee",
+      "AvatarInitials": "MD"
+    },
+    {
+      "Id": 5,
+      "Username": "elif",
+      "Password": "123",
+      "FullName": "Elif \u015Eahin",
+      "Department": "\u0130nsan Kaynaklar\u0131",
+      "Title": "\u0130K Uzman\u0131",
+      "Role": "Employee",
+      "AvatarInitials": "E\u015E"
+    },
+    {
+      "Id": 6,
+      "Username": "can",
+      "Password": "123",
+      "FullName": "Caner \u00D6zkan",
+      "Department": "Pazarlama",
+      "Title": "Pazarlama Uzman\u0131",
+      "Role": "Employee",
+      "AvatarInitials": "C\u00D6"
+    }
+  ],
+  "Workspaces": [
+    {
+      "Id": 1,
+      "Code": "1A",
+      "Name": "Masa 1 - Sol Koltuk (1A)",
+      "Type": "Masa",
+      "Zone": "Masa 1",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 1,
+      "GridY": 1,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 2,
+      "Code": "1B",
+      "Name": "Masa 1 - Sa\u011F Koltuk (1B)",
+      "Type": "Masa",
+      "Zone": "Masa 1",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 1,
+      "GridY": 1,
+      "GridW": 1,
+      "GridH": 2,
+      "IsActive": true
+    },
+    {
+      "Id": 3,
+      "Code": "2A",
+      "Name": "Masa 2 - Sol Koltuk (2A)",
+      "Type": "Masa",
+      "Zone": "Masa 2",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 2,
+      "GridY": 1,
+      "GridW": 2,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 4,
+      "Code": "2B",
+      "Name": "Masa 2 - Sa\u011F Koltuk (2B)",
+      "Type": "Masa",
+      "Zone": "Masa 2",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 2,
+      "GridY": 1,
+      "GridW": 2,
+      "GridH": 2,
+      "IsActive": true
+    },
+    {
+      "Id": 5,
+      "Code": "3A",
+      "Name": "Masa 3 - Sol Koltuk (3A)",
+      "Type": "Masa",
+      "Zone": "Masa 3",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 1,
+      "GridY": 2,
+      "GridW": 3,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 6,
+      "Code": "3B",
+      "Name": "Masa 3 - Sa\u011F Koltuk (3B)",
+      "Type": "Masa",
+      "Zone": "Masa 3",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 1,
+      "GridY": 2,
+      "GridW": 3,
+      "GridH": 2,
+      "IsActive": true
+    },
+    {
+      "Id": 7,
+      "Code": "4A",
+      "Name": "Masa 4 - Sol Koltuk (4A)",
+      "Type": "Masa",
+      "Zone": "Masa 4",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 2,
+      "GridY": 2,
+      "GridW": 4,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 8,
+      "Code": "4B",
+      "Name": "Masa 4 - Sa\u011F Koltuk (4B)",
+      "Type": "Masa",
+      "Zone": "Masa 4",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 2,
+      "GridY": 2,
+      "GridW": 4,
+      "GridH": 2,
+      "IsActive": true
+    },
+    {
+      "Id": 9,
+      "Code": "5A",
+      "Name": "Masa 5 - Sol Koltuk (5A)",
+      "Type": "Masa",
+      "Zone": "Masa 5",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 1,
+      "GridY": 3,
+      "GridW": 5,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 10,
+      "Code": "5B",
+      "Name": "Masa 5 - Sa\u011F Koltuk (5B)",
+      "Type": "Masa",
+      "Zone": "Masa 5",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 1,
+      "GridY": 3,
+      "GridW": 5,
+      "GridH": 2,
+      "IsActive": true
+    },
+    {
+      "Id": 11,
+      "Code": "6A",
+      "Name": "Masa 6 - Sol Koltuk (6A)",
+      "Type": "Masa",
+      "Zone": "Masa 6",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 2,
+      "GridY": 3,
+      "GridW": 6,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 12,
+      "Code": "6B",
+      "Name": "Masa 6 - Sa\u011F Koltuk (6B)",
+      "Type": "Masa",
+      "Zone": "Masa 6",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 2,
+      "GridY": 3,
+      "GridW": 6,
+      "GridH": 2,
+      "IsActive": true
+    },
+    {
+      "Id": 13,
+      "Code": "7A",
+      "Name": "Masa 7 - Sol Koltuk (7A)",
+      "Type": "Masa",
+      "Zone": "Masa 7",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 1,
+      "GridY": 4,
+      "GridW": 7,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 14,
+      "Code": "7B",
+      "Name": "Masa 7 - Sa\u011F Koltuk (7B)",
+      "Type": "Masa",
+      "Zone": "Masa 7",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 1,
+      "GridY": 4,
+      "GridW": 7,
+      "GridH": 2,
+      "IsActive": true
+    },
+    {
+      "Id": 15,
+      "Code": "8A",
+      "Name": "Masa 8 - Sol Koltuk (8A)",
+      "Type": "Masa",
+      "Zone": "Masa 8",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 2,
+      "GridY": 4,
+      "GridW": 8,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 16,
+      "Code": "8B",
+      "Name": "Masa 8 - Sa\u011F Koltuk (8B)",
+      "Type": "Masa",
+      "Zone": "Masa 8",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 2,
+      "GridY": 4,
+      "GridW": 8,
+      "GridH": 2,
+      "IsActive": true
+    },
+    {
+      "Id": 17,
+      "Code": "9A",
+      "Name": "Masa 9 - Sol Koltuk (9A)",
+      "Type": "Masa",
+      "Zone": "Masa 9",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 1,
+      "GridY": 5,
+      "GridW": 9,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 18,
+      "Code": "9B",
+      "Name": "Masa 9 - Sa\u011F Koltuk (9B)",
+      "Type": "Masa",
+      "Zone": "Masa 9",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 1,
+      "GridY": 5,
+      "GridW": 9,
+      "GridH": 2,
+      "IsActive": true
+    },
+    {
+      "Id": 19,
+      "Code": "10A",
+      "Name": "Masa 10 - Sol Koltuk (10A)",
+      "Type": "Masa",
+      "Zone": "Masa 10",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 2,
+      "GridY": 5,
+      "GridW": 10,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 20,
+      "Code": "10B",
+      "Name": "Masa 10 - Sa\u011F Koltuk (10B)",
+      "Type": "Masa",
+      "Zone": "Masa 10",
+      "Capacity": 1,
+      "Features": [
+        "Monit\u00F6r",
+        "Priz"
+      ],
+      "GridX": 2,
+      "GridY": 5,
+      "GridW": 10,
+      "GridH": 2,
+      "IsActive": true
+    },
+    {
+      "Id": 21,
+      "Code": "ODA-1",
+      "Name": "Toplant\u0131 Odas\u0131 1",
+      "Type": "Oda",
+      "Zone": "Toplant\u0131 Odalar\u0131",
+      "Capacity": 6,
+      "Features": [
+        "TV Ekran",
+        "Beyaz Tahta"
+      ],
+      "GridX": 1,
+      "GridY": 6,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 22,
+      "Code": "ODA-2",
+      "Name": "Toplant\u0131 Odas\u0131 2",
+      "Type": "Oda",
+      "Zone": "Toplant\u0131 Odalar\u0131",
+      "Capacity": 8,
+      "Features": [
+        "Projeksiyon",
+        "Video Konferans"
+      ],
+      "GridX": 2,
+      "GridY": 6,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 23,
+      "Code": "ODA-3",
+      "Name": "Toplant\u0131 Odas\u0131 3",
+      "Type": "Oda",
+      "Zone": "Toplant\u0131 Odalar\u0131",
+      "Capacity": 4,
+      "Features": [
+        "Ak\u0131ll\u0131 Ekran"
+      ],
+      "GridX": 3,
+      "GridY": 6,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    },
+    {
+      "Id": 24,
+      "Code": "ODA-4",
+      "Name": "B\u00FCy\u00FCk Konferans Odas\u0131",
+      "Type": "Oda",
+      "Zone": "Toplant\u0131 Odalar\u0131",
+      "Capacity": 12,
+      "Features": [
+        "Ses Sistemi",
+        "75\u0022 Ekran"
+      ],
+      "GridX": 4,
+      "GridY": 6,
+      "GridW": 1,
+      "GridH": 1,
+      "IsActive": true
+    }
+  ],
+  "Reservations": [
+    {
+      "Id": 1,
+      "WorkspaceItemId": 1,
+      "UserId": 2,
+      "Date": "2026-11-06",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "G\u00FCnl\u00FCk \u00E7al\u0131\u015Fma",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T19:24:56.3135068+03:00"
+    },
+    {
+      "Id": 2,
+      "WorkspaceItemId": 4,
+      "UserId": 3,
+      "Date": "2026-11-06",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Tasar\u0131m",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T20:24:56.3135532+03:00"
+    },
+    {
+      "Id": 3,
+      "WorkspaceItemId": 5,
+      "UserId": 4,
+      "Date": "2026-11-06",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Analiz",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T20:24:56.3135535+03:00"
+    },
+    {
+      "Id": 4,
+      "WorkspaceItemId": 6,
+      "UserId": 5,
+      "Date": "2026-11-06",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "\u0130K G\u00F6r\u00FC\u015Fmeleri",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T21:24:56.3135536+03:00"
+    },
+    {
+      "Id": 5,
+      "WorkspaceItemId": 11,
+      "UserId": 6,
+      "Date": "2026-11-06",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Pazarlama",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T21:39:56.3135547+03:00"
+    },
+    {
+      "Id": 6,
+      "WorkspaceItemId": 21,
+      "UserId": 1,
+      "Date": "2026-11-06",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Haftal\u0131k De\u011Ferlendirme",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T18:24:56.313556+03:00"
+    },
+    {
+      "Id": 7,
+      "WorkspaceItemId": 2,
+      "UserId": 2,
+      "Date": "2026-11-07",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Sprint",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T21:54:56.3135561+03:00"
+    },
+    {
+      "Id": 8,
+      "WorkspaceItemId": 22,
+      "UserId": 3,
+      "Date": "2026-11-07",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Sunum",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T22:04:56.3135563+03:00"
+    },
+    {
+      "Id": 9,
+      "WorkspaceItemId": 7,
+      "UserId": 2,
+      "Date": "2026-11-06",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Ofis \u00C7al\u0131\u015Fmas\u0131",
+      "Status": "Cancelled",
+      "CreatedAt": "2026-11-06T22:25:45.8869255+03:00"
+    },
+    {
+      "Id": 10,
+      "WorkspaceItemId": 8,
+      "UserId": 2,
+      "Date": "2026-11-06",
+      "TimeSlot": "Tam G\u00FCn (09:00 - 18:00)",
+      "Note": "Ofis \u00C7al\u0131\u015Fmas\u0131",
+      "Status": "Active",
+      "CreatedAt": "2026-11-06T22:26:17.5516063+03:00"
+    }
+  ]
+}
