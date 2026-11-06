@@ -20,7 +20,7 @@ public class ReservationStore
     {
         var dataDir = Path.Combine(env.ContentRootPath, "App_Data");
         Directory.CreateDirectory(dataDir);
-        _filePath = Path.Combine(dataDir, "store_v2.json");
+        _filePath = Path.Combine(dataDir, "store_v3.json");
         LoadOrSeed();
     }
 
@@ -63,11 +63,11 @@ public class ReservationStore
         _data.Users = new List<User>
         {
             new() { Id = 1, Username = "admin", Password = "123", FullName = "Fatih Yayla", Department = "Yönetim", Title = "Sistem Yöneticisi", Role = "Admin", AvatarInitials = "FY" },
-            new() { Id = 2, Username = "ahmet", Password = "123", FullName = "Ahmet Yılmaz", Department = "Yazılım", Title = ".NET Geliştirici", Role = "Employee", AvatarInitials = "AY" },
-            new() { Id = 3, Username = "zeynep", Password = "123", FullName = "Zeynep Kaya", Department = "Tasarım", Title = "UI/UX Tasarımcısı", Role = "Employee", AvatarInitials = "ZK" },
+            new() { Id = 2, Username = "ahmet", Password = "123", FullName = "Ahmet Yılmaz", Department = "Yazılım Geliştirme", Title = "Kıdemli .NET Geliştirici", Role = "Employee", AvatarInitials = "AY" },
+            new() { Id = 3, Username = "zeynep", Password = "123", FullName = "Zeynep Kaya", Department = "Ürün & Tasarım", Title = "UI/UX Tasarımcısı", Role = "Employee", AvatarInitials = "ZK" },
             new() { Id = 4, Username = "murat", Password = "123", FullName = "Murat Demir", Department = "Veri Analitiği", Title = "Veri Bilimci", Role = "Employee", AvatarInitials = "MD" },
             new() { Id = 5, Username = "elif", Password = "123", FullName = "Elif Şahin", Department = "İnsan Kaynakları", Title = "İK Uzmanı", Role = "Employee", AvatarInitials = "EŞ" },
-            new() { Id = 6, Username = "can", Password = "123", FullName = "Caner Özkan", Department = "Pazarlama", Title = "Pazarlama Uzmanı", Role = "Employee", AvatarInitials = "CÖ" }
+            new() { Id = 6, Username = "can", Password = "123", FullName = "Caner Özkan", Department = "Pazarlama", Title = "Dijital Pazarlama Uzmanı", Role = "Employee", AvatarInitials = "CÖ" }
         };
 
         var workspaces = new List<WorkspaceItem>();
@@ -77,39 +77,37 @@ public class ReservationStore
         for (int deskNo = 1; deskNo <= 10; deskNo++)
         {
             string zoneName = $"Masa {deskNo}";
-            int row = (deskNo - 1) / 2 + 1; // 5 sıra
-            int side = (deskNo % 2 == 1) ? 1 : 2; // 1: Sol Koridor Tarafı, 2: Sağ Koridor Tarafı
+            int row = (deskNo - 1) / 2 + 1;
+            int side = (deskNo % 2 == 1) ? 1 : 2;
 
-            // Sol Koltuk (A)
             workspaces.Add(new WorkspaceItem
             {
                 Id = idCounter++,
                 Code = $"{deskNo}A",
-                Name = $"Masa {deskNo} - Sol Koltuk ({deskNo}A)",
+                Name = $"Masa {deskNo} - Koltuk {deskNo}A",
                 Type = "Masa",
                 Zone = zoneName,
                 Capacity = 1,
                 Features = new() { "Monitör", "Priz" },
                 GridX = side,
                 GridY = row,
-                GridW = deskNo, // Desk number
-                GridH = 1       // Seat index 1 (Left)
+                GridW = deskNo,
+                GridH = 1
             });
 
-            // Sağ Koltuk (B)
             workspaces.Add(new WorkspaceItem
             {
                 Id = idCounter++,
                 Code = $"{deskNo}B",
-                Name = $"Masa {deskNo} - Sağ Koltuk ({deskNo}B)",
+                Name = $"Masa {deskNo} - Koltuk {deskNo}B",
                 Type = "Masa",
                 Zone = zoneName,
                 Capacity = 1,
                 Features = new() { "Monitör", "Priz" },
                 GridX = side,
                 GridY = row,
-                GridW = deskNo, // Desk number
-                GridH = 2       // Seat index 2 (Right)
+                GridW = deskNo,
+                GridH = 2
             });
         }
 
@@ -126,17 +124,17 @@ public class ReservationStore
 
         _data.Reservations = new List<Reservation>
         {
-            // Bugün için örnek dolu koltuklar (kırmızı görünecek)
-            new() { Id = 1, WorkspaceItemId = 1, UserId = 2, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Günlük çalışma", Status = "Active", CreatedAt = DateTime.Now.AddHours(-3) }, // 1A
-            new() { Id = 2, WorkspaceItemId = 4, UserId = 3, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Tasarım", Status = "Active", CreatedAt = DateTime.Now.AddHours(-2) },       // 2B
-            new() { Id = 3, WorkspaceItemId = 5, UserId = 4, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Analiz", Status = "Active", CreatedAt = DateTime.Now.AddHours(-2) },        // 3A
-            new() { Id = 4, WorkspaceItemId = 6, UserId = 5, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "İK Görüşmeleri", Status = "Active", CreatedAt = DateTime.Now.AddHours(-1) }, // 3B (Masa 3 tamamen dolu)
-            new() { Id = 5, WorkspaceItemId = 11, UserId = 6, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Pazarlama", Status = "Active", CreatedAt = DateTime.Now.AddMinutes(-45) }, // 6A
-            new() { Id = 6, WorkspaceItemId = 21, UserId = 1, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Haftalık Değerlendirme", Status = "Active", CreatedAt = DateTime.Now.AddHours(-4) }, // ODA-1
+            // Bugün ofise gelip Check-In yapmış (doğrulanmış) çalışanlar + henüz yolda olanlar
+            new() { Id = 1, WorkspaceItemId = 1, UserId = 2, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Sprint geliştirme", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-3) }, // Ahmet - CheckedIn
+            new() { Id = 2, WorkspaceItemId = 4, UserId = 3, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "UI/UX Tasarım", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-2) },     // Zeynep - CheckedIn
+            new() { Id = 3, WorkspaceItemId = 5, UserId = 4, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Veri Raporlama", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-2) },   // Murat - CheckedIn
+            new() { Id = 4, WorkspaceItemId = 6, UserId = 5, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Mülakatlar", Status = "Active", CreatedAt = DateTime.Now.AddHours(-1) },          // Elif - Henüz Check-In yapmadı
+            new() { Id = 5, WorkspaceItemId = 11, UserId = 6, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Kampanya Planı", Status = "CheckedIn", CreatedAt = DateTime.Now.AddMinutes(-45) },// Caner - CheckedIn
+            new() { Id = 6, WorkspaceItemId = 21, UserId = 1, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Yönetim Toplantısı", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-4) },
 
-            // Yarın için örnek dolu koltuklar
-            new() { Id = 7, WorkspaceItemId = 2, UserId = 2, Date = tomorrow, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Sprint", Status = "Active", CreatedAt = DateTime.Now.AddMinutes(-30) },
-            new() { Id = 8, WorkspaceItemId = 22, UserId = 3, Date = tomorrow, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Sunum", Status = "Active", CreatedAt = DateTime.Now.AddMinutes(-20) }
+            // Yarın için örnek rezervasyonlar
+            new() { Id = 7, WorkspaceItemId = 2, UserId = 2, Date = tomorrow, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Ofis çalışması", Status = "Active", CreatedAt = DateTime.Now.AddMinutes(-30) },
+            new() { Id = 8, WorkspaceItemId = 22, UserId = 3, Date = tomorrow, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Tasarım Sunumu", Status = "Active", CreatedAt = DateTime.Now.AddMinutes(-20) }
         };
     }
 
@@ -201,6 +199,7 @@ public class ReservationStore
                         res.UserId,
                         UserFullName = user?.FullName ?? "Dolu",
                         UserDepartment = user?.Department ?? "",
+                        UserTitle = user?.Title ?? "",
                         UserInitials = user?.AvatarInitials ?? "D",
                         res.Date,
                         res.TimeSlot,
@@ -214,6 +213,7 @@ public class ReservationStore
             var totalActive = items.Count(i => i.IsActive);
             var reservedCount = items.Count(i => i.IsActive && i.IsReserved);
             var availableCount = items.Count(i => i.IsActive && !i.IsReserved);
+            var checkedInCount = dayReservations.Count(r => r.Status == "CheckedIn");
 
             return new
             {
@@ -224,7 +224,7 @@ public class ReservationStore
                     ActiveTotal = totalActive,
                     Reserved = reservedCount,
                     Available = availableCount,
-                    Maintenance = items.Count(i => !i.IsActive),
+                    CheckedIn = checkedInCount,
                     OccupancyRate = totalActive > 0 ? Math.Round((double)reservedCount / totalActive * 100, 0) : 0
                 },
                 Items = items
@@ -257,8 +257,7 @@ public class ReservationStore
 
             if (existingOnWorkspace != null)
             {
-                var bookedBy = _data.Users.FirstOrDefault(u => u.Id == existingOnWorkspace.UserId);
-                return (false, $"{workspace.Code} seçilen tarihte ({req.Date}) {bookedBy?.FullName ?? "başka bir çalışan"} tarafından zaten rezerve edilmiş.", null);
+                return (false, $"{workspace.Code} seçilen tarihte ({req.Date}) zaten dolu.", null);
             }
 
             var nextId = _data.Reservations.Any() ? _data.Reservations.Max(r => r.Id) + 1 : 1;
@@ -269,7 +268,7 @@ public class ReservationStore
                 UserId = req.UserId,
                 Date = req.Date,
                 TimeSlot = string.IsNullOrWhiteSpace(req.TimeSlot) ? "Tam Gün (09:00 - 18:00)" : req.TimeSlot,
-                Note = string.IsNullOrWhiteSpace(req.Note) ? "Ofis Çalışması" : req.Note.Trim(),
+                Note = string.IsNullOrWhiteSpace(req.Note) ? "Uzaktan / Hibrit Ofis Çalışması" : req.Note.Trim(),
                 Status = "Active",
                 CreatedAt = DateTime.Now
             };
@@ -277,7 +276,7 @@ public class ReservationStore
             _data.Reservations.Add(newRes);
             Save();
 
-            return (true, $"{workspace.Name} için {req.Date} tarihli rezervasyonunuz tamamlandı!", newRes);
+            return (true, $"{workspace.Name} ayrıldı! Ofise geldiğinizde 'Check-In' sekmesinden doğrulama yapmayı unutmayın.", newRes);
         }
     }
 
@@ -312,7 +311,7 @@ public class ReservationStore
 
             res.Status = "CheckedIn";
             Save();
-            return (true, "Check-In işleminiz onaylandı!");
+            return (true, "Ofis Check-In işleminiz başarıyla doğrulandı! Artık 'Ofistekiler' ekranında görünüyorsunuz.");
         }
     }
 
@@ -398,40 +397,6 @@ public class ReservationStore
             var reservedRooms = dayReservations.Count(r => _data.Workspaces.FirstOrDefault(w => w.Id == r.WorkspaceItemId)?.Type == "Oda");
             var checkedInCount = dayReservations.Count(r => r.Status == "CheckedIn");
 
-            var zoneBreakdown = _data.Workspaces
-                .GroupBy(w => w.Type == "Oda" ? "Toplantı Odaları" : "2 Kişilik Çalışma Masaları (Koltuklar)")
-                .Select(g =>
-                {
-                    var zoneIds = g.Select(x => x.Id).ToHashSet();
-                    var resInZone = dayReservations.Count(r => zoneIds.Contains(r.WorkspaceItemId));
-                    var activeInZone = g.Count(x => x.IsActive);
-                    return new
-                    {
-                        Zone = g.Key,
-                        Total = g.Count(),
-                        ActiveTotal = activeInZone,
-                        Reserved = resInZone,
-                        Available = Math.Max(0, activeInZone - resInZone),
-                        OccupancyRate = activeInZone > 0 ? Math.Round((double)resInZone / activeInZone * 100, 0) : 0
-                    };
-                }).ToList();
-
-            var baseDate = DateTime.TryParse(date, out var parsedDate) ? parsedDate : DateTime.Today;
-            var trend = Enumerable.Range(-1, 7).Select(offset =>
-            {
-                var d = baseDate.AddDays(offset);
-                var dStr = d.ToString("yyyy-MM-dd");
-                var count = _data.Reservations.Count(r => r.Date == dStr && r.Status != "Cancelled");
-                var rate = activeWorkspaces.Count > 0 ? Math.Round((double)count / activeWorkspaces.Count * 100, 0) : 0;
-                return new
-                {
-                    Date = dStr,
-                    Label = d.ToString("dd MMM ddd", new System.Globalization.CultureInfo("tr-TR")),
-                    ReservedCount = count,
-                    OccupancyRate = rate
-                };
-            }).ToList();
-
             var detailedReservations = _data.Reservations
                 .OrderByDescending(r => r.Date)
                 .ThenByDescending(r => r.CreatedAt)
@@ -475,8 +440,6 @@ public class ReservationStore
                     CheckedInCount = checkedInCount,
                     OccupancyRate = activeWorkspaces.Count > 0 ? Math.Round((double)dayReservations.Count / activeWorkspaces.Count * 100, 0) : 0
                 },
-                ZoneBreakdown = zoneBreakdown,
-                WeeklyTrend = trend,
                 AllReservations = detailedReservations
             };
         }

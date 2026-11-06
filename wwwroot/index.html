@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAY OFİS | Koltuk &amp; Masa Rezervasyon Sistemi</title>
+    <title>RAY OFİS | Hibrit Masa Rezervasyon &amp; Check-In</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="js/app.js"></script>
 </head>
-<body ng-controller="MainController" ng-cloak>
+<body ng-controller="MainController" data-theme="light" ng-cloak>
 
     <!-- TOAST NOTIFICATIONS -->
     <div class="toast-container">
@@ -23,22 +23,28 @@
     <!-- ==================== LOGIN SCREEN ==================== -->
     <div class="login-wrapper" ng-if="!currentUser">
         <div class="login-box">
-            <div style="text-align: center; margin-bottom: 24px;">
-                <div class="ray-logo" style="justify-content: center; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <div class="ray-logo">
                     <div class="ray-logo-mark"><span>R</span></div>
-                    <div class="ray-logo-text" style="text-align: left;">
+                    <div class="ray-logo-text">
                         <div class="ray-logo-title"><span class="brand-ray">RAY</span>OFİS<span class="brand-dot">.</span></div>
-                        <div class="ray-logo-subtitle">Masa &amp; Oda Rezervasyon</div>
+                        <div class="ray-logo-subtitle">Hibrit Çalışma &amp; Check-In</div>
                     </div>
                 </div>
-                <h2 style="font-size: 20px; font-weight: 800;">Kullanıcı Girişi</h2>
-                <p style="font-size: 13px; color: var(--text-secondary);">Giriş yapın veya alttaki demo kullanıcılara tıklayın.</p>
+                <button type="button" class="btn btn-theme-toggle" ng-click="toggleTheme()">
+                    {{theme === 'light' ? '🌙 Dark' : '☀️ Beyaz'}}
+                </button>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 20px; font-weight: 800;">Hoş Geldiniz</h2>
+                <p style="font-size: 13px; color: var(--text-secondary);">Uzaktan masanızı ayırtın, ofise geldiğinizde Check-In ile doğrulayın.</p>
             </div>
 
             <form ng-submit="login()">
                 <div class="form-group">
                     <label>Kullanıcı Adı</label>
-                    <input type="text" class="form-control" ng-model="loginData.username" placeholder="admin veya ahmet" required>
+                    <input type="text" class="form-control" ng-model="loginData.username" placeholder="Örn: ahmet, zeynep, admin" required>
                 </div>
                 <div class="form-group">
                     <label>Şifre</label>
@@ -46,13 +52,13 @@
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 18px;">
                     <button type="submit" class="btn btn-ray-blue btn-lg" style="flex: 1;">Giriş Yap</button>
-                    <button type="button" class="btn btn-ray-red btn-lg" ng-click="quickLogin('admin')">Admin Girişi</button>
+                    <button type="button" class="btn btn-ray-red btn-lg" ng-click="quickLogin('admin')">Admin</button>
                 </div>
             </form>
 
             <div style="margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--border-color);">
-                <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">
-                    Tek Tıkla Hızlı Giriş (Şifre: 123)
+                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                    Hızlı Demo Profilleri (Şifre: 123)
                 </div>
                 <div class="demo-chips">
                     <button type="button" class="demo-chip"
@@ -61,8 +67,8 @@
                             ng-click="quickLogin(u.username)">
                         <div class="demo-avatar">{{u.avatarInitials}}</div>
                         <div style="overflow: hidden;">
-                            <div style="font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{u.fullName}}</div>
-                            <div style="font-size: 11px; color: var(--text-secondary);">{{u.role === 'Admin' ? 'Admin' : u.department}}</div>
+                            <div style="font-size: 12.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{u.fullName}}</div>
+                            <div style="font-size: 11px; color: var(--text-secondary);">{{u.role === 'Admin' ? 'Yönetici' : u.department}}</div>
                         </div>
                     </button>
                 </div>
@@ -70,7 +76,7 @@
         </div>
     </div>
 
-    <!-- ==================== MAIN APP ==================== -->
+    <!-- ==================== AUTHENTICATED APP ==================== -->
     <div ng-if="currentUser">
 
         <!-- TOP NAVBAR -->
@@ -80,99 +86,103 @@
                     <div class="ray-logo-mark"><span>R</span></div>
                     <div class="ray-logo-text">
                         <div class="ray-logo-title"><span class="brand-ray">RAY</span>OFİS<span class="brand-dot">.</span></div>
-                        <div class="ray-logo-subtitle">Rezervasyon Sistemi</div>
+                        <div class="ray-logo-subtitle">Hibrit Ofis Sistemi</div>
                     </div>
                 </a>
 
                 <div class="nav-tabs">
                     <button class="nav-tab" ng-class="{'active': activeTab === 'floorplan'}" ng-click="switchTab('floorplan')">
-                        Masa &amp; Koltuk Seçimi
+                        <span>Masa Seçimi</span>
                     </button>
-                    <button class="nav-tab" ng-class="{'active': activeTab === 'myReservations'}" ng-click="switchTab('myReservations')">
-                        Rezervasyonlarım ({{myReservations.length}})
+                    <button class="nav-tab" ng-class="{'active': activeTab === 'checkIn'}" ng-click="switchTab('checkIn')">
+                        <span>Ofis Check-In</span>
+                        <span class="nav-badge" ng-if="myReservations.length > 0">{{myReservations.length}}</span>
+                    </button>
+                    <button class="nav-tab" ng-class="{'active': activeTab === 'officePresence'}" ng-click="switchTab('officePresence')">
+                        <span>Ofistekiler</span>
+                        <span class="nav-badge">{{getCheckedInCount()}}</span>
                     </button>
                     <button class="nav-tab admin-tab" ng-if="currentUser.role === 'Admin'" ng-class="{'active': activeTab === 'adminDashboard'}" ng-click="switchTab('adminDashboard')">
-                        Admin Dashboard
+                        <span>Admin</span>
                     </button>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="text-align: right;">
-                        <div style="font-size: 13.5px; font-weight: 800;">{{currentUser.fullName}}</div>
-                        <div style="font-size: 11.5px; color: var(--text-secondary);">{{currentUser.role === 'Admin' ? 'Yönetici (Admin)' : currentUser.department}}</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button type="button" class="btn btn-theme-toggle" ng-click="toggleTheme()" title="Tema Değiştir">
+                        {{theme === 'light' ? '🌙 Dark' : '☀️ Beyaz'}}
+                    </button>
+                    <div style="text-align: right; line-height: 1.2;">
+                        <div style="font-size: 13px; font-weight: 800;">{{currentUser.fullName}}</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">{{currentUser.role === 'Admin' ? 'Admin' : currentUser.department}}</div>
                     </div>
-                    <button class="btn btn-outline-red btn-sm" ng-click="logout()">Çıkış</button>
+                    <button class="btn btn-soft-red btn-sm" ng-click="logout()">Çıkış</button>
                 </div>
             </div>
         </header>
 
         <main class="main-content">
 
-            <!-- DAY PICKER BAR -->
-            <div class="date-bar" ng-if="activeTab === 'floorplan' || activeTab === 'adminDashboard'">
+            <!-- DAY SELECTOR BAR (Used across Floorplan, Office Presence, and Admin) -->
+            <div class="date-bar" ng-if="activeTab !== 'checkIn'">
                 <div>
-                    <div style="font-size: 12px; font-weight: 800; color: var(--ray-blue); text-transform: uppercase; margin-bottom: 6px;">
-                        1. Adım: Rezervasyon Gününü Seçin
+                    <div style="font-size: 11.5px; font-weight: 800; color: var(--ray-blue); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                        Günü Seçin
                     </div>
                     <div class="day-strip">
                         <div class="day-pill"
                              ng-repeat="d in daysStrip"
                              ng-class="{'active': selectedDate === d.iso}"
                              ng-click="selectDate(d.iso)">
-                            <div style="font-size: 11px; font-weight: 700; opacity: 0.85;">{{d.dayName}}</div>
-                            <div style="font-size: 16px; font-weight: 900;">{{d.dayNum}} {{d.monthName}}</div>
+                            <div style="font-size: 10.5px; font-weight: 700; opacity: 0.85;">{{d.dayName}}</div>
+                            <div style="font-size: 15px; font-weight: 800;">{{d.dayNum}} {{d.monthName}}</div>
                         </div>
                     </div>
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 13px; font-weight: 700; color: var(--text-secondary);">Başka Tarih:</span>
                     <input type="date" class="form-control" style="width: auto; padding: 8px 12px;"
                            ng-model="selectedDateObj" ng-change="onDateInputChange()">
                 </div>
             </div>
 
-            <!-- ==================== TAB 1: BUS-STYLE SEAT SELECTION ==================== -->
+            <!-- ==================== TAB 1: SEAT RESERVATION (PRIVACY PROTECTED) ==================== -->
             <div ng-if="activeTab === 'floorplan'">
                 <div class="reservation-grid">
 
-                    <!-- LEFT: OTOBÜS KOLTUK SEÇİMİ GİBİ 2 KİŞİLİK MASALAR -->
+                    <!-- LEFT: 2-PERSON DESKS BUS LAYOUT -->
                     <div class="bus-container-card">
                         <div style="text-align: center; margin-bottom: 16px;">
-                            <h2 style="font-size: 19px; font-weight: 800;">2. Adım: Oturmak İstediğiniz Koltuğa veya Odaya Tıklayın</h2>
+                            <h2 style="font-size: 19px; font-weight: 800;">Oturmak İstediğiniz Koltuğu veya Odayı Seçin</h2>
                             <p style="font-size: 13px; color: var(--text-secondary);">
-                                Seçili Tarih: <strong style="color: var(--ray-blue);">{{selectedDate}}</strong> &mdash;
-                                Boş: <strong style="color: #10B981;">{{summary.available}}</strong> |
-                                Dolu (Kırmızı): <strong style="color: var(--ray-red);">{{summary.reserved}}</strong>
+                                Seçili Gün: <strong style="color: var(--ray-blue);">{{selectedDate}}</strong> &bull;
+                                Boş: <strong style="color: var(--green-live);">{{summary.available}}</strong> &bull;
+                                Dolu: <strong style="color: var(--ray-red);">{{summary.reserved}}</strong>
                             </p>
                         </div>
 
-                        <!-- SEAT LEGEND (BOŞ / DOLU KIRMIZI / SEÇİLİ MAVİ) -->
                         <div class="seat-legend-bar">
                             <div class="legend-box">
                                 <span class="legend-seat-sample empty"></span>
-                                <span>Boş Koltuk (Müsait)</span>
+                                <span>Boş (Müsait)</span>
                             </div>
                             <div class="legend-box">
                                 <span class="legend-seat-sample reserved"></span>
-                                <span style="color: var(--ray-red);">Rezervasyonlu / Dolu Koltuk</span>
+                                <span style="color: var(--ray-red);">Dolu (Rezerve)</span>
                             </div>
                             <div class="legend-box">
                                 <span class="legend-seat-sample selected"></span>
-                                <span style="color: var(--ray-blue);">Seçtiğiniz Koltuk</span>
+                                <span style="color: var(--ray-blue);">Seçiminiz / Sizin Yeriniz</span>
                             </div>
                         </div>
 
-                        <!-- BUS CABIN / OFFICE SEATING BOX -->
                         <div class="bus-cabin">
                             <div class="bus-front-banner">
-                                OFİS GİRİŞİ &amp; PENCERE CEPHESİ (HER MASA 2 KİŞİLİKTİR)
+                                OFİS KAT DÜZENİ &bull; HER MASA 2 KİŞİLİKTİR
                             </div>
 
-                            <!-- 5 ROWS OF 2-PERSON DESKS (LEFT DESK | CORRIDOR | RIGHT DESK) -->
+                            <!-- 5 ROWS OF 2-PERSON DESKS -->
                             <div class="bus-row" ng-repeat="row in deskRows">
-
-                                <!-- Left 2-Person Desk -->
+                                <!-- Left Desk -->
                                 <div class="two-person-desk">
                                     <div class="desk-label-bar">{{row.leftDesk.title}}</div>
                                     <div class="desk-seats-pair">
@@ -181,16 +191,17 @@
                                              ng-class="getBusSeatClass(seat)"
                                              ng-click="selectWorkspace(seat)">
                                             <div class="seat-number">{{seat.code}}</div>
+                                            <!-- Privacy rule: Normal users do NOT see who reserved other seats during booking -->
                                             <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
-                                            <div class="seat-subtext" ng-if="seat.isReserved">{{seat.reservation.userFullName}}</div>
+                                            <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN YERİNİZ</div>
+                                            <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">DOLU</div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Middle Corridor -->
                                 <div class="bus-corridor">KORİDOR</div>
 
-                                <!-- Right 2-Person Desk -->
+                                <!-- Right Desk -->
                                 <div class="two-person-desk">
                                     <div class="desk-label-bar">{{row.rightDesk.title}}</div>
                                     <div class="desk-seats-pair">
@@ -200,97 +211,111 @@
                                              ng-click="selectWorkspace(seat)">
                                             <div class="seat-number">{{seat.code}}</div>
                                             <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
-                                            <div class="seat-subtext" ng-if="seat.isReserved">{{seat.reservation.userFullName}}</div>
+                                            <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN YERİNİZ</div>
+                                            <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">DOLU</div>
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
 
-                            <!-- MEETING ROOMS AT THE BACK -->
+                            <!-- MEETING ROOMS -->
                             <div class="rooms-section-divider">
-                                TOPLANTI ODALARI (ODAYA TIKLAYARAK REZERVE EDEBİLİRSİNİZ)
+                                TOPLANTI ODALARI
                             </div>
                             <div class="rooms-row">
                                 <div class="bus-seat"
                                      ng-repeat="room in meetingRooms"
                                      ng-class="getBusSeatClass(room)"
                                      ng-click="selectWorkspace(room)">
-                                    <div class="seat-number" style="font-size: 14px;">{{room.code}}</div>
-                                    <div class="seat-subtext" ng-if="!room.isReserved">BOŞ ({{room.capacity}} Kişi)</div>
-                                    <div class="seat-subtext" ng-if="room.isReserved">{{room.reservation.userFullName}}</div>
+                                    <div class="seat-number" style="font-size: 13.5px;">{{room.code}}</div>
+                                    <div class="seat-subtext" ng-if="!room.isReserved">BOŞ ({{room.capacity}}K)</div>
+                                    <div class="seat-subtext" ng-if="room.isReserved && isMyReservation(room)">SİZİN ODANIZ</div>
+                                    <div class="seat-subtext" ng-if="room.isReserved && !isMyReservation(room)">DOLU</div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
-                    <!-- RIGHT: SIMPLE 1-CLICK CONFIRMATION PANEL -->
+                    <!-- RIGHT: BOOKING PANEL -->
                     <aside class="booking-side-card">
                         <div ng-if="!selectedItem" style="text-align: center; padding: 24px 10px; color: var(--text-secondary);">
-                            Soldaki düzenden bir koltuk veya oda seçin.
+                            Soldaki düzenden boş bir koltuk veya oda seçin.
                         </div>
 
                         <div ng-if="selectedItem">
-                            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">
-                                SEÇİLEN KOLTUK / ODA
+                            <div style="font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">
+                                SEÇİLEN YER
                             </div>
-                            <div style="font-size: 26px; font-weight: 900; color: var(--ray-blue); margin-bottom: 2px;">
+                            <div style="font-size: 28px; font-weight: 900; color: var(--ray-blue); line-height: 1.1;">
                                 {{selectedItem.code}}
                             </div>
-                            <div style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 14px;">
+                            <div style="font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-bottom: 16px;">
                                 {{selectedItem.name}}
                             </div>
 
-                            <div style="padding: 12px; border-radius: 10px; background: var(--bg-subtle); border: 1px solid var(--border-color); margin-bottom: 16px; font-size: 13px;">
-                                <div style="margin-bottom: 4px;"><strong>Tarih:</strong> {{selectedDate}}</div>
+                            <div style="padding: 14px; border-radius: 14px; background: var(--bg-subtle); border: 1px solid var(--border-color); margin-bottom: 16px; font-size: 13px;">
+                                <div style="margin-bottom: 6px;"><strong>Tarih:</strong> {{selectedDate}}</div>
                                 <div>
                                     <strong>Durum:</strong>
-                                    <span ng-if="!selectedItem.isReserved" style="color: #10B981; font-weight: 800;">BOŞ (Müsait)</span>
-                                    <span ng-if="selectedItem.isReserved" style="color: var(--ray-red); font-weight: 800;">DOLU (Rezerve Edilmiş)</span>
+                                    <span ng-if="!selectedItem.isReserved" style="color: var(--green-live); font-weight: 800;">Müsait (Boş)</span>
+                                    <span ng-if="selectedItem.isReserved && isMyReservation(selectedItem)" style="color: var(--ray-blue); font-weight: 800;">Sizin Rezervasyonunuz</span>
+                                    <span ng-if="selectedItem.isReserved && !isMyReservation(selectedItem)" style="color: var(--ray-red); font-weight: 800;">Dolu (Başka Bir Çalışan Tarafından Ayrılmış)</span>
                                 </div>
                             </div>
 
-                            <!-- IF EMPTY -> RESERVE BUTTON -->
+                            <!-- AVAILABLE: RESERVE FORM -->
                             <div ng-if="!selectedItem.isReserved">
                                 <form ng-submit="createReservation()">
                                     <div class="form-group">
-                                        <label>Saat Aralığı</label>
+                                        <label>Çalışma Saat Dilimi</label>
                                         <select class="form-control" ng-model="bookingForm.timeSlot" ng-options="t for t in timeSlots"></select>
                                     </div>
                                     <div class="form-group">
                                         <label>Not (İsteğe Bağlı)</label>
-                                        <input type="text" class="form-control" ng-model="bookingForm.note" placeholder="Örn: Günlük çalışma">
+                                        <input type="text" class="form-control" ng-model="bookingForm.note" placeholder="Örn: Ofis çalışma günü">
                                     </div>
                                     <button type="submit" class="btn btn-ray-blue btn-lg" style="width: 100%; margin-top: 6px;">
-                                        {{selectedItem.code}} Koltuğunu Rezerve Et
+                                        {{selectedItem.code}} Masasını Ayırt
                                     </button>
                                 </form>
                             </div>
 
-                            <!-- IF RESERVED (RED) -> SHOW WHO BOOKED IT & CANCEL BUTTON -->
-                            <div ng-if="selectedItem.isReserved">
-                                <div style="padding: 14px; border-radius: 10px; background: var(--ray-red-soft); border: 1px solid rgba(255,0,37,0.25); margin-bottom: 14px;">
-                                    <div style="font-size: 12px; font-weight: 800; color: var(--ray-red); text-transform: uppercase; margin-bottom: 4px;">
-                                        Bu Koltuk Rezerve Edilmiş
+                            <!-- RESERVED BY CURRENT USER -->
+                            <div ng-if="selectedItem.isReserved && isMyReservation(selectedItem)">
+                                <div style="padding: 14px; border-radius: 14px; background: var(--ray-blue-soft); margin-bottom: 14px; font-size: 13px;">
+                                    <div style="font-weight: 800; color: var(--ray-blue); margin-bottom: 4px;">
+                                        {{selectedItem.reservation.status === 'CheckedIn' ? '✅ Ofis Check-In Doğrulandı' : '⏳ Ofis Check-In Bekleniyor'}}
                                     </div>
-                                    <div style="font-size: 15px; font-weight: 800; color: var(--text-main);">
-                                        {{selectedItem.reservation.userFullName}}
-                                    </div>
-                                    <div style="font-size: 12.5px; color: var(--text-secondary); margin-top: 2px;">
-                                        {{selectedItem.reservation.timeSlot}}
-                                    </div>
-                                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;" ng-if="selectedItem.reservation.note">
-                                        Not: {{selectedItem.reservation.note}}
+                                    <div style="color: var(--text-secondary);">
+                                        {{selectedItem.reservation.status === 'CheckedIn'
+                                            ? 'Masanız doğrulandı, şu anda ofiste aktif görünüyorsunuz.'
+                                            : 'Ofise ulaştığınızda Check-In yaparak masanızı doğrulayabilirsiniz.'}}
                                     </div>
                                 </div>
 
-                                <button class="btn btn-ray-red btn-lg"
-                                        style="width: 100%;"
-                                        ng-if="selectedItem.reservation.userId === currentUser.id || currentUser.role === 'Admin'"
-                                        ng-click="cancelReservation(selectedItem.reservation.id)">
-                                    Rezervasyonu İptal Et (Boşa Çıkar)
-                                </button>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <button class="btn btn-ray-blue btn-lg"
+                                            ng-if="selectedItem.reservation.status !== 'CheckedIn'"
+                                            ng-click="switchTab('checkIn')">
+                                        Check-In Ekranına Git
+                                    </button>
+                                    <button class="btn btn-soft-red"
+                                            ng-click="cancelReservation(selectedItem.reservation.id)">
+                                        Rezervasyonu İptal Et
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- RESERVED BY SOMEONE ELSE (PRIVACY PROTECTED FOR NORMAL USERS) -->
+                            <div ng-if="selectedItem.isReserved && !isMyReservation(selectedItem)">
+                                <div style="padding: 16px; border-radius: 14px; background: var(--ray-red-soft); text-align: center;">
+                                    <div style="font-size: 14px; font-weight: 800; color: var(--ray-red); margin-bottom: 4px;">
+                                        Bu Koltuk / Oda Dolu
+                                    </div>
+                                    <div style="font-size: 12.5px; color: var(--text-secondary);">
+                                        Lütfen haritadan beyaz renkli (BOŞ) koltuklardan birini seçiniz.
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </aside>
@@ -298,49 +323,153 @@
                 </div>
             </div>
 
-            <!-- ==================== TAB 2: MY RESERVATIONS ==================== -->
-            <div ng-if="activeTab === 'myReservations'">
-                <div class="panel-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                        <h2 style="font-size: 18px; font-weight: 800;">Rezervasyonlarım</h2>
-                        <button class="btn btn-ray-blue btn-sm" ng-click="switchTab('floorplan')">+ Yeni Koltuk Seç</button>
+            <!-- ==================== TAB 2: OFFICE CHECK-IN & VERIFICATION PAGE ==================== -->
+            <div ng-if="activeTab === 'checkIn'">
+                <div class="panel-card" style="margin-bottom: 22px;">
+                    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px;">
+                        <div>
+                            <span style="font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: var(--ray-blue); letter-spacing: 0.6px;">
+                                UZAKTAN ÇALIŞAN DOĞRULAMA SİSTEMİ
+                            </span>
+                            <h2 style="font-size: 22px; font-weight: 800; margin-top: 2px;">Ofis Check-In &amp; Masa Doğrulama</h2>
+                            <p style="font-size: 13.5px; color: var(--text-secondary);">
+                                Uzaktan ayırttığınız masaya ofise geldiğinizde <strong>Check-In Yap</strong> butonuna basarak rezervasyonunuzu doğrulayın.
+                            </p>
+                        </div>
+                        <button class="btn btn-ray-blue" ng-click="switchTab('floorplan')">+ Yeni Masa Ayırt</button>
                     </div>
+                </div>
 
-                    <div ng-if="myReservations.length === 0" style="text-align: center; padding: 36px; color: var(--text-secondary);">
-                        Henüz aktif bir koltuk veya oda rezervasyonunuz yok.
+                <div ng-if="myReservations.length === 0" class="panel-card" style="text-align: center; padding: 48px 20px;">
+                    <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 8px;">Henüz Ayrılmış Bir Masanız Yok</h3>
+                    <p style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 18px;">
+                        Ofise gideceğiniz günü seçip önceden koltuğunuzu ayırtabilirsiniz.
+                    </p>
+                    <button class="btn btn-ray-blue btn-lg" ng-click="switchTab('floorplan')">Masa Seçimine Git</button>
+                </div>
+
+                <div class="checkin-grid" ng-if="myReservations.length > 0">
+                    <div class="pass-card" ng-repeat="r in myReservations" ng-class="{'verified': r.status === 'CheckedIn'}">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <span style="font-size: 12.5px; font-weight: 800; padding: 4px 12px; border-radius: 99px; background: var(--ray-blue-soft); color: var(--ray-blue);">
+                                    Tarih: {{r.date}}
+                                </span>
+                                <span ng-if="r.status === 'CheckedIn'" style="font-size: 12px; font-weight: 800; color: var(--green-live);">
+                                    ● Doğrulandı (Ofiste)
+                                </span>
+                                <span ng-if="r.status !== 'CheckedIn'" style="font-size: 12px; font-weight: 800; color: #F59E0B;">
+                                    ● Check-In Bekleniyor
+                                </span>
+                            </div>
+
+                            <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px;">
+                                <div style="font-size: 28px; font-weight: 900; color: var(--text-main);">{{r.workspaceCode}}</div>
+                                <div style="font-size: 13px; font-weight: 700; color: var(--text-secondary);">{{r.timeSlot}}</div>
+                            </div>
+                            <div style="font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-bottom: 14px;">
+                                {{r.workspaceName}}
+                            </div>
+
+                            <!-- 3-Step Verification Progress -->
+                            <div class="pass-steps">
+                                <span class="step-dot done"></span>
+                                <span>1. Masa Ayrıldı</span>
+                                <span style="opacity: 0.4;">&rarr;</span>
+                                <span class="step-dot" ng-class="r.status === 'CheckedIn' ? 'done' : 'wait'"></span>
+                                <span>2. Ofis Check-In</span>
+                                <span style="opacity: 0.4;">&rarr;</span>
+                                <span class="step-dot" ng-class="r.status === 'CheckedIn' ? 'done' : ''"></span>
+                                <span>3. Onaylandı</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 6px;">
+                            <button class="btn btn-ray-blue btn-lg"
+                                    style="flex: 1;"
+                                    ng-if="r.status !== 'CheckedIn'"
+                                    ng-click="checkInReservation(r.id)">
+                                📍 Ofisteyim — Check-In Yap
+                            </button>
+                            <div ng-if="r.status === 'CheckedIn'"
+                                 style="flex: 1; padding: 12px; border-radius: 12px; background: var(--green-soft); color: var(--green-live); font-weight: 800; font-size: 13.5px; text-align: center;">
+                                ✓ Masa Rezervasyonu Doğrulandı
+                            </div>
+                            <button class="btn btn-soft-red" ng-click="cancelReservation(r.id)" title="Rezervasyonu İptal Et">
+                                İptal
+                            </button>
+                        </div>
                     </div>
-
-                    <table class="ray-table" ng-if="myReservations.length > 0">
-                        <thead>
-                            <tr>
-                                <th>Tarih</th>
-                                <th>Koltuk / Oda</th>
-                                <th>Saat</th>
-                                <th>Not</th>
-                                <th style="text-align: right;">İşlem</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr ng-repeat="r in myReservations">
-                                <td style="font-weight: 800; color: var(--ray-blue);">{{r.date}}</td>
-                                <td><strong>{{r.workspaceCode}}</strong> &mdash; {{r.workspaceName}}</td>
-                                <td>{{r.timeSlot}}</td>
-                                <td>{{r.note}}</td>
-                                <td style="text-align: right;">
-                                    <button class="btn btn-outline-red btn-sm" ng-click="cancelReservation(r.id)">İptal Et</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
 
-            <!-- ==================== TAB 3: ADMIN DASHBOARD ==================== -->
+            <!-- ==================== TAB 3: MINIMALIST "WHO IS IN THE OFFICE" PAGE ==================== -->
+            <div ng-if="activeTab === 'officePresence'" class="presence-container">
+                <div class="presence-header-card">
+                    <div>
+                        <span style="font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: var(--green-live); letter-spacing: 0.6px;">
+                            ● CANLI OFİS DURUMU ({{selectedDate}})
+                        </span>
+                        <h2 style="font-size: 22px; font-weight: 800; margin-top: 2px;">Bugün Ofiste Kimler Var?</h2>
+                        <p style="font-size: 13px; color: var(--text-secondary);">
+                            Ofise gelerek Check-In yapmış ekip arkadaşlarınızı burada görebilirsiniz.
+                        </p>
+                    </div>
+
+                    <div style="display: flex; gap: 8px; background: var(--bg-subtle); padding: 5px; border-radius: 14px; border: 1px solid var(--border-color);">
+                        <button class="btn btn-sm"
+                                ng-class="presenceFilter === 'CHECKED_IN' ? 'btn-ray-blue' : ''"
+                                ng-style="presenceFilter !== 'CHECKED_IN' && {'background':'transparent','color':'var(--text-secondary)'}"
+                                ng-click="presenceFilter = 'CHECKED_IN'">
+                            Şu An Ofistekiler ({{getCheckedInCount()}})
+                        </button>
+                        <button class="btn btn-sm"
+                                ng-class="presenceFilter === 'ALL' ? 'btn-ray-blue' : ''"
+                                ng-style="presenceFilter !== 'ALL' && {'background':'transparent','color':'var(--text-secondary)'}"
+                                ng-click="presenceFilter = 'ALL'">
+                            Tüm Rezervasyonlular ({{peopleInOffice.length}})
+                        </button>
+                    </div>
+                </div>
+
+                <div ng-if="getFilteredPresence().length === 0" class="panel-card" style="text-align: center; padding: 48px 20px; color: var(--text-secondary);">
+                    Seçili günde henüz ofise Check-In yapmış çalışan bulunmuyor.
+                </div>
+
+                <!-- Minimalist Visual Avatar Grid -->
+                <div class="presence-minimal-grid">
+                    <div class="person-bubble-card" ng-repeat="p in getFilteredPresence()">
+                        <div class="person-avatar-wrap">
+                            <div class="person-avatar-circle">{{p.initials}}</div>
+                            <span class="live-status-dot"
+                                  ng-style="p.status !== 'CheckedIn' && {'background':'#F59E0B'}"
+                                  title="{{p.status === 'CheckedIn' ? 'Ofiste (Check-In Yaptı)' : 'Rezerve (Bekleniyor)'}}"></span>
+                        </div>
+                        <div>
+                            <div style="font-size: 15px; font-weight: 800; color: var(--text-main);">{{p.fullName}}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">{{p.department}}</div>
+                        </div>
+                        <div class="person-desk-pill">
+                            <span>Masa / Oda: {{p.workspaceCode}}</span>
+                        </div>
+                        <div style="font-size: 11px; font-weight: 700;"
+                             ng-style="{'color': p.status === 'CheckedIn' ? 'var(--green-live)' : '#F59E0B'}">
+                            {{p.status === 'CheckedIn' ? '● Ofiste Doğrulandı' : '○ Check-In Bekleniyor'}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TAB 4: ADMIN DASHBOARD ==================== -->
             <div ng-if="activeTab === 'adminDashboard' && adminData">
                 <div class="summary-strip">
                     <div class="stat-card">
                         <h4>Seçili Gün ({{selectedDate}}) Doluluk</h4>
                         <div class="stat-val" style="color: var(--ray-blue);">%{{adminData.kpis.occupancyRate}}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Ofise Gelen (Check-In Doğrulanan)</h4>
+                        <div class="stat-val" style="color: var(--green-live);">{{adminData.kpis.checkedInCount}} Kişi</div>
                     </div>
                     <div class="stat-card">
                         <h4>Dolu Koltuk Sayısı</h4>
@@ -350,52 +479,59 @@
                         <h4>Dolu Toplantı Odası</h4>
                         <div class="stat-val" style="color: var(--ray-blue);">{{adminData.kpis.reservedRooms}} / {{adminData.kpis.totalRooms}}</div>
                     </div>
-                    <div class="stat-card">
-                        <h4>Boş Koltuk &amp; Oda</h4>
-                        <div class="stat-val" style="color: #10B981;">{{adminData.kpis.availableToday}}</div>
-                    </div>
                 </div>
 
                 <div class="panel-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-                        <h3 style="font-size: 17px; font-weight: 800;">Tüm Rezervasyonlar (Admin Kontrol Paneli)</h3>
-                        <input type="text" class="form-control" style="width: 240px; padding: 7px 12px;"
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h3 style="font-size: 18px; font-weight: 800;">Tüm Rezervasyonlar &amp; Check-In Kontrolü (Admin)</h3>
+                            <p style="font-size: 12.5px; color: var(--text-secondary);">Yönetici olarak tüm koltukların kimin tarafından ayrıldığını ve Check-In durumlarını görebilirsiniz.</p>
+                        </div>
+                        <input type="text" class="form-control" style="width: 240px; padding: 8px 12px;"
                                ng-model="adminSearch" placeholder="Çalışan, koltuk veya tarih ara...">
                     </div>
 
-                    <table class="ray-table">
-                        <thead>
-                            <tr>
-                                <th>Tarih</th>
-                                <th>Koltuk / Oda</th>
-                                <th>Çalışan</th>
-                                <th>Departman</th>
-                                <th>Saat &amp; Not</th>
-                                <th>Durum</th>
-                                <th style="text-align: right;">İşlem</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr ng-repeat="r in adminData.allReservations | filter:adminSearch">
-                                <td style="font-weight: 800; color: var(--ray-blue);">{{r.date}}</td>
-                                <td><strong style="color: var(--ray-red);">{{r.workspaceCode}}</strong> ({{r.workspaceName}})</td>
-                                <td style="font-weight: 700;">{{r.userFullName}}</td>
-                                <td>{{r.userDepartment}}</td>
-                                <td>{{r.timeSlot}} &bull; {{r.note}}</td>
-                                <td>
-                                    <span ng-if="r.status !== 'Cancelled'" style="color: var(--ray-red); font-weight: 700;">Dolu (Aktif)</span>
-                                    <span ng-if="r.status === 'Cancelled'" style="color: var(--text-muted);">İptal Edildi</span>
-                                </td>
-                                <td style="text-align: right;">
-                                    <button class="btn btn-outline-red btn-sm"
-                                            ng-if="r.status !== 'Cancelled'"
-                                            ng-click="cancelReservation(r.id)">
-                                        İptal Et
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="ray-table">
+                            <thead>
+                                <tr>
+                                    <th>Tarih</th>
+                                    <th>Koltuk / Oda</th>
+                                    <th>Çalışan</th>
+                                    <th>Departman</th>
+                                    <th>Saat &amp; Not</th>
+                                    <th>Doğrulama Durumu</th>
+                                    <th style="text-align: right;">Yönetici İşlemi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="r in adminData.allReservations | filter:adminSearch">
+                                    <td style="font-weight: 800; color: var(--ray-blue);">{{r.date}}</td>
+                                    <td><strong style="color: var(--ray-red);">{{r.workspaceCode}}</strong> ({{r.workspaceName}})</td>
+                                    <td style="font-weight: 700;">{{r.userFullName}}</td>
+                                    <td>{{r.userDepartment}}</td>
+                                    <td>{{r.timeSlot}} &bull; {{r.note}}</td>
+                                    <td>
+                                        <span ng-if="r.status === 'CheckedIn'" style="color: var(--green-live); font-weight: 800;">✓ Ofiste (Check-In Yaptı)</span>
+                                        <span ng-if="r.status === 'Active'" style="color: #F59E0B; font-weight: 800;">⏳ Rezerve (Check-In Bekleniyor)</span>
+                                        <span ng-if="r.status === 'Cancelled'" style="color: var(--text-muted);">İptal Edildi</span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <button class="btn btn-soft-blue btn-sm"
+                                                ng-if="r.status === 'Active'"
+                                                ng-click="checkInReservation(r.id)">
+                                            Check-In Onayla
+                                        </button>
+                                        <button class="btn btn-soft-red btn-sm"
+                                                ng-if="r.status !== 'Cancelled'"
+                                                ng-click="cancelReservation(r.id)">
+                                            İptal Et
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
