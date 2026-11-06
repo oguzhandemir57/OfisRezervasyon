@@ -388,6 +388,8 @@ public class ReservationStore
                         w.GridY,
                         w.GridW,
                         w.GridH,
+                        w.CanvasX,
+                        w.CanvasY,
                         w.IsActive,
                         IsReserved = res != null,
                         Reservation = res == null ? null : new
@@ -782,6 +784,11 @@ public class ReservationStore
                 .OrderBy(w => w.GridH)
                 .ToList();
 
+            int existingCanvasX = allDeskSeats.FirstOrDefault()?.CanvasX ?? -1;
+            int existingCanvasY = allDeskSeats.FirstOrDefault()?.CanvasY ?? -1;
+            int canvasX = req.CanvasX ?? existingCanvasX;
+            int canvasY = req.CanvasY ?? existingCanvasY;
+
             int nextWsId = _data.Workspaces.Any() ? _data.Workspaces.Max(w => w.Id) + 1 : 1;
 
             for (int s = 1; s <= targetSeats; s++)
@@ -794,6 +801,8 @@ public class ReservationStore
                     existingSeat.Orientation = orientation;
                     existingSeat.GridX = side;
                     existingSeat.GridY = row;
+                    existingSeat.CanvasX = canvasX;
+                    existingSeat.CanvasY = canvasY;
                     existingSeat.Code = code;
                     existingSeat.Name = BuildSeatName(req.FloorId, req.DeskNo, s, code);
                     if (req.Features != null && req.Features.Count > 0)
@@ -822,6 +831,8 @@ public class ReservationStore
                         GridY = row,
                         GridW = req.DeskNo,
                         GridH = s,
+                        CanvasX = canvasX,
+                        CanvasY = canvasY,
                         IsActive = true
                     });
                 }
@@ -860,6 +871,8 @@ public class ReservationStore
             string orientation = (req.Orientation == "vertical") ? "vertical" : "horizontal";
             int side = (req.GridX == 1 || req.GridX == 2) ? req.GridX : ((nextDeskNo % 2 == 1) ? 1 : 2);
             int row = (nextDeskNo - 1) / 2 + 1;
+            int canvasX = req.CanvasX ?? (side == 1 ? 6 : 54);
+            int canvasY = req.CanvasY ?? Math.Min(82, (row - 1) * 18 + 6);
             int nextWsId = _data.Workspaces.Any() ? _data.Workspaces.Max(w => w.Id) + 1 : 1;
 
             for (int s = 1; s <= seatCount; s++)
@@ -884,6 +897,8 @@ public class ReservationStore
                     GridY = row,
                     GridW = nextDeskNo,
                     GridH = s,
+                    CanvasX = canvasX,
+                    CanvasY = canvasY,
                     IsActive = true
                 });
             }

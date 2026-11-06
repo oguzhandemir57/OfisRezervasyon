@@ -36,6 +36,8 @@ public class WorkspaceItem
     public int GridY { get; set; } // Row number (1..N)
     public int GridW { get; set; } = 1; // DeskNo
     public int GridH { get; set; } = 1; // SeatIndex (1..M)
+    public int CanvasX { get; set; } = -1; // 2D Square Canvas X% (0..82)
+    public int CanvasY { get; set; } = -1; // 2D Square Canvas Y% (0..82)
     public bool IsActive { get; set; } = true;
 }
 
@@ -121,6 +123,8 @@ public class UpdateDeskGroupRequest
     public string Orientation { get; set; } = "horizontal"; // "horizontal" or "vertical"
     public int GridX { get; set; } = 1; // 1 = Sol Cephe, 2 = Sağ Cephe
     public int GridY { get; set; } = 1; // Row index
+    public int? CanvasX { get; set; }
+    public int? CanvasY { get; set; }
     public List<string>? Features { get; set; }
 }
 
@@ -130,6 +134,8 @@ public class AddDeskGroupRequest
     public int SeatCount { get; set; } = 2;
     public string Orientation { get; set; } = "horizontal";
     public int GridX { get; set; } = 1;
+    public int? CanvasX { get; set; }
+    public int? CanvasY { get; set; }
     public List<string>? Features { get; set; }
 }
 

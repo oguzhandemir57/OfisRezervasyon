@@ -877,13 +877,20 @@
             localStorage.setItem('ray_ofis_static_db_v5', JSON.stringify(db));
         }
 
+        $scope.dismissToast = function (toast) {
+            if (!toast) return;
+            var idx = $scope.toasts.indexOf(toast);
+            if (idx !== -1) {
+                $scope.toasts.splice(idx, 1);
+            }
+        };
+
         $scope.showToast = function (message, isError) {
             var toast = { id: Date.now() + Math.random(), message: message, isError: !!isError };
             $scope.toasts.push(toast);
             $timeout(function () {
-                var idx = $scope.toasts.indexOf(toast);
-                if (idx !== -1) $scope.toasts.splice(idx, 1);
-            }, 3200);
+                $scope.dismissToast(toast);
+            }, 1800);
         };
 
         function formatDateISO(d) {
@@ -940,13 +947,19 @@
                 } else {
                     var deskNo = item.gridW || 1;
                     if (!desksMap[deskNo]) {
+                        var sideCol = item.gridX || ((deskNo % 2 === 1) ? 1 : 2);
+                        var rowIdx = item.gridY || (Math.floor((deskNo - 1) / 2) + 1);
+                        var defaultX = (sideCol === 1) ? 5 : 53;
+                        var defaultY = Math.min(6 + (rowIdx - 1) * 18, 78);
                         desksMap[deskNo] = {
                             deskNo: deskNo,
                             floorId: item.floorId || $scope.selectedFloorId || 1,
                             title: 'MASA ' + deskNo,
                             orientation: item.orientation || 'horizontal',
-                            gridX: item.gridX || ((deskNo % 2 === 1) ? 1 : 2),
-                            gridY: item.gridY || (Math.floor((deskNo - 1) / 2) + 1),
+                            gridX: sideCol,
+                            gridY: rowIdx,
+                            canvasX: (typeof item.canvasX === 'number' && item.canvasX >= 0) ? item.canvasX : defaultX,
+                            canvasY: (typeof item.canvasY === 'number' && item.canvasY >= 0) ? item.canvasY : defaultY,
                             specBadge: (deskNo % 2 === 1) ? 'Yükseklik Ayarlı' : 'Geniş Yüzey',
                             monitorBadge: (deskNo <= 4) ? 'Çift Monitör' : (deskNo <= 7 ? '34" UltraWide' : '4K Ekran'),
                             seats: []
@@ -963,6 +976,13 @@
             }).sort(function (a, b) { return a.deskNo - b.deskNo; });
 
             $scope.designerDesks = allDesks;
+
+            if ($scope.selectedCanvasDesk) {
+                var foundSelected = allDesks.find(function (d) { return d.deskNo === $scope.selectedCanvasDesk.deskNo; });
+                $scope.selectedCanvasDesk = foundSelected || (allDesks.length > 0 ? allDesks[0] : null);
+            } else if (allDesks.length > 0) {
+                $scope.selectedCanvasDesk = allDesks[0];
+            }
 
             var leftDesks = allDesks.filter(function (d) { return d.gridX !== 2; });
             var rightDesks = allDesks.filter(function (d) { return d.gridX === 2; });
@@ -1292,22 +1312,30 @@
                 });
         };
 
-        function updateDeskGroupConfig(desk, newSeatCount, newOrientation, newGridX) {
+        function updateDeskGroupConfig(desk, newSeatCount, newOrientation, newGridX, newCanvasX, newCanvasY, silentToast) {
             if (!desk) return;
             var targetSeats = Math.min(Math.max(parseInt(newSeatCount) || 2, 1), 8);
+            var cX = (typeof newCanvasX === 'number') ? newCanvasX : (typeof desk.canvasX === 'number' ? desk.canvasX : -1);
+            var cY = (typeof newCanvasY === 'number') ? newCanvasY : (typeof desk.canvasY === 'number' ? desk.canvasY : -1);
+            var derivedGridX = newGridX || (cX >= 45 ? 2 : 1);
+
             var payload = {
                 floorId: desk.floorId || $scope.selectedFloorId || 1,
                 deskNo: desk.deskNo,
                 seatCount: targetSeats,
                 orientation: newOrientation || desk.orientation || 'horizontal',
-                gridX: newGridX || desk.gridX || 1,
-                gridY: desk.gridY || 1
+                gridX: derivedGridX,
+                gridY: desk.gridY || 1,
+                canvasX: cX,
+                canvasY: cY
             };
 
             $http.post('/api/admin/desks/update', payload)
                 .then(function (res) {
                     if (res.data && res.data.success) {
-                        $scope.showToast(res.data.message, false);
+                        if (!silentToast) {
+                            $scope.showToast(res.data.message, false);
+                        }
                         loadWorkspaces();
                     }
                 })
@@ -1324,6 +1352,8 @@
                             existing.isActive = true;
                             existing.orientation = payload.orientation;
                             existing.gridX = payload.gridX;
+                            existing.canvasX = payload.canvasX;
+                            existing.canvasY = payload.canvasY;
                             existing.code = code;
                             existing.name = buildSeatNameClient(payload.floorId, payload.deskNo, s, code);
                         } else {
@@ -1341,6 +1371,8 @@
                                 gridY: payload.gridY,
                                 gridW: payload.deskNo,
                                 gridH: s,
+                                canvasX: payload.canvasX,
+                                canvasY: payload.canvasY,
                                 isActive: true
                             });
                         }
@@ -1351,13 +1383,15 @@
                         }
                     });
                     saveFallbackStore(db);
-                    $scope.showToast('Masa ' + payload.deskNo + ' güncellendi: ' + targetSeats + ' Kişilik (' + (payload.orientation === 'vertical' ? 'Dikine' : 'Yatay') + ')', false);
+                    if (!silentToast) {
+                        $scope.showToast('Masa ' + payload.deskNo + ' güncellendi: ' + targetSeats + ' Kişilik (' + (payload.orientation === 'vertical' ? 'Dikine' : 'Yatay') + ')', false);
+                    }
                     loadWorkspaces();
                 });
         }
 
         $scope.setDeskOrientation = function (desk, orientation) {
-            updateDeskGroupConfig(desk, desk.seats.length, orientation, desk.gridX);
+            updateDeskGroupConfig(desk, desk.seats.length, orientation, desk.gridX, desk.canvasX, desk.canvasY, false);
         };
 
         $scope.changeDeskSeatCount = function (desk, newCount) {
@@ -1365,26 +1399,70 @@
                 $scope.showToast('Bir masa en az 1, en fazla 8 kişilik olabilir.', true);
                 return;
             }
-            updateDeskGroupConfig(desk, newCount, desk.orientation, desk.gridX);
+            updateDeskGroupConfig(desk, newCount, desk.orientation, desk.gridX, desk.canvasX, desk.canvasY, false);
         };
 
         $scope.setDeskSide = function (desk, gridX) {
-            updateDeskGroupConfig(desk, desk.seats.length, desk.orientation, gridX);
+            updateDeskGroupConfig(desk, desk.seats.length, desk.orientation, gridX, desk.canvasX, desk.canvasY, false);
         };
 
-        $scope.addDeskToFloor = function () {
+        // ==================== SQUARE FLOOR CANVAS DRAG & DROP + CLICK TO CONFIGURE ====================
+        var paletteDragMeta = { orientation: 'horizontal', seatCount: 2 };
+        $scope.draggingDesk = null;
+        var dragMovedSignificantly = false;
+
+        $scope.onPaletteDragStart = function (ev, orientation, seatCount) {
+            paletteDragMeta = {
+                orientation: orientation || 'horizontal',
+                seatCount: parseInt(seatCount) || 2
+            };
+            if (ev && ev.dataTransfer) {
+                ev.dataTransfer.setData('text/plain', JSON.stringify(paletteDragMeta));
+            }
+        };
+
+        $scope.onCanvasDrop = function (ev) {
+            if (ev) ev.preventDefault();
+            var canvasEl = document.getElementById('squareFloorCanvas');
+            var dropX = 25;
+            var dropY = 25;
+            if (canvasEl && ev) {
+                var rect = canvasEl.getBoundingClientRect();
+                var rawX = ((ev.clientX - rect.left - 60) / rect.width) * 100;
+                var rawY = ((ev.clientY - rect.top - 40) / rect.height) * 100;
+                dropX = Math.round(Math.min(Math.max(rawX, 3), 75));
+                dropY = Math.round(Math.min(Math.max(rawY, 5), 80));
+            }
+            addDeskToCanvasAt(paletteDragMeta.orientation, paletteDragMeta.seatCount, dropX, dropY);
+        };
+
+        $scope.addDeskToFloorQuick = function (orientation, seatCount) {
+            var countOnFloor = ($scope.designerDesks || []).length;
+            var dropX = (countOnFloor % 2 === 0) ? 10 : 52;
+            var dropY = Math.min(8 + Math.floor(countOnFloor / 2) * 18, 76);
+            addDeskToCanvasAt(orientation || 'horizontal', seatCount || 2, dropX, dropY);
+        };
+
+        function addDeskToCanvasAt(orientation, seatCount, canvasX, canvasY) {
             var payload = {
                 floorId: $scope.selectedFloorId || 1,
-                seatCount: parseInt($scope.newDeskForm.seatCount) || 3,
-                orientation: $scope.newDeskForm.orientation || 'horizontal',
-                gridX: parseInt($scope.newDeskForm.gridX) || 1
+                seatCount: parseInt(seatCount) || 2,
+                orientation: orientation || 'horizontal',
+                gridX: canvasX >= 45 ? 2 : 1,
+                canvasX: canvasX,
+                canvasY: canvasY
             };
 
             $http.post('/api/admin/desks/add', payload)
                 .then(function (res) {
                     if (res.data && res.data.success) {
-                        $scope.showToast(res.data.message, false);
+                        $scope.showToast(res.data.message + ' (Koltuk sayısını ayarlamak için masaya tıklayın)', false);
                         loadWorkspaces();
+                        $timeout(function () {
+                            if ($scope.designerDesks && $scope.designerDesks.length > 0) {
+                                $scope.selectedCanvasDesk = $scope.designerDesks[$scope.designerDesks.length - 1];
+                            }
+                        }, 180);
                     }
                 })
                 .catch(function () {
@@ -1408,13 +1486,90 @@
                             gridY: Math.floor((nextDeskNo - 1) / 2) + 1,
                             gridW: nextDeskNo,
                             gridH: s,
+                            canvasX: payload.canvasX,
+                            canvasY: payload.canvasY,
                             isActive: true
                         });
                     }
                     saveFallbackStore(db);
-                    $scope.showToast('Yeni Masa ' + nextDeskNo + ' (' + payload.seatCount + ' Kişilik) eklendi!', false);
+                    $scope.showToast('Masa ' + nextDeskNo + ' kare alana yerleştirildi!', false);
                     loadWorkspaces();
+                    $timeout(function () {
+                        if ($scope.designerDesks && $scope.designerDesks.length > 0) {
+                            $scope.selectedCanvasDesk = $scope.designerDesks[$scope.designerDesks.length - 1];
+                        }
+                    }, 120);
                 });
+        }
+
+        $scope.selectCanvasDesk = function (desk, $event) {
+            if ($event) {
+                $event.stopPropagation();
+            }
+            if (dragMovedSignificantly) {
+                dragMovedSignificantly = false;
+                return;
+            }
+            $scope.selectedCanvasDesk = desk;
+        };
+
+        $scope.startCanvasDeskDrag = function ($event, desk) {
+            if (!desk) return;
+            var canvasEl = document.getElementById('squareFloorCanvas');
+            if (!canvasEl) return;
+
+            $scope.selectedCanvasDesk = desk;
+            $scope.draggingDesk = desk;
+            dragMovedSignificantly = false;
+
+            var isTouch = ($event.type === 'touchstart');
+            var startClientX = isTouch ? $event.touches[0].clientX : $event.clientX;
+            var startClientY = isTouch ? $event.touches[0].clientY : $event.clientY;
+            var startCanvasX = desk.canvasX;
+            var startCanvasY = desk.canvasY;
+            var rect = canvasEl.getBoundingClientRect();
+
+            function onMove(moveEv) {
+                var curX = (moveEv.touches && moveEv.touches.length > 0) ? moveEv.touches[0].clientX : moveEv.clientX;
+                var curY = (moveEv.touches && moveEv.touches.length > 0) ? moveEv.touches[0].clientY : moveEv.clientY;
+                var dxPx = curX - startClientX;
+                var dyPx = curY - startClientY;
+
+                if (Math.abs(dxPx) > 4 || Math.abs(dyPx) > 4) {
+                    dragMovedSignificantly = true;
+                }
+
+                var newX = Math.round(startCanvasX + (dxPx / rect.width) * 100);
+                var newY = Math.round(startCanvasY + (dyPx / rect.height) * 100);
+                desk.canvasX = Math.min(Math.max(newX, 2), 78);
+                desk.canvasY = Math.min(Math.max(newY, 4), 82);
+                $scope.$applyAsync();
+            }
+
+            function onUp() {
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onUp);
+
+                $scope.$applyAsync(function () {
+                    $scope.draggingDesk = null;
+                    if (dragMovedSignificantly) {
+                        var newSide = desk.canvasX >= 45 ? 2 : 1;
+                        updateDeskGroupConfig(desk, desk.seats.length, desk.orientation, newSide, desk.canvasX, desk.canvasY, true);
+                        $scope.showToast(desk.title + ' yeni konumuna yerleştirildi.', false);
+                    }
+                });
+            }
+
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+            window.addEventListener('touchmove', onMove, { passive: false });
+            window.addEventListener('touchend', onUp);
+        };
+
+        $scope.addDeskToFloor = function () {
+            $scope.addDeskToFloorQuick($scope.newDeskForm.orientation || 'horizontal', parseInt($scope.newDeskForm.seatCount) || 3);
         };
 
         $scope.deleteDeskModule = function (desk) {
