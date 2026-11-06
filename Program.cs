@@ -116,4 +116,10 @@ app.MapGet("/api/admin/dashboard", (string? date, ReservationStore store) =>
     return Results.Ok(store.GetAdminDashboard(targetDate));
 });
 
+// AI Chatbot Endpoint (Conversational Reservation & Check-In Assistant)
+app.MapPost("/api/ai/chat", (AiChatRequest req, ReservationStore store) =>
+{
+    return Results.Ok(store.ProcessAiChat(req));
+});
+
 app.Run();

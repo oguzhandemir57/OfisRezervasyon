@@ -105,6 +105,9 @@
                     <button class="nav-tab admin-tab" ng-if="currentUser.role === 'Admin'" ng-class="{'active': activeTab === 'adminDashboard'}" ng-click="switchTab('adminDashboard')">
                         <span>Admin</span>
                     </button>
+                    <button class="nav-tab" ng-click="toggleAiChat()" style="color: var(--ray-blue);">
+                        <span>🤖 AI Asistan</span>
+                    </button>
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -536,6 +539,46 @@
             </div>
 
         </main>
+
+        <!-- ==================== RAY AI CHATBOT FLOATING WIDGET ==================== -->
+        <button type="button" class="ai-fab-btn" ng-click="toggleAiChat()">
+            <span class="ai-fab-pulse"></span>
+            <span>{{aiChatOpen ? '✕ Asistanı Kapat' : '🤖 RAY AI Asistan'}}</span>
+        </button>
+
+        <div class="ai-chat-window" ng-if="aiChatOpen">
+            <div class="ai-chat-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="ai-avatar-badge">🤖</div>
+                    <div>
+                        <div style="font-size: 14.5px; font-weight: 800;">RAY Yapay Zeka Asistanı</div>
+                        <div style="font-size: 11px; opacity: 0.85;">Konuşarak Rezervasyon &amp; Check-In</div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm" style="background: rgba(255,255,255,0.16); color: #fff; padding: 5px 10px;" ng-click="toggleAiChat()">✕</button>
+            </div>
+
+            <div class="ai-chat-messages" id="aiChatMessagesBox">
+                <div class="chat-msg" ng-repeat="m in aiMessages track by $index" ng-class="m.sender">
+                    {{m.text}}
+                </div>
+                <div class="chat-msg bot" ng-if="aiTyping" style="font-style: italic; opacity: 0.75;">
+                    RAY AI düşünüyor...
+                </div>
+            </div>
+
+            <div class="ai-suggestions-strip">
+                <button type="button" class="ai-chip" ng-repeat="s in aiSuggestions track by $index" ng-click="sendAiQuickChip(s)">
+                    {{s}}
+                </button>
+            </div>
+
+            <form class="ai-chat-input-bar" ng-submit="sendAiMessage()">
+                <input type="text" ng-model="aiInputText" placeholder="Örn: Yarın 4A koltuğunu ayırt veya Check-In yap..." autocomplete="off">
+                <button type="submit" class="btn btn-ray-blue btn-sm" style="padding: 0 16px;">Gönder</button>
+            </form>
+        </div>
+
     </div>
 
 </body>

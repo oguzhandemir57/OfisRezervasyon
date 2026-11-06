@@ -21,7 +21,6 @@ public class WorkspaceItem
     public string Zone { get; set; } = string.Empty;
     public int Capacity { get; set; } = 1;
     public List<string> Features { get; set; } = new();
-    // Coordinates on the interactive office floor plan (percentage/grid units)
     public int GridX { get; set; }
     public int GridY { get; set; }
     public int GridW { get; set; } = 1;
@@ -66,4 +65,11 @@ public class SaveWorkspaceRequest
     public int Capacity { get; set; } = 1;
     public List<string> Features { get; set; } = new();
     public bool IsActive { get; set; } = true;
+}
+
+public class AiChatRequest
+{
+    public int UserId { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string SelectedDate { get; set; } = string.Empty;
 }
