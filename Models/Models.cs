@@ -74,6 +74,7 @@ public class AiChatRequest
     public string Message { get; set; } = string.Empty;
     public string SelectedDate { get; set; } = string.Empty;
     public bool ReplaceExisting { get; set; } = false;
+    public string? GeminiApiKey { get; set; }
 }
 
 public class AiActionButton

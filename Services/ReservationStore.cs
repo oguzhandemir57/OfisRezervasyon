@@ -1,3 +1,5 @@
+using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using RayOfisRezervasyon.Models;
@@ -520,17 +522,27 @@ public class ReservationStore
         }
     }
 
-    // ==================== CONVERSATIONAL AI CHATBOT ENGINE ====================
-    public object ProcessAiChat(AiChatRequest req)
+    private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(15) };
+
+    // ==================== GEMINI FREE + CONVERSATIONAL AI CHATBOT ENGINE ====================
+    public async Task<object> ProcessAiChatAsync(AiChatRequest req)
     {
+        User user;
+        string text;
+        string lower;
+        string todayStr;
+        string targetDate;
+        string timeSlot;
+        HashSet<int> reservedIds;
+
         lock (_lock)
         {
-            var user = _data.Users.FirstOrDefault(u => u.Id == req.UserId) ?? _data.Users.First();
-            var text = (req.Message ?? "").Trim();
-            var lower = text.ToLower(new System.Globalization.CultureInfo("tr-TR"));
-            var todayStr = DateTime.Today.ToString("yyyy-MM-dd");
+            user = _data.Users.FirstOrDefault(u => u.Id == req.UserId) ?? _data.Users.First();
+            text = (req.Message ?? "").Trim();
+            lower = text.ToLower(new System.Globalization.CultureInfo("tr-TR"));
+            todayStr = DateTime.Today.ToString("yyyy-MM-dd");
 
-            string targetDate = string.IsNullOrWhiteSpace(req.SelectedDate)
+            targetDate = string.IsNullOrWhiteSpace(req.SelectedDate)
                 ? todayStr
                 : req.SelectedDate;
 
@@ -547,7 +559,7 @@ public class ReservationStore
                     targetDate = dateMatch.Groups[1].Value;
             }
 
-            string timeSlot = "Tam Gün (09:00 - 18:00)";
+            timeSlot = "Tam Gün (09:00 - 18:00)";
             if (lower.Contains("öğleden önce") || lower.Contains("sabah"))
                 timeSlot = "Öğleden Önce (09:00 - 13:00)";
             else if (lower.Contains("öğleden sonra"))
@@ -568,25 +580,19 @@ public class ReservationStore
                 };
             }
 
-            WorkspaceItem? matchedWorkspace = null;
-            var roomMatch = Regex.Match(lower, @"oda[\s\-]*([1-4])");
-            if (roomMatch.Success)
-            {
-                string code = "ODA-" + roomMatch.Groups[1].Value;
-                matchedWorkspace = _data.Workspaces.FirstOrDefault(w => w.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
-            }
-            else
-            {
-                var seatMatch = Regex.Match(lower, @"\b(10|[1-9])\s*([ab])\b");
-                if (seatMatch.Success)
-                {
-                    string code = (seatMatch.Groups[1].Value + seatMatch.Groups[2].Value).ToUpper();
-                    matchedWorkspace = _data.Workspaces.FirstOrDefault(w => w.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
-                }
-            }
+            reservedIds = _data.Reservations
+                .Where(r => r.Date == targetDate && r.Status != "Cancelled")
+                .Select(r => r.WorkspaceItemId)
+                .ToHashSet();
 
-            // INTENT A: CHECK-IN / VERIFICATION (ONLY TODAY ALLOWED!)
-            if (lower.Contains("check") || lower.Contains("ofisteyim") || lower.Contains("ofise geldim") || lower.Contains("doğrula") || lower.Contains("dogrula"))
+            bool isQuestionAboutRulesOrHowTo =
+                lower.Contains("nasıl") || lower.Contains("nasil") ||
+                lower.Contains("nedir") || lower.Contains("kural") ||
+                lower.Contains("ne işe") || lower.Contains("hakkında");
+
+            // INTENT A: DIRECT CHECK-IN ACTION (ONLY TODAY ALLOWED!)
+            if (!isQuestionAboutRulesOrHowTo &&
+                (lower.Contains("check") || lower.Contains("ofisteyim") || lower.Contains("ofise geldim") || lower.Contains("doğrula") || lower.Contains("dogrula")))
             {
                 var pendingToday = _data.Reservations
                     .FirstOrDefault(r => r.UserId == user.Id && r.Date == todayStr && r.Status == "Active");
@@ -653,7 +659,7 @@ public class ReservationStore
 
                 return new
                 {
-                    replyHtml = $"Bugün (<strong>{todayStr}</strong>) için aktif bir masa rezervasyonunuz bulunmüyor. Önce bugün için boş bir masa seçmek ister misiniz?",
+                    replyHtml = $"Bugün (<strong>{todayStr}</strong>) için aktif bir masa rezervasyonunuz bulunmuyor. Önce bugün için boş bir masa seçmek ister misiniz?",
                     action = "NONE",
                     targetDate = todayStr,
                     buttons = new List<AiActionButton>
@@ -663,8 +669,8 @@ public class ReservationStore
                 };
             }
 
-            // INTENT B: CANCEL RESERVATION
-            if (lower.Contains("iptal") || lower.Contains("sil"))
+            // INTENT B: DIRECT CANCEL RESERVATION
+            if (!isQuestionAboutRulesOrHowTo && (lower.Contains("iptal") || lower.Contains("rezervasyonumu sil")))
             {
                 var activeUserRes = _data.Reservations
                     .Where(r => r.UserId == user.Id && r.Status != "Cancelled")
@@ -704,7 +710,7 @@ public class ReservationStore
             }
 
             // INTENT C: WHO IS IN THE OFFICE
-            if (lower.Contains("kimler") || lower.Contains("kim var") || lower.Contains("ofisteki"))
+            if (lower.Contains("kimler var") || lower.Contains("kim var") || lower.Contains("ofistekiler"))
             {
                 var checkedInPeople = _data.Reservations
                     .Where(r => r.Date == targetDate && r.Status == "CheckedIn")
@@ -712,7 +718,7 @@ public class ReservationStore
                     {
                         var u = _data.Users.FirstOrDefault(x => x.Id == r.UserId);
                         var w = _data.Workspaces.FirstOrDefault(x => x.Id == r.WorkspaceItemId);
-                        return $"<strong>{u?.FullName}</strong> (<strong>{w?.Code}</strong>)";
+                        return $"<strong>{u?.FullName}</strong> (<strong>{w?.Code}</strong> - {u?.Department})";
                     })
                     .ToList();
 
@@ -744,7 +750,7 @@ public class ReservationStore
             }
 
             // INTENT D: MY RESERVATIONS
-            if (lower.Contains("rezervasyonlarım") || lower.Contains("masam ne") || lower.Contains("nerede otur"))
+            if (lower.Contains("rezervasyonlarım") || lower.Contains("masam ne") || lower.Contains("nerede oturuyorum"))
             {
                 var myList = _data.Reservations
                     .Where(r => r.UserId == user.Id && r.Status != "Cancelled")
@@ -785,13 +791,41 @@ public class ReservationStore
                 };
             }
 
-            // INTENT E: SPECIFIC SEAT/ROOM SELECTION (WITH AUTOMATIC OLD RESERVATION CANCELLATION ON SWAP FOR BOTH DESKS & ROOMS)
-            var reservedIds = _data.Reservations
-                .Where(r => r.Date == targetDate && r.Status != "Cancelled")
-                .Select(r => r.WorkspaceItemId)
-                .ToHashSet();
+            // DETECT SPECIFIC WORKSPACE CODE (1A..10B or ODA-1..ODA-4)
+            WorkspaceItem? matchedWorkspace = null;
+            var roomMatch = Regex.Match(lower, @"oda[\s\-]*([1-4])");
+            if (roomMatch.Success)
+            {
+                string code = "ODA-" + roomMatch.Groups[1].Value;
+                matchedWorkspace = _data.Workspaces.FirstOrDefault(w => w.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
+            }
+            else
+            {
+                var seatMatch = Regex.Match(lower, @"\b(10|[1-9])\s*([ab])\b");
+                if (seatMatch.Success)
+                {
+                    string code = (seatMatch.Groups[1].Value + seatMatch.Groups[2].Value).ToUpper();
+                    matchedWorkspace = _data.Workspaces.FirstOrDefault(w => w.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
+                }
+            }
 
-            if (matchedWorkspace != null)
+            bool isAskingAboutFeaturesOrStatus =
+                lower.Contains("özellik") || lower.Contains("ozellik") ||
+                lower.Contains("ne var") || lower.Contains("nedir") ||
+                lower.Contains("boş mu") || lower.Contains("dolu mu") ||
+                lower.Contains("kaç kişilik") || lower.Contains("monitör") ||
+                lower.Contains("monitor") || lower.Contains("cam kenar") ||
+                lower.Contains("yükseklik");
+
+            bool hasBookingVerb =
+                lower.Contains("ayırt") || lower.Contains("ayirt") ||
+                lower.Contains("rezerv") || lower.Contains("seç") ||
+                lower.Contains("değiştir") || lower.Contains("degistir") ||
+                lower.Contains("isterim") || lower.Contains("istiyorum") ||
+                lower.Trim().Length <= 4; // e.g., user just typed "1A" or "ODA-2"
+
+            // INTENT E: DIRECT BOOKING OF A SPECIFIC SEAT/ROOM
+            if (matchedWorkspace != null && (!isAskingAboutFeaturesOrStatus || hasBookingVerb))
             {
                 if (reservedIds.Contains(matchedWorkspace.Id))
                 {
@@ -814,7 +848,6 @@ public class ReservationStore
                     };
                 }
 
-                // Check if user already has an active reservation of the SAME TYPE ("Masa" or "Oda") on targetDate
                 var existingSameDayItems = _data.Reservations
                     .Where(r => r.UserId == user.Id && r.Date == targetDate && r.Status != "Cancelled")
                     .Select(r => new { Res = r, Ws = _data.Workspaces.FirstOrDefault(w => w.Id == r.WorkspaceItemId) })
@@ -897,8 +930,16 @@ public class ReservationStore
                 };
             }
 
-            // INTENT F: LIST AVAILABLE DESKS / ROOMS IN BOLD WITH SELECTION BUTTONS
-            if (lower.Contains("masa") || lower.Contains("koltuk") || lower.Contains("boş") || lower.Contains("bos") || lower.Contains("ayırt") || lower.Contains("ayirt") || lower.Contains("rezerv") || lower.Contains("oda"))
+            // INTENT F: DIRECT COMMAND TO LIST AVAILABLE DESKS / ROOMS IN BOLD WITH SELECTION BUTTONS
+            bool isDirectListOrBookCommand =
+                (lower.Contains("boş masa") || lower.Contains("bos masa") ||
+                 lower.Contains("boş oda") || lower.Contains("bos oda") ||
+                 lower.Contains("masa ayırt") || lower.Contains("masa ayirt") ||
+                 lower.Contains("oda ayırt") || lower.Contains("oda ayirt") ||
+                 lower.Contains("boş koltuk")) &&
+                !isAskingAboutFeaturesOrStatus;
+
+            if (isDirectListOrBookCommand)
             {
                 bool wantsRoom = lower.Contains("oda") || lower.Contains("toplantı");
                 var freeItems = _data.Workspaces
@@ -935,21 +976,310 @@ public class ReservationStore
                     buttons = seatButtons
                 };
             }
-
-            return new
-            {
-                replyHtml = $"Merhaba <strong>{user.FullName}</strong>! Ne yapmak istersiniz? Aşağıdaki butonlardan seçebilirsiniz:",
-                action = "NONE",
-                targetDate = targetDate,
-                buttons = new List<AiActionButton>
-                {
-                    new() { Label = "✨ Bugün Boş Masa Seç", Command = "Bana bugün boş masa ayırt", Style = "blue" },
-                    new() { Label = "🏢 Toplantı Odası Seç", Command = "Bana bugün boş oda ayırt", Style = "outline" },
-                    new() { Label = "📍 Ofisteyim, Check-In Yap", Command = "Ofise geldim, Check-In yap", Style = "blue" },
-                    new() { Label = "👥 Bugün Ofiste Kimler Var?", Command = "Bugün ofiste kimler var?", Style = "outline" }
-                }
-            };
         }
+
+        // ==================== INTENT G: GEMINI FREE AI (SITE KNOWLEDGE + GENERAL QUESTIONS) ====================
+        return await GenerateGeminiResponseAsync(req, user, text, lower, targetDate, todayStr);
+    }
+
+    private string BuildSiteSystemPrompt(User user, string targetDate, string todayStr)
+    {
+        lock (_lock)
+        {
+            var reservedMap = _data.Reservations
+                .Where(r => r.Date == targetDate && r.Status != "Cancelled")
+                .ToDictionary(r => r.WorkspaceItemId, r => r);
+
+            var deskLines = _data.Workspaces
+                .Where(w => w.IsActive)
+                .Select(w =>
+                {
+                    bool isBusy = reservedMap.ContainsKey(w.Id);
+                    string status = isBusy ? "DOLU" : "BOŞ";
+                    string feats = string.Join(", ", w.Features);
+                    return $"- {w.Code} ({w.Name}, Tip: {w.Type}, Kapasite: {w.Capacity}): Durum={status} | Özellikler: [{feats}]";
+                });
+
+            var myActive = _data.Reservations
+                .Where(r => r.UserId == user.Id && r.Status != "Cancelled")
+                .Select(r =>
+                {
+                    var w = _data.Workspaces.FirstOrDefault(x => x.Id == r.WorkspaceItemId);
+                    return $"{r.Date} -> {w?.Code} ({r.Status})";
+                }).ToList();
+
+            var checkedInToday = _data.Reservations
+                .Where(r => r.Date == todayStr && r.Status == "CheckedIn")
+                .Select(r =>
+                {
+                    var u = _data.Users.FirstOrDefault(x => x.Id == r.UserId);
+                    var w = _data.Workspaces.FirstOrDefault(x => x.Id == r.WorkspaceItemId);
+                    return $"{u?.FullName} ({w?.Code})";
+                }).ToList();
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Sen 'RAY Yapay Zeka Asistanı'sın (Google Gemini altyapısıyla çalışıyorsun).");
+            sb.AppendLine("Hem içinde bulunduğun 'RAY OFİS — Masa & Toplantı Odası Rezervasyon Sistemi' web uygulamasını eksiksiz biliyorsun, hem de kullanıcının masa/ofis dışındaki her türlü genel kültür, yazılım, günlük hayat, matematik, yemek tarifi, tavsiye veya sohbet sorularına zekice, samimi ve doğru Türkçe yanıtlar veriyorsun.");
+            sb.AppendLine();
+            sb.AppendLine("=== KULLANICI VE TARİH BİLGİSİ ===");
+            sb.AppendLine($"- Konuştuğun Kullanıcı: {user.FullName} ({user.Department} - {user.Title}, Rol: {user.Role})");
+            sb.AppendLine($"- Bugünün Tarihi: {todayStr} | Seçili Tarih: {targetDate}");
+            sb.AppendLine($"- Kullanıcının Aktif Rezervasyonları: {(myActive.Count > 0 ? string.Join("; ", myActive) : "Yok")}");
+            sb.AppendLine($"- Bugün Ofiste Check-In Yapmış Olanlar: {(checkedInToday.Count > 0 ? string.Join(", ", checkedInToday) : "Henüz kimse Check-In yapmadı")}");
+            sb.AppendLine();
+            sb.AppendLine("=== SİTE KURALLARI VE ÖZELLİKLERİ (RAY OFİS) ===");
+            sb.AppendLine("1. Ofiste 10 adet 2 kişilik masa modülü (1A, 1B ... 10A, 10B toplam 20 koltuk) ve 4 adet Toplantı Odası (ODA-1, ODA-2, ODA-3, ODA-4) vardır.");
+            sb.AppendLine("2. Bir kullanıcı aynı gün içinde en fazla 1 masa ve 1 toplantı odası rezerve edebilir. Aynı güne 2. bir masa veya oda seçerse sistem eski rezervasyonunu otomatik iptal edip yenisiyle değiştirir.");
+            sb.AppendLine("3. Check-In (Ofisteyim doğrulaması) SADECE rezervasyonun olduğu gün (bugün) yapılabilir. Yarın veya ileri tarihli masalar önceden Check-In yapılamaz.");
+            sb.AppendLine("4. Gizlilik gereği normal kullanıcılar rezervasyon ekranında kırmızı (dolu) koltukları kimin aldığını göremez; yalnızca ofise gelip Check-In yapanları 'Ofistekiler' sekmesinde görebilir. Admin ise tüm detayları görür.");
+            sb.AppendLine("5. Rezervasyon yapıldığında Google Takvim ve Outlook Takvim'e ekleme butonları çıkar.");
+            sb.AppendLine();
+            sb.AppendLine($"=== {targetDate} TARİHİ İÇİN MASALAR, ODALAR VE DONANIM ÖZELLİKLERİ ===");
+            sb.AppendLine(string.Join("\n", deskLines));
+            sb.AppendLine();
+            sb.AppendLine("=== YANIT FORMATI KURALLARI ===");
+            sb.AppendLine("- Yanıtlarını her zaman Türkçe, kısa, net ve okunaklı ver (en fazla 3-5 cümle veya maddeli liste).");
+            sb.AppendLine("- Önemli kelimeleri ve masa numaralarını (örn. **1A**, **3B**, **ODA-1**) kalın (**...**) yaz.");
+            sb.AppendLine("- Eğer kullanıcı masa/ofis dışında genel bir soru sorarsa (örn. hava durumu, yemek, kodlama, tarih, sohbet vb.), doğrudan o soruyu en iyi şekilde yanıtla.");
+            return sb.ToString();
+        }
+    }
+
+    private async Task<object> GenerateGeminiResponseAsync(AiChatRequest req, User user, string userMessage, string lower, string targetDate, string todayStr)
+    {
+        string systemPrompt = BuildSiteSystemPrompt(user, targetDate, todayStr);
+        string? apiKey = !string.IsNullOrWhiteSpace(req.GeminiApiKey)
+            ? req.GeminiApiKey!.Trim()
+            : Environment.GetEnvironmentVariable("GEMINI_API_KEY");
+
+        string? aiText = null;
+
+        // 1. Official Google Gemini Free Tier API (if API key provided)
+        if (!string.IsNullOrWhiteSpace(apiKey))
+        {
+            aiText = await TryCallGoogleGeminiApiAsync(apiKey!, systemPrompt, userMessage);
+        }
+
+        // 2. Zero-Key Free Gemini/OpenAI-Compatible LLM Endpoint (works immediately without requiring user setup)
+        if (string.IsNullOrWhiteSpace(aiText))
+        {
+            aiText = await TryCallFreeKeylessLlmAsync(systemPrompt, userMessage);
+        }
+
+        bool usedOffline = false;
+
+        // 3. Built-in Smart Site & General Responder (offline fallback)
+        if (string.IsNullOrWhiteSpace(aiText))
+        {
+            usedOffline = true;
+            aiText = BuildSmartLocalFallbackAnswer(user, userMessage, lower, targetDate, todayStr);
+        }
+
+        string htmlReply = FormatMarkdownToHtml(aiText!);
+        var dynamicButtons = BuildContextualButtons(lower, htmlReply, targetDate, todayStr);
+
+        return new
+        {
+            replyHtml = htmlReply,
+            action = "GEMINI_REPLY",
+            usedOfflineFallback = usedOffline,
+            systemPrompt = usedOffline ? systemPrompt : null,
+            targetDate = targetDate,
+            buttons = dynamicButtons
+        };
+    }
+
+    private async Task<string?> TryCallGoogleGeminiApiAsync(string apiKey, string systemPrompt, string userMessage)
+    {
+        string[] models = new[] { "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash" };
+        foreach (var model in models)
+        {
+            try
+            {
+                var url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={Uri.EscapeDataString(apiKey)}";
+                var payload = new
+                {
+                    system_instruction = new
+                    {
+                        parts = new[] { new { text = systemPrompt } }
+                    },
+                    contents = new[]
+                    {
+                        new
+                        {
+                            role = "user",
+                            parts = new[] { new { text = userMessage } }
+                        }
+                    },
+                    generationConfig = new
+                    {
+                        temperature = 0.7,
+                        maxOutputTokens = 500
+                    }
+                };
+
+                var json = JsonSerializer.Serialize(payload);
+                using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                using var resp = await _http.PostAsync(url, content);
+                if (!resp.IsSuccessStatusCode) continue;
+
+                var respStr = await resp.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(respStr);
+                if (doc.RootElement.TryGetProperty("candidates", out var candidates) &&
+                    candidates.GetArrayLength() > 0)
+                {
+                    var first = candidates[0];
+                    if (first.TryGetProperty("content", out var cObj) &&
+                        cObj.TryGetProperty("parts", out var parts) &&
+                        parts.GetArrayLength() > 0 &&
+                        parts[0].TryGetProperty("text", out var textProp))
+                    {
+                        var textVal = textProp.GetString();
+                        if (!string.IsNullOrWhiteSpace(textVal))
+                            return textVal.Trim();
+                    }
+                }
+            }
+            catch
+            {
+                // Try next model
+            }
+        }
+        return null;
+    }
+
+    private async Task<string?> TryCallFreeKeylessLlmAsync(string systemPrompt, string userMessage)
+    {
+        try
+        {
+            var payload = new
+            {
+                model = "openai",
+                messages = new[]
+                {
+                    new { role = "system", content = systemPrompt },
+                    new { role = "user", content = userMessage }
+                },
+                temperature = 0.7
+            };
+
+            var json = JsonSerializer.Serialize(payload);
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+            using var resp = await _http.PostAsync("https://text.pollinations.ai/openai", content);
+            if (resp.IsSuccessStatusCode)
+            {
+                var respStr = await resp.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(respStr);
+                if (doc.RootElement.TryGetProperty("choices", out var choices) &&
+                    choices.GetArrayLength() > 0 &&
+                    choices[0].TryGetProperty("message", out var msgObj) &&
+                    msgObj.TryGetProperty("content", out var contentProp))
+                {
+                    var textVal = contentProp.GetString();
+                    if (!string.IsNullOrWhiteSpace(textVal))
+                        return textVal.Trim();
+                }
+            }
+        }
+        catch
+        {
+            // Ignore network errors and fall back cleanly
+        }
+        return null;
+    }
+
+    private string BuildSmartLocalFallbackAnswer(User user, string userMessage, string lower, string targetDate, string todayStr)
+    {
+        lock (_lock)
+        {
+            var reservedIds = _data.Reservations
+                .Where(r => r.Date == targetDate && r.Status != "Cancelled")
+                .Select(r => r.WorkspaceItemId)
+                .ToHashSet();
+
+            // Check if asking about specific desk features (dual monitor, window, standing desk, ultrawide)
+            if (lower.Contains("çift monitör") || lower.Contains("cift monitor") || lower.Contains("monitör") ||
+                lower.Contains("cam kenar") || lower.Contains("yükseklik") || lower.Contains("yukseklik") ||
+                lower.Contains("ultrawide") || lower.Contains("özellik") || lower.Contains("ozellik"))
+            {
+                var matchingFree = _data.Workspaces
+                    .Where(w => w.IsActive && !reservedIds.Contains(w.Id))
+                    .Where(w =>
+                        (lower.Contains("çift") && w.Features.Any(f => f.Contains("Çift Monitör", StringComparison.OrdinalIgnoreCase))) ||
+                        (lower.Contains("cam") && w.Features.Any(f => f.Contains("Cam Kenarı", StringComparison.OrdinalIgnoreCase))) ||
+                        ((lower.Contains("yükseklik") || lower.Contains("yukseklik")) && w.Features.Any(f => f.Contains("Yükseklik", StringComparison.OrdinalIgnoreCase))) ||
+                        (lower.Contains("ultrawide") && w.Features.Any(f => f.Contains("UltraWide", StringComparison.OrdinalIgnoreCase))))
+                    .ToList();
+
+                if (matchingFree.Count > 0)
+                {
+                    var codes = string.Join(", ", matchingFree.Select(w => $"**{w.Code}**"));
+                    var sampleFeats = string.Join(", ", matchingFree[0].Features.Take(3));
+                    return $"📅 **{targetDate}** tarihinde aradığınız özelliklere ({sampleFeats}) sahip boş masalarımız: {codes}. Aşağıdaki butonlardan hemen seçip rezerve edebilirsiniz!";
+                }
+            }
+
+            if (lower.Contains("nasıl") || lower.Contains("kural") || lower.Contains("site") || lower.Contains("ne işe"))
+            {
+                return "**RAY OFİS Rezervasyon Sistemi** ile uzaktan çalışırken ofise geleceğiniz günü seçip **2 boyutlu masa haritasından** (çift monitörlü, cam kenarı, yükseklik ayarlı) masanızı veya toplantı odanızı ayırtabilirsiniz.\n• Aynı gün için en fazla **1 masa** ve **1 toplantı odası** alabilirsiniz (değiştirirseniz eskisi otomatik iptal olur).\n• Ofise geldiğiniz gün **Check-In** yaparak yerinizi doğrularsınız ve **Ofistekiler** sayfasında görünürsünüz.";
+            }
+
+            return $"Merhaba **{user.FullName}**! Ben Gemini destekli **RAY Yapay Zeka Asistanıyım**. Size hem ofis masa/oda rezervasyonları, masa donanım özellikleri (**Çift Monitör**, **Cam Kenarı**, **Yükseklik Ayarlı Masa**) ve **Check-In** işlemlerinde, hem de merak ettiğiniz diğer tüm konularda yardımcı olabilirim.";
+        }
+    }
+
+    private List<AiActionButton> BuildContextualButtons(string lower, string htmlReply, string targetDate, string todayStr)
+    {
+        lock (_lock)
+        {
+            var reservedIds = _data.Reservations
+                .Where(r => r.Date == targetDate && r.Status != "Cancelled")
+                .Select(r => r.WorkspaceItemId)
+                .ToHashSet();
+
+            var buttons = new List<AiActionButton>();
+
+            // Extract any free workspace codes mentioned in the AI reply (e.g. 1A, 2B, ODA-1) so user can book them in 1 click!
+            var matches = Regex.Matches(htmlReply, @"\b(10[AB]|[1-9][AB]|ODA-[1-4])\b");
+            var addedCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (Match m in matches)
+            {
+                var code = m.Value.ToUpper();
+                if (addedCodes.Contains(code)) continue;
+                var ws = _data.Workspaces.FirstOrDefault(w => w.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
+                if (ws != null && ws.IsActive && !reservedIds.Contains(ws.Id))
+                {
+                    addedCodes.Add(code);
+                    buttons.Add(new AiActionButton
+                    {
+                        Label = $"🪑 {ws.Code} Seç",
+                        Command = $"{targetDate} için {ws.Code} koltuğunu ayırt",
+                        Style = "blue"
+                    });
+                    if (buttons.Count >= 6) break;
+                }
+            }
+
+            if (buttons.Count == 0)
+            {
+                buttons.Add(new AiActionButton { Label = "✨ Bugün Boş Masa Seç", Command = "Bana bugün boş masa ayırt", Style = "blue" });
+                buttons.Add(new AiActionButton { Label = "📍 Check-In Yap", Command = "Ofise geldim, Check-In yap", Style = "outline" });
+                buttons.Add(new AiActionButton { Label = "👥 Ofiste Kimler Var?", Command = "Bugün ofiste kimler var?", Style = "outline" });
+            }
+
+            return buttons;
+        }
+    }
+
+    private static string FormatMarkdownToHtml(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return "";
+        var encoded = System.Net.WebUtility.HtmlEncode(text.Trim());
+        encoded = Regex.Replace(encoded, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
+        encoded = Regex.Replace(encoded, @"`([^`]+)`", "<code style=\"background:rgba(1,53,235,0.08);padding:1px 5px;border-radius:4px;font-weight:700;\">$1</code>");
+        encoded = encoded.Replace("\r\n", "\n").Replace("\n", "<br>");
+        return encoded;
     }
 
     public object GetAdminDashboard(string date)

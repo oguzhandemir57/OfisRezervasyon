@@ -112,10 +112,11 @@ app.MapGet("/api/admin/dashboard", (string? date, ReservationStore store) =>
     return Results.Ok(store.GetAdminDashboard(targetDate));
 });
 
-// AI Chatbot Endpoint (Conversational Reservation & Check-In Assistant)
-app.MapPost("/api/ai/chat", (AiChatRequest req, ReservationStore store) =>
+// AI Chatbot Endpoint (Gemini Free AI + Conversational Reservation & Check-In Assistant)
+app.MapPost("/api/ai/chat", async (AiChatRequest req, ReservationStore store) =>
 {
-    return Results.Ok(store.ProcessAiChat(req));
+    var result = await store.ProcessAiChatAsync(req);
+    return Results.Ok(result);
 });
 
 app.Run();

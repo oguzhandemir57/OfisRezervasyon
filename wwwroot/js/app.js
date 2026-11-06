@@ -156,20 +156,37 @@
             window.open(outlookUrl, '_blank');
         };
 
-        // ==================== RAY AI CHATBOT STATE ====================
+        // ==================== RAY AI CHATBOT STATE (GEMINI FREE AI) ====================
         $scope.aiState = {
             open: false,
             inputText: '',
-            typing: false
+            typing: false,
+            showKeyConfig: false,
+            geminiKey: localStorage.getItem('ray_gemini_api_key') || ''
+        };
+
+        $scope.toggleGeminiKeyConfig = function () {
+            $scope.aiState.showKeyConfig = !$scope.aiState.showKeyConfig;
+        };
+
+        $scope.saveGeminiKey = function () {
+            var k = ($scope.aiState.geminiKey || '').trim();
+            localStorage.setItem('ray_gemini_api_key', k);
+            $scope.aiState.showKeyConfig = false;
+            if (k) {
+                $scope.showToast('Google Gemini Free API Anahtarı kaydedildi!', false);
+            } else {
+                $scope.showToast('Otomatik Ücretsiz Yapay Zeka modu aktif.', false);
+            }
         };
 
         $scope.aiMessages = [
             {
                 sender: 'bot',
-                html: $sce.trustAsHtml('Merhaba! Ben <strong>RAY Yapay Zeka Asistanınızım</strong> 🤖<br>Yapmak istediğiniz işlemi butonlardan seçebilir veya yazabilirsiniz:'),
+                html: $sce.trustAsHtml('Merhaba! Ben <strong>Gemini</strong> destekli <strong>RAY Yapay Zeka Asistanınızım</strong> 🤖<br>Bana hem <strong>masa/oda özellikleri, rezervasyon ve Check-In</strong> işlemlerini söyleyebilir hem de <strong>masa harici merak ettiğiniz her türlü soruyu</strong> sorabilirsiniz:'),
                 buttons: [
                     { label: '✨ Bana Bugün Boş Masa Ayırt', command: 'Bana bugün boş masa ayırt', style: 'blue' },
-                    { label: '🏢 Toplantı Odası Ayırt', command: 'Bana bugün boş oda ayırt', style: 'outline' },
+                    { label: '🖥️ Çift Monitörlü Masalar Hangileri?', command: 'Çift monitörlü ve cam kenarı boş masalar hangileri?', style: 'outline' },
                     { label: '📍 Ofisteyim, Check-In Yap', command: 'Ofise geldim, Check-In yap', style: 'blue' },
                     { label: '👥 Bugün Ofiste Kimler Var?', command: 'Bugün ofiste kimler var?', style: 'outline' }
                 ]
@@ -208,6 +225,166 @@
             sendMessageToAi(rawText, rawText, false);
         };
 
+        function formatMarkdownClient(text) {
+            if (!text) return '';
+            var safe = String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            safe = safe.replace(/`([^`]+)`/g, '<code style="background:rgba(1,53,235,0.08);padding:1px 5px;border-radius:4px;font-weight:700;">$1</code>');
+            safe = safe.replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
+            return safe;
+        }
+
+        function buildClientSitePrompt(targetDate) {
+            var user = $scope.currentUser || { fullName: 'Misafir', department: 'Ofis', title: 'Çalışan', role: 'Employee' };
+            var deskLines = ($scope.workspaces || []).map(function (w) {
+                var status = w.isReserved ? 'DOLU' : 'BOŞ';
+                var feats = (w.features || []).join(', ');
+                return '- ' + w.code + ' (' + w.name + ', Tip: ' + w.type + ', Kapasite: ' + w.capacity + '): Durum=' + status + ' | Özellikler: [' + feats + ']';
+            }).join('\n');
+
+            var myActive = ($scope.myReservations || []).map(function (r) {
+                return r.date + ' -> ' + r.workspaceCode + ' (' + r.status + ')';
+            }).join('; ') || 'Yok';
+
+            var checkedInPeople = ($scope.peopleInOffice || []).filter(function (p) {
+                return p.status === 'CheckedIn';
+            }).map(function (p) {
+                return p.fullName + ' (' + p.workspaceCode + ')';
+            }).join(', ') || 'Henüz kimse Check-In yapmadı';
+
+            return [
+                "Sen 'RAY Yapay Zeka Asistanı'sın (Google Gemini altyapısıyla çalışıyorsun).",
+                "Hem içinde bulunduğun 'RAY OFİS — Masa & Toplantı Odası Rezervasyon Sistemi' web uygulamasını eksiksiz biliyorsun, hem de kullanıcının masa/ofis dışındaki her türlü genel kültür, yazılım, günlük hayat, matematik, yemek tarifi, tavsiye veya sohbet sorularına zekice, samimi ve doğru Türkçe yanıtlar veriyorsun.",
+                "",
+                "=== KULLANICI VE TARİH BİLGİSİ ===",
+                "- Konuştuğun Kullanıcı: " + user.fullName + " (" + user.department + " - " + user.title + ")",
+                "- Bugünün Tarihi: " + $scope.todayDate + " | Seçili Tarih: " + targetDate,
+                "- Kullanıcının Aktif Rezervasyonları: " + myActive,
+                "- Bugün Ofiste Check-In Yapmış Olanlar: " + checkedInPeople,
+                "",
+                "=== SİTE KURALLARI VE ÖZELLİKLERİ (RAY OFİS) ===",
+                "1. Ofiste 10 adet 2 kişilik masa modülü (1A, 1B ... 10A, 10B toplam 20 koltuk) ve 4 adet Toplantı Odası (ODA-1, ODA-2, ODA-3, ODA-4) vardır.",
+                "2. Bir kullanıcı aynı gün içinde en fazla 1 masa ve 1 toplantı odası rezerve edebilir. Aynı güne 2. bir masa veya oda seçerse sistem eski rezervasyonunu otomatik iptal edip yenisiyle değiştirir.",
+                "3. Check-In (Ofisteyim doğrulaması) SADECE rezervasyonun olduğu gün (bugün) yapılabilir. Yarın veya ileri tarihli masalar önceden Check-In yapılamaz.",
+                "4. Gizlilik gereği normal kullanıcılar rezervasyon ekranında kırmızı (dolu) koltukları kimin aldığını göremez; yalnızca ofise gelip Check-In yapanları 'Ofistekiler' sekmesinde görebilir.",
+                "5. Rezervasyon yapıldığında Google Takvim ve Outlook Takvim'e ekleme butonları çıkar.",
+                "",
+                "=== " + targetDate + " TARİHİ İÇİN MASALAR, ODALAR VE DONANIM ÖZELLİKLERİ ===",
+                deskLines,
+                "",
+                "=== YANIT FORMATI KURALLARI ===",
+                "- Yanıtlarını her zaman Türkçe, kısa, net ve okunaklı ver (en fazla 3-5 cümle veya maddeli liste).",
+                "- Önemli kelimeleri ve masa numaralarını (örn. **1A**, **3B**, **ODA-1**) kalın (**...**) yaz.",
+                "- Eğer kullanıcı masa/ofis dışında genel bir soru sorarsa, doğrudan o soruyu en iyi şekilde yanıtla."
+            ].join('\n');
+        }
+
+        function buildDynamicSeatButtonsClient(htmlText, targetDate) {
+            var btns = [];
+            var seen = {};
+            var regex = /\b(10[AB]|[1-9][AB]|ODA-[1-4])\b/g;
+            var match;
+            while ((match = regex.exec(htmlText)) !== null) {
+                var code = match[1].toUpperCase();
+                if (seen[code]) continue;
+                var ws = ($scope.workspaces || []).find(function (w) { return w.code === code; });
+                if (ws && !ws.isReserved) {
+                    seen[code] = true;
+                    btns.push({
+                        label: '🪑 ' + code + ' Seç',
+                        command: targetDate + ' için ' + code + ' koltuğunu ayırt',
+                        style: 'blue'
+                    });
+                    if (btns.length >= 6) break;
+                }
+            }
+            if (btns.length === 0) {
+                btns.push({ label: '✨ Bugün Boş Masa Seç', command: 'Bana bugün boş masa ayırt', style: 'blue' });
+                btns.push({ label: '📍 Check-In Yap', command: 'Ofise geldim, Check-In yap', style: 'outline' });
+                btns.push({ label: '👥 Ofiste Kimler Var?', command: 'Bugün ofiste kimler var?', style: 'outline' });
+            }
+            return btns;
+        }
+
+        function callBrowserGeminiFree(systemPrompt, userMessage, targetDate, fallbackCallback) {
+            var apiKey = ($scope.aiState.geminiKey || '').trim();
+
+            function tryPollinationsFree() {
+                fetch('https://text.pollinations.ai/openai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'openai',
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: userMessage }
+                        ],
+                        temperature: 0.7
+                    })
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    var content = d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
+                    if (content) {
+                        var html = formatMarkdownClient(content);
+                        $scope.$applyAsync(function () {
+                            $scope.aiState.typing = false;
+                            handleAiResponse({
+                                replyHtml: html,
+                                action: 'GEMINI_REPLY',
+                                targetDate: targetDate,
+                                buttons: buildDynamicSeatButtonsClient(html, targetDate)
+                            });
+                        });
+                    } else {
+                        fallbackCallback();
+                    }
+                })
+                .catch(function () {
+                    fallbackCallback();
+                });
+            }
+
+            if (apiKey) {
+                var gemUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
+                fetch(gemUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        system_instruction: { parts: [{ text: systemPrompt }] },
+                        contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+                        generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
+                    })
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    var textVal = d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0] && d.candidates[0].content.parts[0].text;
+                    if (textVal) {
+                        var html = formatMarkdownClient(textVal);
+                        $scope.$applyAsync(function () {
+                            $scope.aiState.typing = false;
+                            handleAiResponse({
+                                replyHtml: html,
+                                action: 'GEMINI_REPLY',
+                                targetDate: targetDate,
+                                buttons: buildDynamicSeatButtonsClient(html, targetDate)
+                            });
+                        });
+                    } else {
+                        tryPollinationsFree();
+                    }
+                })
+                .catch(function () {
+                    tryPollinationsFree();
+                });
+            } else {
+                tryPollinationsFree();
+            }
+        }
+
         function sendMessageToAi(commandText, displayLabel, replaceExisting) {
             var nowTime = new Date().toTimeString().slice(0, 5);
             $scope.aiMessages.push({
@@ -222,22 +399,45 @@
                 userId: $scope.currentUser.id,
                 message: commandText,
                 selectedDate: $scope.selectedDate,
-                replaceExisting: !!replaceExisting
+                replaceExisting: !!replaceExisting,
+                geminiApiKey: ($scope.aiState.geminiKey || '').trim()
             };
 
             $http.post('/api/ai/chat', payload)
                 .then(function (res) {
+                    var data = res.data;
+                    if (data && data.usedOfflineFallback) {
+                        // Backend couldn't reach external network; try direct browser Gemini/Free LLM call
+                        var sysPrompt = data.systemPrompt || buildClientSitePrompt(data.targetDate || $scope.selectedDate);
+                        callBrowserGeminiFree(sysPrompt, commandText, data.targetDate || $scope.selectedDate, function () {
+                            $scope.$applyAsync(function () {
+                                $scope.aiState.typing = false;
+                                handleAiResponse(data);
+                            });
+                        });
+                        return;
+                    }
                     $timeout(function () {
                         $scope.aiState.typing = false;
-                        handleAiResponse(res.data);
-                    }, 220);
+                        handleAiResponse(data);
+                    }, 180);
                 })
                 .catch(function () {
+                    var localReply = processLocalAiChat(payload);
+                    if (localReply && localReply.needsGeminiBrowserCall) {
+                        var sysPrompt = buildClientSitePrompt(localReply.targetDate);
+                        callBrowserGeminiFree(sysPrompt, commandText, localReply.targetDate, function () {
+                            $scope.$applyAsync(function () {
+                                $scope.aiState.typing = false;
+                                handleAiResponse(localReply);
+                            });
+                        });
+                        return;
+                    }
                     $timeout(function () {
                         $scope.aiState.typing = false;
-                        var localReply = processLocalAiChat(payload);
                         handleAiResponse(localReply);
-                    }, 220);
+                    }, 180);
                 });
         }
 
@@ -298,6 +498,11 @@
                 };
             }
 
+            var isQuestionAboutRules =
+                lower.indexOf('nasıl') !== -1 || lower.indexOf('nasil') !== -1 ||
+                lower.indexOf('nedir') !== -1 || lower.indexOf('kural') !== -1 ||
+                lower.indexOf('ne işe') !== -1 || lower.indexOf('hakkında') !== -1;
+
             var timeSlot = 'Tam Gün (09:00 - 18:00)';
             if (lower.indexOf('öğleden önce') !== -1 || lower.indexOf('sabah') !== -1) timeSlot = 'Öğleden Önce (09:00 - 13:00)';
             else if (lower.indexOf('öğleden sonra') !== -1) timeSlot = 'Öğleden Sonra (13:30 - 18:00)';
@@ -316,7 +521,7 @@
             }
 
             // Check-In (TODAY ONLY!)
-            if (lower.indexOf('check') !== -1 || lower.indexOf('ofisteyim') !== -1 || lower.indexOf('ofise geldim') !== -1 || lower.indexOf('doğrula') !== -1) {
+            if (!isQuestionAboutRules && (lower.indexOf('check') !== -1 || lower.indexOf('ofisteyim') !== -1 || lower.indexOf('ofise geldim') !== -1 || lower.indexOf('doğrula') !== -1)) {
                 var pendingToday = db.reservations.find(function (r) {
                     return r.userId === user.id && r.date === todayStr && r.status === 'Active';
                 });
@@ -355,7 +560,7 @@
             }
 
             // Cancel
-            if (lower.indexOf('iptal') !== -1 || lower.indexOf('sil') !== -1) {
+            if (!isQuestionAboutRules && (lower.indexOf('iptal') !== -1 || lower.indexOf('rezervasyonumu sil') !== -1)) {
                 var activeR = db.reservations.slice().reverse().find(function (r) { return r.userId === user.id && r.status !== 'Cancelled'; });
                 if (activeR) {
                     activeR.status = 'Cancelled';
@@ -380,7 +585,7 @@
             }
 
             // Who is in office
-            if (lower.indexOf('kimler') !== -1 || lower.indexOf('kim var') !== -1 || lower.indexOf('ofisteki') !== -1) {
+            if (lower.indexOf('kimler var') !== -1 || lower.indexOf('kim var') !== -1 || lower.indexOf('ofistekiler') !== -1) {
                 var checkedPeople = db.reservations
                     .filter(function (r) { return r.date === targetDate && r.status === 'CheckedIn'; })
                     .map(function (r) {
@@ -398,11 +603,23 @@
                 };
             }
 
+            var isAskingFeatures =
+                lower.indexOf('özellik') !== -1 || lower.indexOf('ozellik') !== -1 ||
+                lower.indexOf('ne var') !== -1 || lower.indexOf('nedir') !== -1 ||
+                lower.indexOf('monitör') !== -1 || lower.indexOf('monitor') !== -1 ||
+                lower.indexOf('cam kenar') !== -1 || lower.indexOf('yükseklik') !== -1;
+
+            var hasBookingVerb =
+                lower.indexOf('ayırt') !== -1 || lower.indexOf('ayirt') !== -1 ||
+                lower.indexOf('rezerv') !== -1 || lower.indexOf('seç') !== -1 ||
+                lower.indexOf('değiştir') !== -1 || lower.indexOf('degistir') !== -1 ||
+                lower.trim().length <= 4;
+
             var dayBusyIds = db.reservations
                 .filter(function (r) { return r.date === targetDate && r.status !== 'Cancelled'; })
                 .map(function (r) { return r.workspaceItemId; });
 
-            if (matchedWs) {
+            if (matchedWs && (!isAskingFeatures || hasBookingVerb)) {
                 if (dayBusyIds.indexOf(matchedWs.id) !== -1) {
                     var alts = db.workspaces.filter(function (w) { return w.type === matchedWs.type && dayBusyIds.indexOf(w.id) === -1; });
                     var altBold = alts.map(function (a) { return '<strong>' + a.code + '</strong>'; }).join(', ');
@@ -489,18 +706,39 @@
                 };
             }
 
-            var wantsRoom = lower.indexOf('oda') !== -1 || lower.indexOf('toplantı') !== -1;
-            var freeItems = db.workspaces.filter(function (w) {
-                return w.type === (wantsRoom ? 'Oda' : 'Masa') && dayBusyIds.indexOf(w.id) === -1;
-            });
-            var boldCodes = freeItems.map(function (w) { return '<strong>' + w.code + '</strong>'; }).join(', ');
+            var isDirectListCommand =
+                (lower.indexOf('boş masa') !== -1 || lower.indexOf('bos masa') !== -1 ||
+                 lower.indexOf('boş oda') !== -1 || lower.indexOf('bos oda') !== -1 ||
+                 lower.indexOf('masa ayırt') !== -1 || lower.indexOf('masa ayirt') !== -1 ||
+                 lower.indexOf('oda ayırt') !== -1 || lower.indexOf('oda ayirt') !== -1) &&
+                !isAskingFeatures;
+
+            if (isDirectListCommand) {
+                var wantsRoom = lower.indexOf('oda') !== -1 || lower.indexOf('toplantı') !== -1;
+                var freeItems = db.workspaces.filter(function (w) {
+                    return w.type === (wantsRoom ? 'Oda' : 'Masa') && dayBusyIds.indexOf(w.id) === -1;
+                });
+                var boldCodes = freeItems.map(function (w) { return '<strong>' + w.code + '</strong>'; }).join(', ');
+                return {
+                    replyHtml: '📅 <strong>' + targetDate + '</strong> için boş ' + (wantsRoom ? 'oda' : 'masa') + ' numaraları:<br>' + boldCodes + '<br><strong>Hangisini istersiniz? Seçin:</strong>',
+                    action: 'LIST_OPTIONS',
+                    targetDate: targetDate,
+                    buttons: freeItems.map(function (w) {
+                        return { label: '🪑 ' + w.code + ' Seç', command: targetDate + ' için ' + w.code + ' koltuğunu ayırt', style: 'blue' };
+                    })
+                };
+            }
+
+            // Any other question (site knowledge, desk features, general knowledge, coding, daily life) -> Call Gemini Free AI!
             return {
-                replyHtml: '📅 <strong>' + targetDate + '</strong> için boş ' + (wantsRoom ? 'oda' : 'masa') + ' numaraları:<br>' + boldCodes + '<br><strong>Hangisini istersiniz? Seçin:</strong>',
-                action: 'LIST_OPTIONS',
+                needsGeminiBrowserCall: true,
+                replyHtml: 'Merhaba <strong>' + user.fullName + '</strong>! Size hem ofis masa/oda özellikleri ve rezervasyon işlemlerinde hem de merak ettiğiniz diğer tüm konularda yardımcı olabilirim.',
+                action: 'GEMINI_REPLY',
                 targetDate: targetDate,
-                buttons: freeItems.map(function (w) {
-                    return { label: '🪑 ' + w.code + ' Seç', command: targetDate + ' için ' + w.code + ' koltuğunu ayırt', style: 'blue' };
-                })
+                buttons: [
+                    { label: '✨ Bugün Boş Masa Seç', command: 'Bana bugün boş masa ayırt', style: 'blue' },
+                    { label: '📍 Check-In Yap', command: 'Ofise geldim, Check-In yap', style: 'outline' }
+                ]
             };
         }
 
