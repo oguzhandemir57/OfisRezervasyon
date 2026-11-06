@@ -48,13 +48,19 @@ app.MapGet("/api/users", (ReservationStore store) =>
     return Results.Ok(store.GetUsers());
 });
 
-// Get Workspaces (Desks, Rooms, Pods) with availability for a specific date
-app.MapGet("/api/workspaces", (string? date, ReservationStore store) =>
+// Get Office Floors
+app.MapGet("/api/floors", (ReservationStore store) =>
+{
+    return Results.Ok(store.GetFloors());
+});
+
+// Get Workspaces (Desks, Rooms, Pods) with availability for a specific date and floor
+app.MapGet("/api/workspaces", (string? date, int? floorId, ReservationStore store) =>
 {
     var targetDate = string.IsNullOrWhiteSpace(date)
         ? DateTime.Today.ToString("yyyy-MM-dd")
         : date;
-    return Results.Ok(store.GetWorkspacesForDate(targetDate));
+    return Results.Ok(store.GetWorkspacesForDate(targetDate, floorId));
 });
 
 // Create a Reservation for 1 day on a desk or room
@@ -110,6 +116,36 @@ app.MapGet("/api/admin/dashboard", (string? date, ReservationStore store) =>
         ? DateTime.Today.ToString("yyyy-MM-dd")
         : date;
     return Results.Ok(store.GetAdminDashboard(targetDate));
+});
+
+// Admin: Create a New Office Floor
+app.MapPost("/api/admin/floors", (CreateFloorRequest req, ReservationStore store) =>
+{
+    return Results.Ok(store.CreateFloor(req));
+});
+
+// Admin: Toggle Floor Active/Closed Status
+app.MapPost("/api/admin/floors/toggle", (ToggleFloorStatusRequest req, ReservationStore store) =>
+{
+    return Results.Ok(store.ToggleFloorStatus(req));
+});
+
+// Admin: Update Desk Module (Orientation: Horizontal/Vertical, Seat Count: 2->3->4..8, Row/Column, Features)
+app.MapPost("/api/admin/desks/update", (UpdateDeskGroupRequest req, ReservationStore store) =>
+{
+    return Results.Ok(store.UpdateDeskGroup(req));
+});
+
+// Admin: Add a New Desk Module to a Floor
+app.MapPost("/api/admin/desks/add", (AddDeskGroupRequest req, ReservationStore store) =>
+{
+    return Results.Ok(store.AddDeskGroup(req));
+});
+
+// Admin: Delete a Desk Module from a Floor
+app.MapDelete("/api/admin/desks", (int floorId, int deskNo, ReservationStore store) =>
+{
+    return Results.Ok(store.DeleteDeskGroup(floorId, deskNo));
 });
 
 // AI Chatbot Endpoint (Gemini Free AI + Conversational Reservation & Check-In Assistant)

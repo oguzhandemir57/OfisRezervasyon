@@ -12,19 +12,30 @@ public class User
     public string AvatarInitials { get; set; } = string.Empty;
 }
 
+public class OfficeFloor
+{
+    public int Id { get; set; }
+    public string Code { get; set; } = string.Empty; // "KAT-1", "KAT-2"
+    public string Name { get; set; } = string.Empty; // "1. Kat — A Blok Açık Ofis"
+    public string Description { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true; // Kullanıma Açık / Kapalı
+}
+
 public class WorkspaceItem
 {
     public int Id { get; set; }
+    public int FloorId { get; set; } = 1;
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = "Masa"; // "Masa", "Oda", "Kabin"
     public string Zone { get; set; } = string.Empty;
     public int Capacity { get; set; } = 1;
     public List<string> Features { get; set; } = new();
-    public int GridX { get; set; }
-    public int GridY { get; set; }
-    public int GridW { get; set; } = 1;
-    public int GridH { get; set; } = 1;
+    public string Orientation { get; set; } = "horizontal"; // "horizontal" (Yatay) or "vertical" (Dikine)
+    public int GridX { get; set; } // 1 = Sol Cephe, 2 = Sağ Cephe
+    public int GridY { get; set; } // Row number (1..N)
+    public int GridW { get; set; } = 1; // DeskNo
+    public int GridH { get; set; } = 1; // SeatIndex (1..M)
     public bool IsActive { get; set; } = true;
 }
 
@@ -83,4 +94,47 @@ public class AiActionButton
     public string Command { get; set; } = string.Empty;
     public string Style { get; set; } = "blue"; // "blue", "red", "outline"
     public bool ReplaceExisting { get; set; } = false;
+}
+
+public class CreateFloorRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int InitialDeskCount { get; set; } = 4;
+    public int SeatsPerDesk { get; set; } = 2;
+    public string DefaultOrientation { get; set; } = "horizontal"; // "horizontal" or "vertical"
+    public bool IncludeMeetingRoom { get; set; } = true;
+    public bool IsActive { get; set; } = true;
+}
+
+public class ToggleFloorStatusRequest
+{
+    public int FloorId { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public class UpdateDeskGroupRequest
+{
+    public int FloorId { get; set; } = 1;
+    public int DeskNo { get; set; } = 1;
+    public int SeatCount { get; set; } = 2; // 1..8 seats
+    public string Orientation { get; set; } = "horizontal"; // "horizontal" or "vertical"
+    public int GridX { get; set; } = 1; // 1 = Sol Cephe, 2 = Sağ Cephe
+    public int GridY { get; set; } = 1; // Row index
+    public List<string>? Features { get; set; }
+}
+
+public class AddDeskGroupRequest
+{
+    public int FloorId { get; set; } = 1;
+    public int SeatCount { get; set; } = 2;
+    public string Orientation { get; set; } = "horizontal";
+    public int GridX { get; set; } = 1;
+    public List<string>? Features { get; set; }
+}
+
+public class DeleteDeskGroupRequest
+{
+    public int FloorId { get; set; } = 1;
+    public int DeskNo { get; set; } = 1;
 }

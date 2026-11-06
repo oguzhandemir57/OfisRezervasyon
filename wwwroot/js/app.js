@@ -28,6 +28,27 @@
         $scope.selectedDate = $scope.todayDate;
         $scope.selectedDateObj = new Date();
 
+        $scope.floors = [];
+        $scope.selectedFloorId = 1;
+        $scope.selectedFloor = null;
+        $scope.designerDesks = [];
+
+        $scope.newFloorForm = {
+            name: '',
+            description: '',
+            initialDeskCount: 4,
+            seatsPerDesk: 3,
+            defaultOrientation: 'horizontal',
+            includeMeetingRoom: true,
+            isActive: true
+        };
+
+        $scope.newDeskForm = {
+            seatCount: 3,
+            orientation: 'horizontal',
+            gridX: 1
+        };
+
         $scope.workspaces = [];
         $scope.deskRows = [];
         $scope.meetingRooms = [];
@@ -762,10 +783,25 @@
             return list;
         }
 
+        var seatLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
+        function buildSeatCodeClient(floorId, deskNo, seatIdx) {
+            var letter = seatLetters[Math.min(Math.max(seatIdx - 1, 0), seatLetters.length - 1)];
+            return floorId === 1 ? (deskNo + letter) : ('K' + floorId + '-' + deskNo + letter);
+        }
+
+        function buildSeatNameClient(floorId, deskNo, seatIdx, code) {
+            var prefix = floorId === 1 ? '' : ('Kat ' + floorId + ' • ');
+            return prefix + 'Masa ' + deskNo + ' - ' + seatIdx + '. Koltuk (' + code + ')';
+        }
+
         function getFallbackStore() {
-            var raw = localStorage.getItem('ray_ofis_static_db_v4');
+            var raw = localStorage.getItem('ray_ofis_static_db_v5');
             if (raw) {
-                try { return JSON.parse(raw); } catch (e) {}
+                try {
+                    var parsed = JSON.parse(raw);
+                    if (parsed && parsed.floors && parsed.floors.length > 0) return parsed;
+                } catch (e) {}
             }
             var today = formatDateISO(new Date());
             var tmrDate = new Date(); tmrDate.setDate(tmrDate.getDate() + 1);
@@ -780,18 +816,47 @@
                 { id: 6, username: 'can', password: '123', fullName: 'Caner Özkan', department: 'Pazarlama', title: 'Dijital Pazarlama Uzmanı', role: 'Employee', avatarInitials: 'CÖ' }
             ];
 
+            var floors = [
+                { id: 1, code: 'KAT-1', name: '1. Kat — A Blok Açık Ofis', description: 'Panoramik Cam Cephe & Ana Çalışma Alanı', isActive: true },
+                { id: 2, code: 'KAT-2', name: '2. Kat — B Blok Ar-Ge & Tasarım', description: 'Çoklu Takım Masaları (3-4 Kişilik) & Dikine/Yatay Hibrit Düzen', isActive: true },
+                { id: 3, code: 'KAT-3', name: '3. Kat — VIP & Proje Katı', description: 'Özel Proje Takımları Katı (Admin Tarafından Açılıp Kapatılabilir)', isActive: false }
+            ];
+
             var workspaces = [];
             var idCounter = 1;
             for (var deskNo = 1; deskNo <= 10; deskNo++) {
                 var row = Math.floor((deskNo - 1) / 2) + 1;
                 var side = (deskNo % 2 === 1) ? 1 : 2;
-                workspaces.push({ id: idCounter++, code: deskNo + 'A', name: 'Masa ' + deskNo + ' - Sol Koltuk (' + deskNo + 'A)', type: 'Masa', zone: 'Masa ' + deskNo, capacity: 1, features: buildFallbackFeatures(deskNo, true), gridX: side, gridY: row, gridW: deskNo, gridH: 1, isActive: true });
-                workspaces.push({ id: idCounter++, code: deskNo + 'B', name: 'Masa ' + deskNo + ' - Sağ Koltuk (' + deskNo + 'B)', type: 'Masa', zone: 'Masa ' + deskNo, capacity: 1, features: buildFallbackFeatures(deskNo, false), gridX: side, gridY: row, gridW: deskNo, gridH: 2, isActive: true });
+                for (var s = 1; s <= 2; s++) {
+                    var c1 = buildSeatCodeClient(1, deskNo, s);
+                    workspaces.push({ id: idCounter++, floorId: 1, code: c1, name: buildSeatNameClient(1, deskNo, s, c1), type: 'Masa', zone: 'Masa ' + deskNo, capacity: 1, orientation: 'horizontal', features: buildFallbackFeatures(deskNo, s === 1), gridX: side, gridY: row, gridW: deskNo, gridH: s, isActive: true });
+                }
             }
-            workspaces.push({ id: idCounter++, code: 'ODA-1', name: 'Toplantı Odası 1 (Sprint)', type: 'Oda', zone: 'Toplantı Odaları', capacity: 6, features: ['65" 4K Akıllı Ekran', 'Cam Yazı Tahtası', 'Ses Yalıtımlı Kabin', 'Kablosuz HDMI Sunum'], isActive: true });
-            workspaces.push({ id: idCounter++, code: 'ODA-2', name: 'Toplantı Odası 2 (İnovasyon)', type: 'Oda', zone: 'Toplantı Odaları', capacity: 8, features: ['Polycom Video Konferans', 'Çift Projeksiyon', 'Cam Kenarı Manzaralı', 'Akustik Panel'], isActive: true });
-            workspaces.push({ id: idCounter++, code: 'ODA-3', name: 'Toplantı Odası 3 (Hızlı Görüşme)', type: 'Oda', zone: 'Toplantı Odaları', capacity: 4, features: ['55" LED TV', 'Yükseklik Ayarlanabilir Masa', 'Hızlı Şarj İstasyonu'], isActive: true });
-            workspaces.push({ id: idCounter++, code: 'ODA-4', name: 'Büyük Konferans Odası', type: 'Oda', zone: 'Toplantı Odaları', capacity: 12, features: ['85" İnteraktif Ekran', '360° Mikrofon & Ses Sistemi', 'Panoramik Cam Cephe', 'İkram & Kahve Köşesi'], isActive: true });
+            workspaces.push({ id: idCounter++, floorId: 1, code: 'ODA-1', name: 'Toplantı Odası 1 (Sprint)', type: 'Oda', zone: 'Toplantı Odaları', capacity: 6, orientation: 'horizontal', features: ['65" 4K Akıllı Ekran', 'Cam Yazı Tahtası', 'Ses Yalıtımlı Kabin', 'Kablosuz HDMI Sunum'], isActive: true });
+            workspaces.push({ id: idCounter++, floorId: 1, code: 'ODA-2', name: 'Toplantı Odası 2 (İnovasyon)', type: 'Oda', zone: 'Toplantı Odaları', capacity: 8, orientation: 'horizontal', features: ['Polycom Video Konferans', 'Çift Projeksiyon', 'Cam Kenarı Manzaralı', 'Akustik Panel'], isActive: true });
+            workspaces.push({ id: idCounter++, floorId: 1, code: 'ODA-3', name: 'Toplantı Odası 3 (Hızlı Görüşme)', type: 'Oda', zone: 'Toplantı Odaları', capacity: 4, orientation: 'horizontal', features: ['55" LED TV', 'Yükseklik Ayarlanabilir Masa', 'Hızlı Şarj İstasyonu'], isActive: true });
+            workspaces.push({ id: idCounter++, floorId: 1, code: 'ODA-4', name: 'Büyük Konferans Odası', type: 'Oda', zone: 'Toplantı Odaları', capacity: 12, orientation: 'horizontal', features: ['85" İnteraktif Ekran', '360° Mikrofon & Ses Sistemi', 'Panoramik Cam Cephe', 'İkram & Kahve Köşesi'], isActive: true });
+
+            var floor2Desks = [
+                { deskNo: 1, seats: 3, orientation: 'horizontal', side: 1, row: 1 },
+                { deskNo: 2, seats: 3, orientation: 'vertical',   side: 2, row: 1 },
+                { deskNo: 3, seats: 4, orientation: 'horizontal', side: 1, row: 2 },
+                { deskNo: 4, seats: 2, orientation: 'vertical',   side: 2, row: 2 }
+            ];
+            floor2Desks.forEach(function (cfg) {
+                for (var s = 1; s <= cfg.seats; s++) {
+                    var c2 = buildSeatCodeClient(2, cfg.deskNo, s);
+                    workspaces.push({ id: idCounter++, floorId: 2, code: c2, name: buildSeatNameClient(2, cfg.deskNo, s, c2), type: 'Masa', zone: 'Masa ' + cfg.deskNo, capacity: 1, orientation: cfg.orientation, features: buildFallbackFeatures(cfg.deskNo, s === 1), gridX: cfg.side, gridY: cfg.row, gridW: cfg.deskNo, gridH: s, isActive: true });
+                }
+            });
+            workspaces.push({ id: idCounter++, floorId: 2, code: 'ODA-5', name: 'Ar-Ge Beyin Fırtınası Odası', type: 'Oda', zone: 'Toplantı Odaları', capacity: 10, orientation: 'horizontal', features: ['75" Akıllı Tahta', 'Çift Monitör Sunum Masası', 'Ses Yalıtımlı Akustik Duvar'], isActive: true });
+
+            for (var d3 = 1; d3 <= 2; d3++) {
+                for (var s3 = 1; s3 <= 3; s3++) {
+                    var c3 = buildSeatCodeClient(3, d3, s3);
+                    workspaces.push({ id: idCounter++, floorId: 3, code: c3, name: buildSeatNameClient(3, d3, s3, c3), type: 'Masa', zone: 'Masa ' + d3, capacity: 1, orientation: d3 === 1 ? 'horizontal' : 'vertical', features: buildFallbackFeatures(d3, s3 === 1), gridX: d3, gridY: 1, gridW: d3, gridH: s3, isActive: true });
+                }
+            }
 
             var reservations = [
                 { id: 1, workspaceItemId: 1, userId: 2, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Sprint geliştirme', status: 'CheckedIn' },
@@ -803,13 +868,13 @@
                 { id: 7, workspaceItemId: 2, userId: 2, date: tomorrow, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Ofis çalışması', status: 'Active' }
             ];
 
-            var db = { users: users, workspaces: workspaces, reservations: reservations };
-            localStorage.setItem('ray_ofis_static_db_v4', JSON.stringify(db));
+            var db = { users: users, floors: floors, workspaces: workspaces, reservations: reservations };
+            localStorage.setItem('ray_ofis_static_db_v5', JSON.stringify(db));
             return db;
         }
 
         function saveFallbackStore(db) {
-            localStorage.setItem('ray_ofis_static_db_v4', JSON.stringify(db));
+            localStorage.setItem('ray_ofis_static_db_v5', JSON.stringify(db));
         }
 
         $scope.showToast = function (message, isError) {
@@ -877,7 +942,11 @@
                     if (!desksMap[deskNo]) {
                         desksMap[deskNo] = {
                             deskNo: deskNo,
+                            floorId: item.floorId || $scope.selectedFloorId || 1,
                             title: 'MASA ' + deskNo,
+                            orientation: item.orientation || 'horizontal',
+                            gridX: item.gridX || ((deskNo % 2 === 1) ? 1 : 2),
+                            gridY: item.gridY || (Math.floor((deskNo - 1) / 2) + 1),
                             specBadge: (deskNo % 2 === 1) ? 'Yükseklik Ayarlı' : 'Geniş Yüzey',
                             monitorBadge: (deskNo <= 4) ? 'Çift Monitör' : (deskNo <= 7 ? '34" UltraWide' : '4K Ekran'),
                             seats: []
@@ -887,14 +956,24 @@
                 }
             });
 
+            var allDesks = Object.keys(desksMap).map(function (k) {
+                var d = desksMap[k];
+                d.seats.sort(function (a, b) { return (a.gridH || 1) - (b.gridH || 1); });
+                return d;
+            }).sort(function (a, b) { return a.deskNo - b.deskNo; });
+
+            $scope.designerDesks = allDesks;
+
+            var leftDesks = allDesks.filter(function (d) { return d.gridX !== 2; });
+            var rightDesks = allDesks.filter(function (d) { return d.gridX === 2; });
+            var maxRows = Math.max(leftDesks.length, rightDesks.length);
+
             var rows = [];
-            for (var r = 0; r < 5; r++) {
-                var leftDeskNo = r * 2 + 1;
-                var rightDeskNo = r * 2 + 2;
+            for (var r = 0; r < maxRows; r++) {
                 rows.push({
                     rowIndex: r + 1,
-                    leftDesk: desksMap[leftDeskNo] || { deskNo: leftDeskNo, title: 'MASA ' + leftDeskNo, seats: [] },
-                    rightDesk: desksMap[rightDeskNo] || { deskNo: rightDeskNo, title: 'MASA ' + rightDeskNo, seats: [] }
+                    leftDesk: leftDesks[r] || { deskNo: 0, title: '', seats: [] },
+                    rightDesk: rightDesks[r] || { deskNo: 0, title: '', seats: [] }
                 });
             }
 
@@ -1026,9 +1105,45 @@
             }
         };
 
-        function applyWorkspacesData(items, summary) {
+        $scope.selectFloor = function (floorObj) {
+            if (!floorObj) return;
+            if (!floorObj.isActive && (!$scope.currentUser || $scope.currentUser.role !== 'Admin')) {
+                $scope.showToast('Bu kat şu anda yönetici tarafından kullanıma kapatılmıştır.', true);
+                return;
+            }
+            $scope.selectedFloorId = floorObj.id;
+            $scope.selectedFloor = floorObj;
+            $scope.selectedItem = null;
+            loadWorkspaces();
+        };
+
+        function computeFallbackFloorsSummary(db) {
+            return (db.floors || []).map(function (f) {
+                var fWs = db.workspaces.filter(function (w) { return (w.floorId || 1) === f.id && w.isActive !== false; });
+                var deskNums = {};
+                fWs.filter(function (w) { return w.type === 'Masa'; }).forEach(function (w) { deskNums[w.gridW || 1] = true; });
+                return angular.extend({}, f, {
+                    deskCount: Object.keys(deskNums).length,
+                    seatCount: fWs.filter(function (w) { return w.type === 'Masa'; }).length,
+                    roomCount: fWs.filter(function (w) { return w.type === 'Oda'; }).length
+                });
+            });
+        }
+
+        function applyWorkspacesData(items, summary, floorsList, currentFloor) {
             $scope.workspaces = items || [];
             $scope.summary = summary || {};
+            if (floorsList) {
+                $scope.floors = floorsList;
+            }
+            if (currentFloor) {
+                $scope.selectedFloor = currentFloor;
+                $scope.selectedFloorId = currentFloor.id;
+            } else if ($scope.floors.length > 0) {
+                var foundF = $scope.floors.find(function (f) { return f.id === $scope.selectedFloorId; }) || $scope.floors[0];
+                $scope.selectedFloor = foundF;
+                $scope.selectedFloorId = foundF.id;
+            }
             buildBusLayoutAndPresence($scope.workspaces);
 
             if ($scope.selectedItem) {
@@ -1042,31 +1157,36 @@
 
         function loadWorkspaces() {
             if (!$scope.currentUser) return;
-            $http.get('/api/workspaces?date=' + encodeURIComponent($scope.selectedDate))
+            var url = '/api/workspaces?date=' + encodeURIComponent($scope.selectedDate) + '&floorId=' + encodeURIComponent($scope.selectedFloorId || 1);
+            $http.get(url)
                 .then(function (res) {
-                    applyWorkspacesData(res.data.items, res.data.summary);
+                    applyWorkspacesData(res.data.items, res.data.summary, res.data.floors, res.data.floor);
                 })
                 .catch(function () {
                     var db = getFallbackStore();
+                    var floorsSummary = computeFallbackFloorsSummary(db);
+                    var activeF = floorsSummary.find(function (f) { return f.id === $scope.selectedFloorId; }) || floorsSummary.find(function (f) { return f.isActive; }) || floorsSummary[0];
                     var dayRes = db.reservations.filter(function (r) { return r.date === $scope.selectedDate && r.status !== 'Cancelled'; });
-                    var items = db.workspaces.map(function (w) {
-                        var res = dayRes.find(function (r) { return r.workspaceItemId === w.id; });
-                        var u = res ? db.users.find(function (x) { return x.id === res.userId; }) : null;
-                        return angular.extend({}, w, {
-                            isReserved: !!res,
-                            reservation: res ? {
-                                id: res.id,
-                                userId: res.userId,
-                                userFullName: u ? u.fullName : 'Dolu',
-                                userDepartment: u ? u.department : '',
-                                userInitials: u ? u.avatarInitials : 'D',
-                                date: res.date,
-                                timeSlot: res.timeSlot,
-                                note: res.note,
-                                status: res.status
-                            } : null
+                    var items = db.workspaces
+                        .filter(function (w) { return w.isActive !== false && (w.floorId || 1) === activeF.id; })
+                        .map(function (w) {
+                            var res = dayRes.find(function (r) { return r.workspaceItemId === w.id; });
+                            var u = res ? db.users.find(function (x) { return x.id === res.userId; }) : null;
+                            return angular.extend({}, w, {
+                                isReserved: !!res,
+                                reservation: res ? {
+                                    id: res.id,
+                                    userId: res.userId,
+                                    userFullName: u ? u.fullName : 'Dolu',
+                                    userDepartment: u ? u.department : '',
+                                    userInitials: u ? u.avatarInitials : 'D',
+                                    date: res.date,
+                                    timeSlot: res.timeSlot,
+                                    note: res.note,
+                                    status: res.status
+                                } : null
+                            });
                         });
-                    });
                     var reserved = items.filter(function (i) { return i.isReserved; }).length;
                     var avail = items.length - reserved;
                     var checkedIn = dayRes.filter(function (r) { return r.status === 'CheckedIn'; }).length;
@@ -1075,10 +1195,250 @@
                         available: avail,
                         reserved: reserved,
                         checkedIn: checkedIn,
-                        occupancyRate: Math.round((reserved / items.length) * 100)
-                    });
+                        occupancyRate: items.length > 0 ? Math.round((reserved / items.length) * 100) : 0
+                    }, floorsSummary, activeF);
                 });
         }
+
+        // ==================== ADMIN FLOOR & DESK LAYOUT DESIGNER ACTIONS ====================
+        $scope.createNewFloor = function () {
+            if (!$scope.newFloorForm.name || !$scope.newFloorForm.name.trim()) {
+                $scope.showToast('Lütfen yeni ofis katı için bir isim girin.', true);
+                return;
+            }
+            var payload = {
+                name: $scope.newFloorForm.name.trim(),
+                description: ($scope.newFloorForm.description || 'Özel Tasarım Çalışma Alanı').trim(),
+                initialDeskCount: parseInt($scope.newFloorForm.initialDeskCount) || 4,
+                seatsPerDesk: parseInt($scope.newFloorForm.seatsPerDesk) || 3,
+                defaultOrientation: $scope.newFloorForm.defaultOrientation || 'horizontal',
+                includeMeetingRoom: true,
+                isActive: $scope.newFloorForm.isActive !== false
+            };
+
+            $http.post('/api/admin/floors', payload)
+                .then(function (res) {
+                    if (res.data && res.data.success) {
+                        $scope.showToast(res.data.message, false);
+                        $scope.newFloorForm.name = '';
+                        $scope.newFloorForm.description = '';
+                        if (res.data.floor) {
+                            $scope.selectedFloorId = res.data.floor.id;
+                        }
+                        loadWorkspaces();
+                    }
+                })
+                .catch(function () {
+                    var db = getFallbackStore();
+                    var nextFloorId = db.floors.length > 0 ? Math.max.apply(null, db.floors.map(function (f) { return f.id; })) + 1 : 1;
+                    var newF = {
+                        id: nextFloorId,
+                        code: 'KAT-' + nextFloorId,
+                        name: payload.name,
+                        description: payload.description,
+                        isActive: payload.isActive
+                    };
+                    db.floors.push(newF);
+                    var nextWsId = db.workspaces.length > 0 ? Math.max.apply(null, db.workspaces.map(function (w) { return w.id; })) + 1 : 1;
+                    for (var d = 1; d <= payload.initialDeskCount; d++) {
+                        var row = Math.floor((d - 1) / 2) + 1;
+                        var side = (d % 2 === 1) ? 1 : 2;
+                        for (var s = 1; s <= payload.seatsPerDesk; s++) {
+                            var code = buildSeatCodeClient(nextFloorId, d, s);
+                            db.workspaces.push({
+                                id: nextWsId++,
+                                floorId: nextFloorId,
+                                code: code,
+                                name: buildSeatNameClient(nextFloorId, d, s, code),
+                                type: 'Masa',
+                                zone: 'Masa ' + d,
+                                capacity: 1,
+                                orientation: payload.defaultOrientation,
+                                features: buildFallbackFeatures(d, s === 1),
+                                gridX: side,
+                                gridY: row,
+                                gridW: d,
+                                gridH: s,
+                                isActive: true
+                            });
+                        }
+                    }
+                    saveFallbackStore(db);
+                    $scope.newFloorForm.name = '';
+                    $scope.newFloorForm.description = '';
+                    $scope.selectedFloorId = nextFloorId;
+                    $scope.showToast(newF.name + ' başarıyla oluşturuldu!', false);
+                    loadWorkspaces();
+                });
+        };
+
+        $scope.toggleFloorStatus = function (floorObj) {
+            if (!floorObj) return;
+            var newStatus = !floorObj.isActive;
+            $http.post('/api/admin/floors/toggle', { floorId: floorObj.id, isActive: newStatus })
+                .then(function (res) {
+                    if (res.data && res.data.success) {
+                        $scope.showToast(res.data.message, false);
+                        loadWorkspaces();
+                    }
+                })
+                .catch(function () {
+                    var db = getFallbackStore();
+                    var f = db.floors.find(function (x) { return x.id === floorObj.id; });
+                    if (f) f.isActive = newStatus;
+                    saveFallbackStore(db);
+                    $scope.showToast(floorObj.name + (newStatus ? ' kullanıma AÇILDI!' : ' kullanıma KAPATILDI!'), false);
+                    loadWorkspaces();
+                });
+        };
+
+        function updateDeskGroupConfig(desk, newSeatCount, newOrientation, newGridX) {
+            if (!desk) return;
+            var targetSeats = Math.min(Math.max(parseInt(newSeatCount) || 2, 1), 8);
+            var payload = {
+                floorId: desk.floorId || $scope.selectedFloorId || 1,
+                deskNo: desk.deskNo,
+                seatCount: targetSeats,
+                orientation: newOrientation || desk.orientation || 'horizontal',
+                gridX: newGridX || desk.gridX || 1,
+                gridY: desk.gridY || 1
+            };
+
+            $http.post('/api/admin/desks/update', payload)
+                .then(function (res) {
+                    if (res.data && res.data.success) {
+                        $scope.showToast(res.data.message, false);
+                        loadWorkspaces();
+                    }
+                })
+                .catch(function () {
+                    var db = getFallbackStore();
+                    var deskSeats = db.workspaces.filter(function (w) {
+                        return (w.floorId || 1) === payload.floorId && w.type === 'Masa' && w.gridW === payload.deskNo;
+                    });
+                    var nextWsId = db.workspaces.length > 0 ? Math.max.apply(null, db.workspaces.map(function (w) { return w.id; })) + 1 : 1;
+                    for (var s = 1; s <= targetSeats; s++) {
+                        var existing = deskSeats.find(function (w) { return w.gridH === s; });
+                        var code = buildSeatCodeClient(payload.floorId, payload.deskNo, s);
+                        if (existing) {
+                            existing.isActive = true;
+                            existing.orientation = payload.orientation;
+                            existing.gridX = payload.gridX;
+                            existing.code = code;
+                            existing.name = buildSeatNameClient(payload.floorId, payload.deskNo, s, code);
+                        } else {
+                            db.workspaces.push({
+                                id: nextWsId++,
+                                floorId: payload.floorId,
+                                code: code,
+                                name: buildSeatNameClient(payload.floorId, payload.deskNo, s, code),
+                                type: 'Masa',
+                                zone: 'Masa ' + payload.deskNo,
+                                capacity: 1,
+                                orientation: payload.orientation,
+                                features: buildFallbackFeatures(payload.deskNo, s === 1),
+                                gridX: payload.gridX,
+                                gridY: payload.gridY,
+                                gridW: payload.deskNo,
+                                gridH: s,
+                                isActive: true
+                            });
+                        }
+                    }
+                    deskSeats.forEach(function (w) {
+                        if (w.gridH > targetSeats) {
+                            w.isActive = false;
+                        }
+                    });
+                    saveFallbackStore(db);
+                    $scope.showToast('Masa ' + payload.deskNo + ' güncellendi: ' + targetSeats + ' Kişilik (' + (payload.orientation === 'vertical' ? 'Dikine' : 'Yatay') + ')', false);
+                    loadWorkspaces();
+                });
+        }
+
+        $scope.setDeskOrientation = function (desk, orientation) {
+            updateDeskGroupConfig(desk, desk.seats.length, orientation, desk.gridX);
+        };
+
+        $scope.changeDeskSeatCount = function (desk, newCount) {
+            if (newCount < 1 || newCount > 8) {
+                $scope.showToast('Bir masa en az 1, en fazla 8 kişilik olabilir.', true);
+                return;
+            }
+            updateDeskGroupConfig(desk, newCount, desk.orientation, desk.gridX);
+        };
+
+        $scope.setDeskSide = function (desk, gridX) {
+            updateDeskGroupConfig(desk, desk.seats.length, desk.orientation, gridX);
+        };
+
+        $scope.addDeskToFloor = function () {
+            var payload = {
+                floorId: $scope.selectedFloorId || 1,
+                seatCount: parseInt($scope.newDeskForm.seatCount) || 3,
+                orientation: $scope.newDeskForm.orientation || 'horizontal',
+                gridX: parseInt($scope.newDeskForm.gridX) || 1
+            };
+
+            $http.post('/api/admin/desks/add', payload)
+                .then(function (res) {
+                    if (res.data && res.data.success) {
+                        $scope.showToast(res.data.message, false);
+                        loadWorkspaces();
+                    }
+                })
+                .catch(function () {
+                    var db = getFallbackStore();
+                    var floorDesks = db.workspaces.filter(function (w) { return (w.floorId || 1) === payload.floorId && w.type === 'Masa'; });
+                    var nextDeskNo = floorDesks.length > 0 ? Math.max.apply(null, floorDesks.map(function (w) { return w.gridW || 1; })) + 1 : 1;
+                    var nextWsId = db.workspaces.length > 0 ? Math.max.apply(null, db.workspaces.map(function (w) { return w.id; })) + 1 : 1;
+                    for (var s = 1; s <= payload.seatCount; s++) {
+                        var code = buildSeatCodeClient(payload.floorId, nextDeskNo, s);
+                        db.workspaces.push({
+                            id: nextWsId++,
+                            floorId: payload.floorId,
+                            code: code,
+                            name: buildSeatNameClient(payload.floorId, nextDeskNo, s, code),
+                            type: 'Masa',
+                            zone: 'Masa ' + nextDeskNo,
+                            capacity: 1,
+                            orientation: payload.orientation,
+                            features: buildFallbackFeatures(nextDeskNo, s === 1),
+                            gridX: payload.gridX,
+                            gridY: Math.floor((nextDeskNo - 1) / 2) + 1,
+                            gridW: nextDeskNo,
+                            gridH: s,
+                            isActive: true
+                        });
+                    }
+                    saveFallbackStore(db);
+                    $scope.showToast('Yeni Masa ' + nextDeskNo + ' (' + payload.seatCount + ' Kişilik) eklendi!', false);
+                    loadWorkspaces();
+                });
+        };
+
+        $scope.deleteDeskModule = function (desk) {
+            if (!desk) return;
+            var fId = desk.floorId || $scope.selectedFloorId || 1;
+            $http.delete('/api/admin/desks?floorId=' + fId + '&deskNo=' + desk.deskNo)
+                .then(function (res) {
+                    if (res.data && res.data.success) {
+                        $scope.showToast(res.data.message, false);
+                        loadWorkspaces();
+                    }
+                })
+                .catch(function () {
+                    var db = getFallbackStore();
+                    db.workspaces.forEach(function (w) {
+                        if ((w.floorId || 1) === fId && w.type === 'Masa' && w.gridW === desk.deskNo) {
+                            w.isActive = false;
+                        }
+                    });
+                    saveFallbackStore(db);
+                    $scope.showToast('Masa ' + desk.deskNo + ' kaldırıldı.', false);
+                    loadWorkspaces();
+                });
+        };
 
         $scope.isMyReservation = function (item) {
             return item && item.isReserved && item.reservation && $scope.currentUser && item.reservation.userId === $scope.currentUser.id;

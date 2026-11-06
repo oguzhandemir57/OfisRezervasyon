@@ -102,8 +102,11 @@
                         <span>Ofistekiler</span>
                         <span class="nav-badge">{{getCheckedInCount()}}</span>
                     </button>
+                    <button class="nav-tab admin-tab" ng-if="currentUser.role === 'Admin'" ng-class="{'active': activeTab === 'layoutDesigner'}" ng-click="switchTab('layoutDesigner')">
+                        <span>🎨 Kat &amp; Masa Tasarımı</span>
+                    </button>
                     <button class="nav-tab admin-tab" ng-if="currentUser.role === 'Admin'" ng-class="{'active': activeTab === 'adminDashboard'}" ng-click="switchTab('adminDashboard')">
-                        <span>Admin</span>
+                        <span>Admin Rapor</span>
                     </button>
                     <button class="nav-tab" ng-click="toggleAiChat()" style="color: var(--ray-blue);">
                         <span>🤖 AI Asistan</span>
@@ -154,14 +157,48 @@
 
                     <!-- LEFT: 2D TOP-DOWN DESK MODULES -->
                     <div class="bus-container-card">
+                        <!-- OFFICE FLOOR SELECTOR BAR -->
+                        <div class="floor-selector-bar">
+                            <div>
+                                <div style="font-size: 10.5px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px;">
+                                    🏢 Ofis Katı Seçin
+                                </div>
+                                <div class="floor-pills-wrap">
+                                    <button type="button"
+                                            class="floor-pill"
+                                            ng-repeat="f in floors"
+                                            ng-if="f.isActive || currentUser.role === 'Admin'"
+                                            ng-class="{'active': selectedFloorId === f.id, 'closed': !f.isActive}"
+                                            ng-click="selectFloor(f)">
+                                        <span>{{f.name}}</span>
+                                        <span ng-if="!f.isActive" style="font-size: 10px; background: rgba(255,0,37,0.15); color: #FF0025; padding: 2px 6px; border-radius: 6px;">🔒 Kapalı</span>
+                                        <span ng-if="f.isActive" style="font-size: 10.5px; opacity: 0.8;">({{f.seatCount}} Koltuk)</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button type="button"
+                                    class="btn btn-soft-blue btn-sm"
+                                    ng-if="currentUser.role === 'Admin'"
+                                    ng-click="switchTab('layoutDesigner')">
+                                🎨 Kat &amp; Masa Düzenini Tasarla
+                            </button>
+                        </div>
+
                         <div style="text-align: center; margin-bottom: 16px;">
-                            <h2 style="font-size: 19px; font-weight: 800;">2 Boyutlu Ofis Masa &amp; Oda Planı</h2>
+                            <h2 style="font-size: 19px; font-weight: 800;">
+                                {{selectedFloor ? selectedFloor.name : '2 Boyutlu Ofis Masa & Oda Planı'}}
+                            </h2>
                             <p style="font-size: 13px; color: var(--text-secondary);">
                                 Seçili Gün: <strong style="color: var(--ray-blue);">{{selectedDate}}</strong> &bull;
                                 Boş: <strong style="color: var(--green-live);">{{summary.available}}</strong> &bull;
                                 Dolu: <strong style="color: var(--ray-red);">{{summary.reserved}}</strong>
                                 &mdash; Donanım özelliklerini görmek için masaya tıklayın.
                             </p>
+                            <div ng-if="selectedFloor && !selectedFloor.isActive"
+                                 style="margin-top: 8px; padding: 8px 14px; border-radius: 10px; background: var(--ray-red-soft); color: var(--ray-red); font-weight: 800; font-size: 12.5px; display: inline-block;">
+                                🔒 Bu kat şu anda kullanıma kapalıdır (Sadece Admin görüntüleyebilir).
+                            </div>
                         </div>
 
                         <div class="seat-legend-bar">
@@ -182,79 +219,141 @@
                         <div class="bus-cabin">
                             <div class="bus-front-banner">
                                 <span class="window-tag">☀️ Sol Cam Kenarı</span>
-                                <span>2B OFİS MASA DÜZENİ</span>
+                                <span>2B OFİS MASA DÜZENİ (YATAY &amp; DİKİNE)</span>
                                 <span class="window-tag">☀️ Sağ Cam Kenarı</span>
                             </div>
 
-                            <!-- 5 ROWS OF 2D 2-PERSON DESK MODULES -->
+                            <!-- DYNAMIC ROWS OF 2D DESK MODULES (SUPPORTS 1..8 SEATS & HORIZONTAL/VERTICAL) -->
                             <div class="bus-row" ng-repeat="row in deskRows">
                                 <!-- Left 2D Desk -->
-                                <div class="two-person-desk">
-                                    <!-- 2D Tabletop Surface with Monitors & Keyboards -->
-                                    <div class="desk-surface-2d">
-                                        <div class="desk-surface-header">
-                                            <span>{{row.leftDesk.title}}</span>
-                                            <span style="font-size: 9.5px; color: var(--ray-blue);">{{row.leftDesk.monitorBadge}} &bull; {{row.leftDesk.specBadge}}</span>
-                                        </div>
-                                        <div class="desk-monitors-row">
-                                            <div class="monitor-2d-rig">
-                                                <div class="monitor-screen-bar"></div>
-                                                <div class="keyboard-pad-2d"></div>
+                                <div class="two-person-desk"
+                                     ng-if="row.leftDesk && row.leftDesk.seats.length > 0"
+                                     ng-class="{'desk-vertical': row.leftDesk.orientation === 'vertical'}">
+
+                                    <!-- HORIZONTAL (YATAY) DESK VIEW -->
+                                    <div ng-if="row.leftDesk.orientation !== 'vertical'">
+                                        <div class="desk-surface-2d">
+                                            <div class="desk-surface-header">
+                                                <span>{{row.leftDesk.title}} ({{row.leftDesk.seats.length}} Kişilik &bull; Yatay)</span>
+                                                <span style="font-size: 9.5px; color: var(--ray-blue);">{{row.leftDesk.monitorBadge}} &bull; {{row.leftDesk.specBadge}}</span>
                                             </div>
-                                            <div class="monitor-2d-rig">
-                                                <div class="monitor-screen-bar"></div>
-                                                <div class="keyboard-pad-2d"></div>
+                                            <div class="desk-monitors-row">
+                                                <div class="monitor-2d-rig" ng-repeat="s in row.leftDesk.seats track by $index">
+                                                    <div class="monitor-screen-bar"></div>
+                                                    <div class="keyboard-pad-2d"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="desk-seats-pair">
+                                            <div class="bus-seat"
+                                                 ng-repeat="seat in row.leftDesk.seats"
+                                                 ng-class="getBusSeatClass(seat)"
+                                                 ng-click="selectWorkspace(seat)">
+                                                <div class="seat-number">{{seat.code}}</div>
+                                                <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
+                                                <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN YERİNİZ</div>
+                                                <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">DOLU</div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- 2 Chairs Facing the Desk -->
-                                    <div class="desk-seats-pair">
-                                        <div class="bus-seat"
-                                             ng-repeat="seat in row.leftDesk.seats"
-                                             ng-class="getBusSeatClass(seat)"
-                                             ng-click="selectWorkspace(seat)">
-                                            <div class="seat-number">{{seat.code}}</div>
-                                            <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
-                                            <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN YERİNİZ</div>
-                                            <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">DOLU</div>
+                                    <!-- VERTICAL (DİKİNE) DESK VIEW -->
+                                    <div ng-if="row.leftDesk.orientation === 'vertical'">
+                                        <div class="desk-surface-header" style="margin-bottom: 6px;">
+                                            <span>{{row.leftDesk.title}} ({{row.leftDesk.seats.length}} Kişilik &bull; Dikine)</span>
+                                            <span style="font-size: 9.5px; color: var(--ray-blue);">{{row.leftDesk.monitorBadge}}</span>
+                                        </div>
+                                        <div class="desk-vertical-body">
+                                            <div class="desk-surface-2d vertical-surface">
+                                                <div class="desk-monitors-col">
+                                                    <div class="monitor-2d-rig-vert" ng-repeat="s in row.leftDesk.seats track by $index">
+                                                        <div class="monitor-screen-bar-vert"></div>
+                                                        <div class="keyboard-pad-2d-vert"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="desk-seats-pair vertical-seats">
+                                                <div class="bus-seat"
+                                                     ng-repeat="seat in row.leftDesk.seats"
+                                                     ng-class="getBusSeatClass(seat)"
+                                                     ng-click="selectWorkspace(seat)">
+                                                    <div class="seat-number">{{seat.code}}</div>
+                                                    <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
+                                                    <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN YERİNİZ</div>
+                                                    <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">DOLU</div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                                <div ng-if="!row.leftDesk || row.leftDesk.seats.length === 0"></div>
 
                                 <div class="bus-corridor">KORİDOR</div>
 
                                 <!-- Right 2D Desk -->
-                                <div class="two-person-desk">
-                                    <div class="desk-surface-2d">
-                                        <div class="desk-surface-header">
-                                            <span>{{row.rightDesk.title}}</span>
-                                            <span style="font-size: 9.5px; color: var(--ray-blue);">{{row.rightDesk.monitorBadge}} &bull; {{row.rightDesk.specBadge}}</span>
-                                        </div>
-                                        <div class="desk-monitors-row">
-                                            <div class="monitor-2d-rig">
-                                                <div class="monitor-screen-bar"></div>
-                                                <div class="keyboard-pad-2d"></div>
+                                <div class="two-person-desk"
+                                     ng-if="row.rightDesk && row.rightDesk.seats.length > 0"
+                                     ng-class="{'desk-vertical': row.rightDesk.orientation === 'vertical'}">
+
+                                    <!-- HORIZONTAL (YATAY) DESK VIEW -->
+                                    <div ng-if="row.rightDesk.orientation !== 'vertical'">
+                                        <div class="desk-surface-2d">
+                                            <div class="desk-surface-header">
+                                                <span>{{row.rightDesk.title}} ({{row.rightDesk.seats.length}} Kişilik &bull; Yatay)</span>
+                                                <span style="font-size: 9.5px; color: var(--ray-blue);">{{row.rightDesk.monitorBadge}} &bull; {{row.rightDesk.specBadge}}</span>
                                             </div>
-                                            <div class="monitor-2d-rig">
-                                                <div class="monitor-screen-bar"></div>
-                                                <div class="keyboard-pad-2d"></div>
+                                            <div class="desk-monitors-row">
+                                                <div class="monitor-2d-rig" ng-repeat="s in row.rightDesk.seats track by $index">
+                                                    <div class="monitor-screen-bar"></div>
+                                                    <div class="keyboard-pad-2d"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="desk-seats-pair">
+                                            <div class="bus-seat"
+                                                 ng-repeat="seat in row.rightDesk.seats"
+                                                 ng-class="getBusSeatClass(seat)"
+                                                 ng-click="selectWorkspace(seat)">
+                                                <div class="seat-number">{{seat.code}}</div>
+                                                <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
+                                                <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN YERİNİZ</div>
+                                                <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">DOLU</div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="desk-seats-pair">
-                                        <div class="bus-seat"
-                                             ng-repeat="seat in row.rightDesk.seats"
-                                             ng-class="getBusSeatClass(seat)"
-                                             ng-click="selectWorkspace(seat)">
-                                            <div class="seat-number">{{seat.code}}</div>
-                                            <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
-                                            <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN YERİNİZ</div>
-                                            <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">DOLU</div>
+                                    <!-- VERTICAL (DİKİNE) DESK VIEW -->
+                                    <div ng-if="row.rightDesk.orientation === 'vertical'">
+                                        <div class="desk-surface-header" style="margin-bottom: 6px;">
+                                            <span>{{row.rightDesk.title}} ({{row.rightDesk.seats.length}} Kişilik &bull; Dikine)</span>
+                                            <span style="font-size: 9.5px; color: var(--ray-blue);">{{row.rightDesk.monitorBadge}}</span>
+                                        </div>
+                                        <div class="desk-vertical-body">
+                                            <div class="desk-surface-2d vertical-surface">
+                                                <div class="desk-monitors-col">
+                                                    <div class="monitor-2d-rig-vert" ng-repeat="s in row.rightDesk.seats track by $index">
+                                                        <div class="monitor-screen-bar-vert"></div>
+                                                        <div class="keyboard-pad-2d-vert"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="desk-seats-pair vertical-seats">
+                                                <div class="bus-seat"
+                                                     ng-repeat="seat in row.rightDesk.seats"
+                                                     ng-class="getBusSeatClass(seat)"
+                                                     ng-click="selectWorkspace(seat)">
+                                                    <div class="seat-number">{{seat.code}}</div>
+                                                    <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
+                                                    <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN YERİNİZ</div>
+                                                    <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">DOLU</div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                                <div ng-if="!row.rightDesk || row.rightDesk.seats.length === 0"></div>
                             </div>
 
                             <!-- MEETING ROOMS -->
@@ -544,7 +643,314 @@
                 </div>
             </div>
 
-            <!-- ==================== TAB 4: ADMIN DASHBOARD ==================== -->
+            <!-- ==================== TAB 4: ADMIN FLOOR & DESK LAYOUT DESIGN STUDIO ==================== -->
+            <div ng-if="activeTab === 'layoutDesigner' && currentUser.role === 'Admin'">
+                <div class="presence-header-card" style="margin-bottom: 20px;">
+                    <div>
+                        <span style="font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: var(--ray-red); letter-spacing: 0.6px;">
+                            ● YÖNETİCİ MİMARİ TASARIM STÜDYOSU
+                        </span>
+                        <h2 style="font-size: 22px; font-weight: 800; margin-top: 2px;">Ofis Katları &amp; 2B Masa Düzeni Tasarım Ekranı</h2>
+                        <p style="font-size: 13px; color: var(--text-secondary);">
+                            Yeni ofis katı oluşturabilir, katları kullanıma açıp kapatabilir, masaları <strong>Yatay / Dikine</strong> çevirebilir ve kapasitesini <strong>2'den 3, 4, 6 veya 8 kişiliğe</strong> yükseltebilirsiniz.
+                        </p>
+                    </div>
+                    <button type="button" class="btn btn-ray-blue" ng-click="switchTab('floorplan')">
+                        👁️ Rezervasyon Haritasında Gör
+                    </button>
+                </div>
+
+                <div class="studio-layout-grid">
+                    <!-- LEFT COLUMN: FLOOR MANAGEMENT + CREATE NEW FLOOR + ADD NEW DESK -->
+                    <aside style="display: flex; flex-direction: column; gap: 18px;">
+
+                        <!-- 1. EXISTING FLOORS & OPEN/CLOSE TOGGLE -->
+                        <div class="panel-card">
+                            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 4px;">🏢 Ofis Katları Yönetimi</h3>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                                Düzenlemek istediğiniz katı seçin veya tek tıkla kullanıma açın / kapatın.
+                            </p>
+
+                            <div class="floor-manage-card"
+                                 ng-repeat="f in floors"
+                                 ng-class="{'selected': selectedFloorId === f.id}">
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                    <div style="cursor: pointer; flex: 1;" ng-click="selectFloor(f)">
+                                        <div style="font-size: 14px; font-weight: 800; color: var(--text-main);">{{f.name}}</div>
+                                        <div style="font-size: 11.5px; color: var(--text-secondary);">{{f.description}}</div>
+                                    </div>
+                                    <span style="font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 99px;"
+                                          ng-style="f.isActive ? {'background':'var(--green-soft)','color':'var(--green-live)'} : {'background':'var(--ray-red-soft)','color':'var(--ray-red)'}">
+                                        {{f.isActive ? '🟢 Açık' : '🔴 Kapalı'}}
+                                    </span>
+                                </div>
+
+                                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--text-secondary); padding-top: 6px; border-top: 1px solid var(--border-color);">
+                                    <span><strong>{{f.deskCount}}</strong> Masa &bull; <strong>{{f.seatCount}}</strong> Koltuk &bull; <strong>{{f.roomCount}}</strong> Oda</span>
+                                    <div style="display: flex; gap: 6px;">
+                                        <button type="button"
+                                                class="btn btn-sm"
+                                                ng-class="selectedFloorId === f.id ? 'btn-ray-blue' : 'btn-soft-blue'"
+                                                ng-click="selectFloor(f)">
+                                            Düzenle
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-sm"
+                                                ng-class="f.isActive ? 'btn-soft-red' : 'btn-ray-blue'"
+                                                ng-click="toggleFloorStatus(f)">
+                                            {{f.isActive ? '🔒 Kapat' : '🔓 Kullanıma Aç'}}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. CREATE NEW OFFICE FLOOR -->
+                        <div class="panel-card">
+                            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 4px;">➕ Yeni Ofis Katı Oluştur</h3>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                                Yeni bir kat tanımlayın ve başlangıç masa/koltuk düzenini belirleyin.
+                            </p>
+
+                            <div class="form-group">
+                                <label>Kat Adı</label>
+                                <input type="text" class="form-control" ng-model="newFloorForm.name" placeholder="Örn: 4. Kat — Pazarlama & Stüdyo">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Kat Açıklaması</label>
+                                <input type="text" class="form-control" ng-model="newFloorForm.description" placeholder="Örn: Panoramik Teras & Takım Masaları">
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div class="form-group">
+                                    <label>Başlangıç Masa Sayısı</label>
+                                    <select class="form-control" ng-model="newFloorForm.initialDeskCount" ng-options="n as (n + ' Masa') for n in [2,4,6,8,10]"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Masa Boyutu (Kişi)</label>
+                                    <select class="form-control" ng-model="newFloorForm.seatsPerDesk" ng-options="n as (n + ' Kişilik') for n in [2,3,4,6]"></select>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div class="form-group">
+                                    <label>Varsayılan Masa Yönü</label>
+                                    <select class="form-control" ng-model="newFloorForm.defaultOrientation">
+                                        <option value="horizontal">↔️ Yatay Düzen</option>
+                                        <option value="vertical">↕️ Dikine Düzen</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Kullanım Durumu</label>
+                                    <select class="form-control" ng-model="newFloorForm.isActive">
+                                        <option ng-value="true">🟢 Kullanıma Açık</option>
+                                        <option ng-value="false">🔴 Kullanıma Kapalı</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-ray-blue btn-lg" style="width: 100%;" ng-click="createNewFloor()">
+                                🏢 Yeni Ofis Katını Oluştur
+                            </button>
+                        </div>
+
+                        <!-- 3. ADD NEW DESK MODULE OR ROOM TO SELECTED FLOOR -->
+                        <div class="panel-card">
+                            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 4px;">🪑 Seçili Kata Yeni Masa Ekle</h3>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                                <strong>{{selectedFloor.name}}</strong> katına yeni bir masa modülü ekleyin.
+                            </p>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div class="form-group">
+                                    <label>Koltuk Kapasitesi</label>
+                                    <select class="form-control" ng-model="newDeskForm.seatCount" ng-options="n as (n + ' Kişilik Masa') for n in [1,2,3,4,5,6,8]"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Masa Yönü</label>
+                                    <select class="form-control" ng-model="newDeskForm.orientation">
+                                        <option value="horizontal">↔️ Yatay</option>
+                                        <option value="vertical">↕️ Dikine</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Cephe / Konum</label>
+                                <select class="form-control" ng-model="newDeskForm.gridX">
+                                    <option ng-value="1">☀️ Sol Cam Cephe</option>
+                                    <option ng-value="2">☀️ Sağ Cam Cephe</option>
+                                </select>
+                            </div>
+
+                            <button type="button" class="btn btn-ray-red btn-lg" style="width: 100%;" ng-click="addDeskToFloor()">
+                                ➕ Kata Yeni Masa Modülü Ekle
+                            </button>
+                        </div>
+
+                    </aside>
+
+                    <!-- RIGHT COLUMN: INTERACTIVE DESK ORIENTATION & CAPACITY DESIGNER FOR SELECTED FLOOR -->
+                    <section class="panel-card">
+                        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color);">
+                            <div>
+                                <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--ray-blue);">
+                                    AKTİF TASARIM KATI: {{selectedFloor.code}}
+                                </div>
+                                <h3 style="font-size: 20px; font-weight: 800;">{{selectedFloor.name}} — Masa Boyutu &amp; Yön Tasarımı</h3>
+                                <p style="font-size: 12.5px; color: var(--text-secondary);">
+                                    Her masanın yönünü <strong>↔️ Yatay</strong> veya <strong>↕️ Dikine</strong> olarak değiştirebilir, masa boyutunu <strong>2'den 3, 4, 6 veya 8 kişiye</strong> yükseltebilirsiniz.
+                                </p>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <button type="button"
+                                        class="btn btn-sm"
+                                        ng-class="selectedFloor.isActive ? 'btn-soft-red' : 'btn-ray-blue'"
+                                        ng-click="toggleFloorStatus(selectedFloor)">
+                                    {{selectedFloor.isActive ? '🔒 Bu Katı Kullanıma Kapat' : '🔓 Bu Katı Kullanıma Aç'}}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div ng-if="designerDesks.length === 0" style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                            Bu katta henüz masa bulunmuyor. Soldaki panelden yeni masa ekleyebilirsiniz.
+                        </div>
+
+                        <div class="designer-desks-grid">
+                            <div class="designer-desk-card" ng-repeat="desk in designerDesks">
+                                <!-- Top Header -->
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <div>
+                                        <span style="font-size: 16px; font-weight: 900; color: var(--text-main);">{{desk.title}}</span>
+                                        <span style="font-size: 11.5px; font-weight: 800; color: var(--ray-blue); margin-left: 6px;">
+                                            ({{desk.seats.length}} Kişilik &bull; {{desk.orientation === 'vertical' ? 'Dikine' : 'Yatay'}})
+                                        </span>
+                                    </div>
+                                    <button type="button" class="btn btn-soft-red btn-sm" style="padding: 4px 9px; font-size: 11px;" ng-click="deleteDeskModule(desk)">
+                                        🗑️ Sil
+                                    </button>
+                                </div>
+
+                                <!-- Control 1: ORIENTATION (YATAY vs DİKİNE) -->
+                                <div class="designer-controls-row">
+                                    <span style="font-size: 12px; font-weight: 800; color: var(--text-secondary);">Masa &amp; Koltuk Yönü:</span>
+                                    <div class="orient-pill-group">
+                                        <button type="button"
+                                                class="orient-pill-btn"
+                                                ng-class="{'active': desk.orientation !== 'vertical'}"
+                                                ng-click="setDeskOrientation(desk, 'horizontal')">
+                                            ↔️ Yatay
+                                        </button>
+                                        <button type="button"
+                                                class="orient-pill-btn"
+                                                ng-class="{'active': desk.orientation === 'vertical'}"
+                                                ng-click="setDeskOrientation(desk, 'vertical')">
+                                            ↕️ Dikine
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Control 2: SEAT CAPACITY (2 -> 3 -> 4 -> 6 -> 8 KİŞİLİK) -->
+                                <div class="designer-controls-row">
+                                    <span style="font-size: 12px; font-weight: 800; color: var(--text-secondary);">Masa Boyutu (Kişi):</span>
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <button type="button" class="seat-stepper-btn" ng-click="changeDeskSeatCount(desk, desk.seats.length - 1)">−</button>
+                                        <span style="font-size: 14px; font-weight: 900; min-width: 62px; text-align: center; color: var(--ray-blue);">
+                                            {{desk.seats.length}} Kişi
+                                        </span>
+                                        <button type="button" class="seat-stepper-btn" ng-click="changeDeskSeatCount(desk, desk.seats.length + 1)">+</button>
+                                    </div>
+                                </div>
+
+                                <!-- Quick Capacity Presets -->
+                                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                                    <button type="button"
+                                            class="btn btn-sm"
+                                            style="flex: 1; padding: 5px 6px; font-size: 11px;"
+                                            ng-repeat="cnt in [2, 3, 4, 6]"
+                                            ng-class="desk.seats.length === cnt ? 'btn-ray-blue' : 'btn-soft-blue'"
+                                            ng-click="changeDeskSeatCount(desk, cnt)">
+                                        {{cnt}} Kişilik Yap
+                                    </button>
+                                </div>
+
+                                <!-- Control 3: COLUMN / WINDOW SIDE -->
+                                <div class="designer-controls-row">
+                                    <span style="font-size: 12px; font-weight: 800; color: var(--text-secondary);">Cephe Konumu:</span>
+                                    <div class="orient-pill-group">
+                                        <button type="button"
+                                                class="orient-pill-btn"
+                                                ng-class="{'active': desk.gridX !== 2}"
+                                                ng-click="setDeskSide(desk, 1)">
+                                            ☀️ Sol Cephe
+                                        </button>
+                                        <button type="button"
+                                                class="orient-pill-btn"
+                                                ng-class="{'active': desk.gridX === 2}"
+                                                ng-click="setDeskSide(desk, 2)">
+                                            ☀️ Sağ Cephe
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- LIVE 2D VISUAL PREVIEW OF THIS DESK -->
+                                <div class="two-person-desk"
+                                     style="margin-top: 2px; background: var(--bg-subtle);"
+                                     ng-class="{'desk-vertical': desk.orientation === 'vertical'}">
+
+                                    <div ng-if="desk.orientation !== 'vertical'">
+                                        <div class="desk-surface-2d" style="margin-bottom: 8px;">
+                                            <div class="desk-surface-header">
+                                                <span>CANLI 2B ÖNİZLEME (YATAY)</span>
+                                                <span>{{desk.seats.length}} KOLTUK</span>
+                                            </div>
+                                            <div class="desk-monitors-row">
+                                                <div class="monitor-2d-rig" ng-repeat="s in desk.seats track by $index">
+                                                    <div class="monitor-screen-bar"></div>
+                                                    <div class="keyboard-pad-2d"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="desk-seats-pair">
+                                            <div class="bus-seat seat-empty" style="height: 52px; cursor: default;" ng-repeat="seat in desk.seats">
+                                                <div class="seat-number" style="font-size: 13px;">{{seat.code}}</div>
+                                                <div class="seat-subtext" style="font-size: 9.5px;">KOLTUK {{$index + 1}}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div ng-if="desk.orientation === 'vertical'">
+                                        <div class="desk-surface-header" style="margin-bottom: 6px;">
+                                            <span>CANLI 2B ÖNİZLEME (DİKİNE)</span>
+                                            <span>{{desk.seats.length}} KOLTUK</span>
+                                        </div>
+                                        <div class="desk-vertical-body">
+                                            <div class="desk-surface-2d vertical-surface">
+                                                <div class="desk-monitors-col">
+                                                    <div class="monitor-2d-rig-vert" ng-repeat="s in desk.seats track by $index">
+                                                        <div class="monitor-screen-bar-vert"></div>
+                                                        <div class="keyboard-pad-2d-vert"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="desk-seats-pair vertical-seats">
+                                                <div class="bus-seat seat-empty" style="height: 48px; cursor: default;" ng-repeat="seat in desk.seats">
+                                                    <div class="seat-number" style="font-size: 13px;">{{seat.code}}</div>
+                                                    <div class="seat-subtext" style="font-size: 9.5px;">KOLTUK {{$index + 1}}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- ==================== TAB 5: ADMIN DASHBOARD ==================== -->
             <div ng-if="activeTab === 'adminDashboard' && adminData">
                 <div class="summary-strip">
                     <div class="stat-card">

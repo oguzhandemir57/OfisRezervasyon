@@ -9,6 +9,7 @@ namespace RayOfisRezervasyon.Services;
 public class StoreData
 {
     public List<User> Users { get; set; } = new();
+    public List<OfficeFloor> Floors { get; set; } = new();
     public List<WorkspaceItem> Workspaces { get; set; } = new();
     public List<Reservation> Reservations { get; set; } = new();
 }
@@ -18,12 +19,13 @@ public class ReservationStore
     private readonly string _filePath;
     private readonly object _lock = new();
     private StoreData _data = new();
+    private static readonly char[] SeatLetters = new[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
 
     public ReservationStore(IWebHostEnvironment env)
     {
         var dataDir = Path.Combine(env.ContentRootPath, "App_Data");
         Directory.CreateDirectory(dataDir);
-        _filePath = Path.Combine(dataDir, "store_v4.json");
+        _filePath = Path.Combine(dataDir, "store_v5.json");
         LoadOrSeed();
     }
 
@@ -37,7 +39,7 @@ public class ReservationStore
                 {
                     var json = File.ReadAllText(_filePath);
                     var loaded = JsonSerializer.Deserialize<StoreData>(json);
-                    if (loaded != null && loaded.Users.Count > 0 && loaded.Workspaces.Count > 0)
+                    if (loaded != null && loaded.Users.Count > 0 && loaded.Workspaces.Count > 0 && loaded.Floors.Count > 0)
                     {
                         _data = loaded;
                         return;
@@ -61,16 +63,14 @@ public class ReservationStore
         File.WriteAllText(_filePath, json);
     }
 
-    private static List<string> GetDeskFeatures(int deskNo, bool isSeatA)
+    private static List<string> GetDeskFeatures(int deskNo, bool isWindowSide)
     {
         var list = new List<string>();
-        // Window-side vs Aisle-side
-        if ((deskNo % 2 == 1 && isSeatA) || (deskNo % 2 == 0 && !isSeatA))
+        if (isWindowSide)
             list.Add("Cam Kenarı Masa (Gün Işığı)");
         else
             list.Add("Koridor Yanı (Kolay Erişim)");
 
-        // Monitor config
         if (deskNo <= 4)
             list.Add("Çift Monitör (2x27\" IPS)");
         else if (deskNo <= 7)
@@ -78,7 +78,6 @@ public class ReservationStore
         else
             list.Add("27\" 4K Monitör + Laptop Standı");
 
-        // Height adjustable & ergonomics
         if (deskNo % 2 == 1)
             list.Add("Yükseklik Ayarlanabilen Motorlu Masa");
         else
@@ -87,6 +86,18 @@ public class ReservationStore
         list.Add("Type-C Hızlı Şarj Dock & Ethernet");
         list.Add("Ergonomik Bel Destekli Koltuk");
         return list;
+    }
+
+    private static string BuildSeatCode(int floorId, int deskNo, int seatIdx)
+    {
+        char letter = SeatLetters[Math.Clamp(seatIdx - 1, 0, SeatLetters.Length - 1)];
+        return floorId == 1 ? $"{deskNo}{letter}" : $"K{floorId}-{deskNo}{letter}";
+    }
+
+    private static string BuildSeatName(int floorId, int deskNo, int seatIdx, string code)
+    {
+        string prefix = floorId == 1 ? "" : $"Kat {floorId} • ";
+        return $"{prefix}Masa {deskNo} - {seatIdx}. Koltuk ({code})";
     }
 
     private void SeedDefaultData()
@@ -101,54 +112,57 @@ public class ReservationStore
             new() { Id = 6, Username = "can", Password = "123", FullName = "Caner Özkan", Department = "Pazarlama", Title = "Dijital Pazarlama Uzmanı", Role = "Employee", AvatarInitials = "CÖ" }
         };
 
+        _data.Floors = new List<OfficeFloor>
+        {
+            new() { Id = 1, Code = "KAT-1", Name = "1. Kat — A Blok Açık Ofis", Description = "Panoramik Cam Cephe & Ana Çalışma Alanı", IsActive = true },
+            new() { Id = 2, Code = "KAT-2", Name = "2. Kat — B Blok Ar-Ge & Tasarım", Description = "Çoklu Takım Masaları (3-4 Kişilik) & Dikine/Yatay Hibrit Düzen", IsActive = true },
+            new() { Id = 3, Code = "KAT-3", Name = "3. Kat — VIP & Proje Katı", Description = "Özel Proje Takımları Katı (Admin Tarafından Açılıp Kapatılabilir)", IsActive = false }
+        };
+
         var workspaces = new List<WorkspaceItem>();
         int idCounter = 1;
 
+        // FLOOR 1: 10 Desks (2 seats each by default, horizontal) + 4 Meeting Rooms
         for (int deskNo = 1; deskNo <= 10; deskNo++)
         {
             string zoneName = $"Masa {deskNo}";
             int row = (deskNo - 1) / 2 + 1;
             int side = (deskNo % 2 == 1) ? 1 : 2;
 
-            workspaces.Add(new WorkspaceItem
+            for (int s = 1; s <= 2; s++)
             {
-                Id = idCounter++,
-                Code = $"{deskNo}A",
-                Name = $"Masa {deskNo} - Sol Koltuk ({deskNo}A)",
-                Type = "Masa",
-                Zone = zoneName,
-                Capacity = 1,
-                Features = GetDeskFeatures(deskNo, true),
-                GridX = side,
-                GridY = row,
-                GridW = deskNo,
-                GridH = 1
-            });
-
-            workspaces.Add(new WorkspaceItem
-            {
-                Id = idCounter++,
-                Code = $"{deskNo}B",
-                Name = $"Masa {deskNo} - Sağ Koltuk ({deskNo}B)",
-                Type = "Masa",
-                Zone = zoneName,
-                Capacity = 1,
-                Features = GetDeskFeatures(deskNo, false),
-                GridX = side,
-                GridY = row,
-                GridW = deskNo,
-                GridH = 2
-            });
+                string code = BuildSeatCode(1, deskNo, s);
+                bool isWin = (side == 1 && s == 1) || (side == 2 && s == 2);
+                workspaces.Add(new WorkspaceItem
+                {
+                    Id = idCounter++,
+                    FloorId = 1,
+                    Code = code,
+                    Name = BuildSeatName(1, deskNo, s, code),
+                    Type = "Masa",
+                    Zone = zoneName,
+                    Capacity = 1,
+                    Orientation = "horizontal",
+                    Features = GetDeskFeatures(deskNo, isWin),
+                    GridX = side,
+                    GridY = row,
+                    GridW = deskNo,
+                    GridH = s,
+                    IsActive = true
+                });
+            }
         }
 
         workspaces.Add(new WorkspaceItem
         {
             Id = idCounter++,
+            FloorId = 1,
             Code = "ODA-1",
             Name = "Toplantı Odası 1 (Sprint)",
             Type = "Oda",
             Zone = "Toplantı Odaları",
             Capacity = 6,
+            Orientation = "horizontal",
             Features = new() { "65\" 4K Akıllı Ekran", "Cam Yazı Tahtası", "Ses Yalıtımlı Kabin", "Kablosuz HDMI Sunum" },
             GridX = 1,
             GridY = 6
@@ -156,11 +170,13 @@ public class ReservationStore
         workspaces.Add(new WorkspaceItem
         {
             Id = idCounter++,
+            FloorId = 1,
             Code = "ODA-2",
             Name = "Toplantı Odası 2 (İnovasyon)",
             Type = "Oda",
             Zone = "Toplantı Odaları",
             Capacity = 8,
+            Orientation = "horizontal",
             Features = new() { "Polycom Video Konferans", "Çift Projeksiyon", "Cam Kenarı Manzaralı", "Akustik Panel" },
             GridX = 2,
             GridY = 6
@@ -168,11 +184,13 @@ public class ReservationStore
         workspaces.Add(new WorkspaceItem
         {
             Id = idCounter++,
+            FloorId = 1,
             Code = "ODA-3",
             Name = "Toplantı Odası 3 (Hızlı Görüşme)",
             Type = "Oda",
             Zone = "Toplantı Odaları",
             Capacity = 4,
+            Orientation = "horizontal",
             Features = new() { "55\" LED TV", "Yükseklik Ayarlanabilir Masa", "Hızlı Şarj İstasyonu" },
             GridX = 3,
             GridY = 6
@@ -180,15 +198,90 @@ public class ReservationStore
         workspaces.Add(new WorkspaceItem
         {
             Id = idCounter++,
+            FloorId = 1,
             Code = "ODA-4",
             Name = "Büyük Konferans Odası",
             Type = "Oda",
             Zone = "Toplantı Odaları",
             Capacity = 12,
+            Orientation = "horizontal",
             Features = new() { "85\" İnteraktif Ekran", "360° Mikrofon & Ses Sistemi", "Panoramik Cam Cephe", "İkram & Kahve Köşesi" },
             GridX = 4,
             GridY = 6
         });
+
+        // FLOOR 2: Showcase 3-person, 4-person, and Vertical ("vertical") desks!
+        var floor2Configs = new[]
+        {
+            new { DeskNo = 1, Seats = 3, Orientation = "horizontal", Side = 1, Row = 1 },
+            new { DeskNo = 2, Seats = 3, Orientation = "vertical",   Side = 2, Row = 1 },
+            new { DeskNo = 3, Seats = 4, Orientation = "horizontal", Side = 1, Row = 2 },
+            new { DeskNo = 4, Seats = 2, Orientation = "vertical",   Side = 2, Row = 2 }
+        };
+        foreach (var cfg in floor2Configs)
+        {
+            for (int s = 1; s <= cfg.Seats; s++)
+            {
+                string code = BuildSeatCode(2, cfg.DeskNo, s);
+                workspaces.Add(new WorkspaceItem
+                {
+                    Id = idCounter++,
+                    FloorId = 2,
+                    Code = code,
+                    Name = BuildSeatName(2, cfg.DeskNo, s, code),
+                    Type = "Masa",
+                    Zone = $"Masa {cfg.DeskNo}",
+                    Capacity = 1,
+                    Orientation = cfg.Orientation,
+                    Features = GetDeskFeatures(cfg.DeskNo, s == 1),
+                    GridX = cfg.Side,
+                    GridY = cfg.Row,
+                    GridW = cfg.DeskNo,
+                    GridH = s,
+                    IsActive = true
+                });
+            }
+        }
+        workspaces.Add(new WorkspaceItem
+        {
+            Id = idCounter++,
+            FloorId = 2,
+            Code = "ODA-5",
+            Name = "Ar-Ge Beyin Fırtınası Odası",
+            Type = "Oda",
+            Zone = "Toplantı Odaları",
+            Capacity = 10,
+            Orientation = "horizontal",
+            Features = new() { "75\" Akıllı Tahta", "Çift Monitör Sunum Masası", "Ses Yalıtımlı Akustik Duvar" },
+            GridX = 1,
+            GridY = 3
+        });
+
+        // FLOOR 3: Initially Closed (IsActive = false on Floor 3) with 2 3-person desks
+        for (int deskNo = 1; deskNo <= 2; deskNo++)
+        {
+            for (int s = 1; s <= 3; s++)
+            {
+                string code = BuildSeatCode(3, deskNo, s);
+                workspaces.Add(new WorkspaceItem
+                {
+                    Id = idCounter++,
+                    FloorId = 3,
+                    Code = code,
+                    Name = BuildSeatName(3, deskNo, s, code),
+                    Type = "Masa",
+                    Zone = $"Masa {deskNo}",
+                    Capacity = 1,
+                    Orientation = deskNo == 1 ? "horizontal" : "vertical",
+                    Features = GetDeskFeatures(deskNo, s == 1),
+                    GridX = deskNo,
+                    GridY = 1,
+                    GridW = deskNo,
+                    GridH = s,
+                    IsActive = true
+                });
+            }
+        }
 
         _data.Workspaces = workspaces;
 
@@ -235,59 +328,100 @@ public class ReservationStore
         }
     }
 
-    public object GetWorkspacesForDate(string date)
+    public object GetFloors()
     {
         lock (_lock)
         {
+            return _data.Floors.Select(f =>
+            {
+                var floorWs = _data.Workspaces.Where(w => w.FloorId == f.Id && w.IsActive).ToList();
+                var deskCount = floorWs.Where(w => w.Type == "Masa").Select(w => w.GridW).Distinct().Count();
+                var seatCount = floorWs.Count(w => w.Type == "Masa");
+                var roomCount = floorWs.Count(w => w.Type == "Oda");
+                return new
+                {
+                    f.Id,
+                    f.Code,
+                    f.Name,
+                    f.Description,
+                    f.IsActive,
+                    DeskCount = deskCount,
+                    SeatCount = seatCount,
+                    RoomCount = roomCount
+                };
+            }).ToList();
+        }
+    }
+
+    public object GetWorkspacesForDate(string date, int? floorId = null)
+    {
+        lock (_lock)
+        {
+            int targetFloorId = floorId ?? (_data.Floors.FirstOrDefault(f => f.IsActive)?.Id ?? 1);
+            var selectedFloor = _data.Floors.FirstOrDefault(f => f.Id == targetFloorId) ?? _data.Floors.First();
+
             var dayReservations = _data.Reservations
                 .Where(r => r.Date == date && r.Status != "Cancelled")
                 .ToList();
 
-            var items = _data.Workspaces.Select(w =>
-            {
-                var res = dayReservations.FirstOrDefault(r => r.WorkspaceItemId == w.Id);
-                var user = res != null ? _data.Users.FirstOrDefault(u => u.Id == res.UserId) : null;
-
-                return new
+            var items = _data.Workspaces
+                .Where(w => w.IsActive && w.FloorId == selectedFloor.Id)
+                .OrderBy(w => w.GridW)
+                .ThenBy(w => w.GridH)
+                .Select(w =>
                 {
-                    w.Id,
-                    w.Code,
-                    w.Name,
-                    w.Type,
-                    w.Zone,
-                    w.Capacity,
-                    w.Features,
-                    w.GridX,
-                    w.GridY,
-                    w.GridW,
-                    w.GridH,
-                    w.IsActive,
-                    IsReserved = res != null,
-                    Reservation = res == null ? null : new
+                    var res = dayReservations.FirstOrDefault(r => r.WorkspaceItemId == w.Id);
+                    var user = res != null ? _data.Users.FirstOrDefault(u => u.Id == res.UserId) : null;
+
+                    return new
                     {
-                        res.Id,
-                        res.UserId,
-                        UserFullName = user?.FullName ?? "Dolu",
-                        UserDepartment = user?.Department ?? "",
-                        UserTitle = user?.Title ?? "",
-                        UserInitials = user?.AvatarInitials ?? "D",
-                        res.Date,
-                        res.TimeSlot,
-                        res.Note,
-                        res.Status,
-                        res.CreatedAt
-                    }
-                };
-            }).ToList();
+                        w.Id,
+                        w.FloorId,
+                        w.Code,
+                        w.Name,
+                        w.Type,
+                        w.Zone,
+                        w.Capacity,
+                        w.Features,
+                        w.Orientation,
+                        w.GridX,
+                        w.GridY,
+                        w.GridW,
+                        w.GridH,
+                        w.IsActive,
+                        IsReserved = res != null,
+                        Reservation = res == null ? null : new
+                        {
+                            res.Id,
+                            res.UserId,
+                            UserFullName = user?.FullName ?? "Dolu",
+                            UserDepartment = user?.Department ?? "",
+                            UserTitle = user?.Title ?? "",
+                            UserInitials = user?.AvatarInitials ?? "D",
+                            res.Date,
+                            res.TimeSlot,
+                            res.Note,
+                            res.Status,
+                            res.CreatedAt
+                        }
+                    };
+                }).ToList();
 
             var totalActive = items.Count(i => i.IsActive);
             var reservedCount = items.Count(i => i.IsActive && i.IsReserved);
             var availableCount = items.Count(i => i.IsActive && !i.IsReserved);
-            var checkedInCount = dayReservations.Count(r => r.Status == "CheckedIn");
+            var checkedInCount = dayReservations.Count(r =>
+            {
+                var ws = _data.Workspaces.FirstOrDefault(w => w.Id == r.WorkspaceItemId);
+                return ws != null && ws.FloorId == selectedFloor.Id && r.Status == "CheckedIn";
+            });
 
             return new
             {
                 Date = date,
+                FloorId = selectedFloor.Id,
+                Floor = selectedFloor,
+                Floors = GetFloors(),
                 Summary = new
                 {
                     Total = items.Count,
@@ -315,6 +449,10 @@ public class ReservationStore
 
             if (!workspace.IsActive)
                 return new { success = false, message = $"{workspace.Code} şu anda kullanım dışı." };
+
+            var floor = _data.Floors.FirstOrDefault(f => f.Id == workspace.FloorId);
+            if (floor != null && !floor.IsActive)
+                return new { success = false, message = $"{floor.Name} şu anda yönetici tarafından kullanıma kapatılmıştır." };
 
             var user = _data.Users.FirstOrDefault(u => u.Id == req.UserId);
             if (user == null)
@@ -519,6 +657,273 @@ public class ReservationStore
                 Save();
                 return (true, $"{newWs.Code} eklendi.");
             }
+        }
+    }
+
+    // ==================== ADMIN FLOOR & DESK LAYOUT DESIGNER ENGINE ====================
+    public object CreateFloor(CreateFloorRequest req)
+    {
+        lock (_lock)
+        {
+            int nextFloorId = _data.Floors.Any() ? _data.Floors.Max(f => f.Id) + 1 : 1;
+            string floorName = string.IsNullOrWhiteSpace(req.Name)
+                ? $"{nextFloorId}. Kat — Yeni Ofis Katı"
+                : req.Name.Trim();
+            string floorDesc = string.IsNullOrWhiteSpace(req.Description)
+                ? "Özel Tasarım Çalışma Alanı"
+                : req.Description.Trim();
+
+            var newFloor = new OfficeFloor
+            {
+                Id = nextFloorId,
+                Code = $"KAT-{nextFloorId}",
+                Name = floorName,
+                Description = floorDesc,
+                IsActive = req.IsActive
+            };
+            _data.Floors.Add(newFloor);
+
+            int deskCount = Math.Clamp(req.InitialDeskCount, 1, 20);
+            int seatsPerDesk = Math.Clamp(req.SeatsPerDesk, 1, 8);
+            string orientation = (req.DefaultOrientation == "vertical") ? "vertical" : "horizontal";
+            int nextWsId = _data.Workspaces.Any() ? _data.Workspaces.Max(w => w.Id) + 1 : 1;
+
+            for (int d = 1; d <= deskCount; d++)
+            {
+                int row = (d - 1) / 2 + 1;
+                int side = (d % 2 == 1) ? 1 : 2;
+                for (int s = 1; s <= seatsPerDesk; s++)
+                {
+                    string code = BuildSeatCode(nextFloorId, d, s);
+                    _data.Workspaces.Add(new WorkspaceItem
+                    {
+                        Id = nextWsId++,
+                        FloorId = nextFloorId,
+                        Code = code,
+                        Name = BuildSeatName(nextFloorId, d, s, code),
+                        Type = "Masa",
+                        Zone = $"Masa {d}",
+                        Capacity = 1,
+                        Orientation = orientation,
+                        Features = GetDeskFeatures(d, s == 1),
+                        GridX = side,
+                        GridY = row,
+                        GridW = d,
+                        GridH = s,
+                        IsActive = true
+                    });
+                }
+            }
+
+            if (req.IncludeMeetingRoom)
+            {
+                int roomCount = _data.Workspaces.Count(w => w.Type == "Oda") + 1;
+                _data.Workspaces.Add(new WorkspaceItem
+                {
+                    Id = nextWsId++,
+                    FloorId = nextFloorId,
+                    Code = $"ODA-{roomCount}",
+                    Name = $"Kat {nextFloorId} Toplantı Odası (ODA-{roomCount})",
+                    Type = "Oda",
+                    Zone = "Toplantı Odaları",
+                    Capacity = 8,
+                    Orientation = "horizontal",
+                    Features = new() { "75\" 4K Sunum Ekranı", "Video Konferans Sistemi", "Ses Yalıtımlı Cam Cephe" },
+                    GridX = 1,
+                    GridY = (deskCount + 1) / 2 + 1,
+                    IsActive = true
+                });
+            }
+
+            Save();
+            return new
+            {
+                success = true,
+                message = $"{floorName} başarıyla oluşturuldu ({deskCount} masa x {seatsPerDesk} kişilik)!",
+                floor = newFloor,
+                floors = GetFloors()
+            };
+        }
+    }
+
+    public object ToggleFloorStatus(ToggleFloorStatusRequest req)
+    {
+        lock (_lock)
+        {
+            var floor = _data.Floors.FirstOrDefault(f => f.Id == req.FloorId);
+            if (floor == null)
+                return new { success = false, message = "Ofis katı bulunamadı." };
+
+            floor.IsActive = req.IsActive;
+            Save();
+
+            string statusText = floor.IsActive ? "kullanıma AÇILDI" : "kullanıma KAPATILDI";
+            return new
+            {
+                success = true,
+                message = $"{floor.Name} başarıyla {statusText}.",
+                floor = floor,
+                floors = GetFloors()
+            };
+        }
+    }
+
+    public object UpdateDeskGroup(UpdateDeskGroupRequest req)
+    {
+        lock (_lock)
+        {
+            int targetSeats = Math.Clamp(req.SeatCount, 1, 8);
+            string orientation = (req.Orientation == "vertical") ? "vertical" : "horizontal";
+            int side = req.GridX == 2 ? 2 : 1;
+            int row = Math.Max(1, req.GridY);
+
+            var allDeskSeats = _data.Workspaces
+                .Where(w => w.FloorId == req.FloorId && w.Type == "Masa" && w.GridW == req.DeskNo)
+                .OrderBy(w => w.GridH)
+                .ToList();
+
+            int nextWsId = _data.Workspaces.Any() ? _data.Workspaces.Max(w => w.Id) + 1 : 1;
+
+            for (int s = 1; s <= targetSeats; s++)
+            {
+                var existingSeat = allDeskSeats.FirstOrDefault(w => w.GridH == s);
+                string code = BuildSeatCode(req.FloorId, req.DeskNo, s);
+                if (existingSeat != null)
+                {
+                    existingSeat.IsActive = true;
+                    existingSeat.Orientation = orientation;
+                    existingSeat.GridX = side;
+                    existingSeat.GridY = row;
+                    existingSeat.Code = code;
+                    existingSeat.Name = BuildSeatName(req.FloorId, req.DeskNo, s, code);
+                    if (req.Features != null && req.Features.Count > 0)
+                    {
+                        existingSeat.Features = new List<string>(req.Features);
+                    }
+                }
+                else
+                {
+                    var baseFeatures = (req.Features != null && req.Features.Count > 0)
+                        ? new List<string>(req.Features)
+                        : (allDeskSeats.FirstOrDefault()?.Features ?? GetDeskFeatures(req.DeskNo, s == 1));
+
+                    _data.Workspaces.Add(new WorkspaceItem
+                    {
+                        Id = nextWsId++,
+                        FloorId = req.FloorId,
+                        Code = code,
+                        Name = BuildSeatName(req.FloorId, req.DeskNo, s, code),
+                        Type = "Masa",
+                        Zone = $"Masa {req.DeskNo}",
+                        Capacity = 1,
+                        Orientation = orientation,
+                        Features = new List<string>(baseFeatures),
+                        GridX = side,
+                        GridY = row,
+                        GridW = req.DeskNo,
+                        GridH = s,
+                        IsActive = true
+                    });
+                }
+            }
+
+            // Deactivate any seats beyond targetSeats and cancel their active reservations
+            foreach (var extraSeat in allDeskSeats.Where(w => w.GridH > targetSeats))
+            {
+                extraSeat.IsActive = false;
+                foreach (var r in _data.Reservations.Where(r => r.WorkspaceItemId == extraSeat.Id && r.Status != "Cancelled"))
+                {
+                    r.Status = "Cancelled";
+                }
+            }
+
+            Save();
+            string orientText = orientation == "vertical" ? "Dikine" : "Yatay";
+            return new
+            {
+                success = true,
+                message = $"Masa {req.DeskNo} güncellendi: {targetSeats} Kişilik ({orientText} düzen)!"
+            };
+        }
+    }
+
+    public object AddDeskGroup(AddDeskGroupRequest req)
+    {
+        lock (_lock)
+        {
+            var floorDesks = _data.Workspaces
+                .Where(w => w.FloorId == req.FloorId && w.Type == "Masa")
+                .ToList();
+
+            int nextDeskNo = floorDesks.Any() ? floorDesks.Max(w => w.GridW) + 1 : 1;
+            int seatCount = Math.Clamp(req.SeatCount, 1, 8);
+            string orientation = (req.Orientation == "vertical") ? "vertical" : "horizontal";
+            int side = (req.GridX == 1 || req.GridX == 2) ? req.GridX : ((nextDeskNo % 2 == 1) ? 1 : 2);
+            int row = (nextDeskNo - 1) / 2 + 1;
+            int nextWsId = _data.Workspaces.Any() ? _data.Workspaces.Max(w => w.Id) + 1 : 1;
+
+            for (int s = 1; s <= seatCount; s++)
+            {
+                string code = BuildSeatCode(req.FloorId, nextDeskNo, s);
+                var feats = (req.Features != null && req.Features.Count > 0)
+                    ? new List<string>(req.Features)
+                    : GetDeskFeatures(nextDeskNo, s == 1);
+
+                _data.Workspaces.Add(new WorkspaceItem
+                {
+                    Id = nextWsId++,
+                    FloorId = req.FloorId,
+                    Code = code,
+                    Name = BuildSeatName(req.FloorId, nextDeskNo, s, code),
+                    Type = "Masa",
+                    Zone = $"Masa {nextDeskNo}",
+                    Capacity = 1,
+                    Orientation = orientation,
+                    Features = feats,
+                    GridX = side,
+                    GridY = row,
+                    GridW = nextDeskNo,
+                    GridH = s,
+                    IsActive = true
+                });
+            }
+
+            Save();
+            return new
+            {
+                success = true,
+                deskNo = nextDeskNo,
+                message = $"Yeni Masa {nextDeskNo} ({seatCount} Kişilik, {(orientation == "vertical" ? "Dikine" : "Yatay")}) kata eklendi!"
+            };
+        }
+    }
+
+    public object DeleteDeskGroup(int floorId, int deskNo)
+    {
+        lock (_lock)
+        {
+            var seats = _data.Workspaces
+                .Where(w => w.FloorId == floorId && w.Type == "Masa" && w.GridW == deskNo)
+                .ToList();
+
+            if (seats.Count == 0)
+                return new { success = false, message = "Masa bulunamadı." };
+
+            foreach (var seat in seats)
+            {
+                seat.IsActive = false;
+                foreach (var r in _data.Reservations.Where(r => r.WorkspaceItemId == seat.Id && r.Status != "Cancelled"))
+                {
+                    r.Status = "Cancelled";
+                }
+            }
+
+            Save();
+            return new
+            {
+                success = true,
+                message = $"Masa {deskNo} kaldırıldı."
+            };
         }
     }
 
@@ -791,21 +1196,30 @@ public class ReservationStore
                 };
             }
 
-            // DETECT SPECIFIC WORKSPACE CODE (1A..10B or ODA-1..ODA-4)
+            // DETECT SPECIFIC WORKSPACE CODE (1A..20H, K2-1A..K9-20H, or ODA-1..ODA-20)
             WorkspaceItem? matchedWorkspace = null;
-            var roomMatch = Regex.Match(lower, @"oda[\s\-]*([1-4])");
+            var roomMatch = Regex.Match(lower, @"oda[\s\-]*(\d+)");
             if (roomMatch.Success)
             {
                 string code = "ODA-" + roomMatch.Groups[1].Value;
-                matchedWorkspace = _data.Workspaces.FirstOrDefault(w => w.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
+                matchedWorkspace = _data.Workspaces.FirstOrDefault(w => w.IsActive && w.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
             }
             else
             {
-                var seatMatch = Regex.Match(lower, @"\b(10|[1-9])\s*([ab])\b");
-                if (seatMatch.Success)
+                var floorSeatMatch = Regex.Match(lower, @"\bk(\d+)[\s\-]*(\d+)\s*([a-h])\b");
+                if (floorSeatMatch.Success)
                 {
-                    string code = (seatMatch.Groups[1].Value + seatMatch.Groups[2].Value).ToUpper();
-                    matchedWorkspace = _data.Workspaces.FirstOrDefault(w => w.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
+                    string code = $"K{floorSeatMatch.Groups[1].Value}-{floorSeatMatch.Groups[2].Value}{floorSeatMatch.Groups[3].Value.ToUpper()}";
+                    matchedWorkspace = _data.Workspaces.FirstOrDefault(w => w.IsActive && w.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
+                }
+                else
+                {
+                    var seatMatch = Regex.Match(lower, @"\b(20|1\d|[1-9])\s*([a-h])\b");
+                    if (seatMatch.Success)
+                    {
+                        string code = (seatMatch.Groups[1].Value + seatMatch.Groups[2].Value).ToUpper();
+                        matchedWorkspace = _data.Workspaces.FirstOrDefault(w => w.IsActive && w.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
+                    }
                 }
             }
 
@@ -1239,8 +1653,8 @@ public class ReservationStore
 
             var buttons = new List<AiActionButton>();
 
-            // Extract any free workspace codes mentioned in the AI reply (e.g. 1A, 2B, ODA-1) so user can book them in 1 click!
-            var matches = Regex.Matches(htmlReply, @"\b(10[AB]|[1-9][AB]|ODA-[1-4])\b");
+            // Extract any free workspace codes mentioned in the AI reply (e.g. 1A, 1C, K2-1A, ODA-1) so user can book them in 1 click!
+            var matches = Regex.Matches(htmlReply, @"\b(K\d+-\d+[A-H]|(?:20|1\d|[1-9])[A-H]|ODA-\d+)\b");
             var addedCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (Match m in matches)
