@@ -221,29 +221,31 @@
                             </div>
                         </div>
 
-                        <div class="bus-cabin">
-                            <div class="bus-front-banner">
-                                <span class="window-tag">☀️ Sol Cam Kenarı</span>
-                                <span>2B OFİS MASA DÜZENİ (YATAY &amp; DİKİNE)</span>
-                                <span class="window-tag">☀️ Sağ Cam Kenarı</span>
-                            </div>
+                        <!-- LIVE 2D FLOOR PLAN CANVAS (SHOWS EXACT ADMIN DESIGN: POSITIONS, YATAY/DİKEY & SEAT COUNTS) -->
+                        <div class="square-floor-canvas-wrap">
+                            <div class="square-floor-canvas reservation-floor-canvas">
+                                <div class="square-canvas-edge-label top">⬆️ KUZEY CEPHE / GİRİŞ</div>
+                                <div class="square-canvas-edge-label left">☀️ SOL CAM CEPHE</div>
+                                <div class="square-canvas-edge-label right">☀️ SAĞ CAM CEPHE</div>
 
-                            <!-- DYNAMIC ROWS OF 2D DESK MODULES (SUPPORTS 1..8 SEATS & HORIZONTAL/VERTICAL) -->
-                            <div class="bus-row" ng-repeat="row in deskRows">
-                                <!-- Left 2D Desk -->
-                                <div class="two-person-desk"
-                                     ng-if="row.leftDesk && row.leftDesk.seats.length > 0"
-                                     ng-class="{'desk-vertical': row.leftDesk.orientation === 'vertical'}">
+                                <div class="square-canvas-watermark" ng-if="designerDesks.length === 0">
+                                    <div style="font-size: 18px; font-weight: 900;">BU KATTA HENÜZ MASA BULUNMUYOR</div>
+                                </div>
 
-                                    <!-- HORIZONTAL (YATAY) DESK VIEW -->
-                                    <div ng-if="row.leftDesk.orientation !== 'vertical'">
+                                <!-- DESKS AT EXACT DESIGNED (canvasX, canvasY) POSITIONS -->
+                                <div class="canvas-placed-desk"
+                                     ng-repeat="desk in designerDesks track by desk.deskNo"
+                                     ng-style="{'left': desk.canvasX + '%', 'top': desk.canvasY + '%'}">
+
+                                    <!-- HORIZONTAL (YATAY) DESK: Table on Top, Chairs in Horizontal Row Below -->
+                                    <div ng-if="desk.orientation !== 'vertical'">
                                         <div class="desk-surface-2d">
                                             <div class="desk-surface-header">
-                                                <span>{{row.leftDesk.title}} ({{row.leftDesk.seats.length}} Kişilik &bull; Yatay)</span>
-                                                <span style="font-size: 9.5px; color: var(--ray-blue);">{{row.leftDesk.monitorBadge}} &bull; {{row.leftDesk.specBadge}}</span>
+                                                <span>{{desk.title}} ({{desk.seats.length}} Kişilik &bull; Yatay Masa)</span>
+                                                <span style="font-size: 9.5px; color: var(--ray-blue);">{{desk.monitorBadge}}</span>
                                             </div>
                                             <div class="desk-monitors-row">
-                                                <div class="monitor-2d-rig" ng-repeat="s in row.leftDesk.seats track by $index">
+                                                <div class="monitor-2d-rig" ng-repeat="s in desk.seats track by $index">
                                                     <div class="monitor-screen-bar"></div>
                                                     <div class="keyboard-pad-2d"></div>
                                                 </div>
@@ -252,16 +254,9 @@
 
                                         <div class="desk-seats-pair">
                                             <div class="bus-seat"
-                                                 ng-repeat="seat in row.leftDesk.seats"
+                                                 ng-repeat="seat in desk.seats"
                                                  ng-class="getBusSeatClass(seat)"
                                                  ng-click="selectWorkspace(seat)">
-                                                <svg class="armchair-svg" viewBox="0 0 28 28" aria-hidden="true">
-                                                    <path d="M6 11V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v4"></path>
-                                                    <path d="M6 11a3 3 0 0 0-3 3v5a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2v-5a3 3 0 0 0-3-3v5H6v-5z"></path>
-                                                    <line x1="6" y1="14" x2="22" y2="14"></line>
-                                                    <line x1="7" y1="21" x2="7" y2="24"></line>
-                                                    <line x1="21" y1="21" x2="21" y2="24"></line>
-                                                </svg>
                                                 <div class="seat-number">{{seat.code}}</div>
                                                 <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
                                                 <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN</div>
@@ -270,16 +265,13 @@
                                         </div>
                                     </div>
 
-                                    <!-- VERTICAL (DİKİNE) DESK VIEW -->
-                                    <div ng-if="row.leftDesk.orientation === 'vertical'">
-                                        <div class="desk-surface-header" style="margin-bottom: 6px;">
-                                            <span>{{row.leftDesk.title}} ({{row.leftDesk.seats.length}} Kişilik &bull; Dikine)</span>
-                                            <span style="font-size: 9.5px; color: var(--ray-blue);">{{row.leftDesk.monitorBadge}}</span>
-                                        </div>
+                                    <!-- VERTICAL (DİKEY) DESK: Tall Vertical Table on Left, Chairs Stacked Vertically on Right -->
+                                    <div ng-if="desk.orientation === 'vertical'">
                                         <div class="desk-vertical-body">
                                             <div class="desk-surface-2d vertical-surface">
+                                                <span class="vertical-desk-label">{{desk.title}} &bull; Dikey Masa</span>
                                                 <div class="desk-monitors-col">
-                                                    <div class="monitor-2d-rig-vert" ng-repeat="s in row.leftDesk.seats track by $index">
+                                                    <div class="monitor-2d-rig-vert" ng-repeat="s in desk.seats track by $index">
                                                         <div class="monitor-screen-bar-vert"></div>
                                                         <div class="keyboard-pad-2d-vert"></div>
                                                     </div>
@@ -287,16 +279,9 @@
                                             </div>
                                             <div class="desk-seats-pair vertical-seats">
                                                 <div class="bus-seat"
-                                                     ng-repeat="seat in row.leftDesk.seats"
+                                                     ng-repeat="seat in desk.seats"
                                                      ng-class="getBusSeatClass(seat)"
                                                      ng-click="selectWorkspace(seat)">
-                                                    <svg class="armchair-svg" viewBox="0 0 28 28" aria-hidden="true">
-                                                        <path d="M6 11V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v4"></path>
-                                                        <path d="M6 11a3 3 0 0 0-3 3v5a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2v-5a3 3 0 0 0-3-3v5H6v-5z"></path>
-                                                        <line x1="6" y1="14" x2="22" y2="14"></line>
-                                                        <line x1="7" y1="21" x2="7" y2="24"></line>
-                                                        <line x1="21" y1="21" x2="21" y2="24"></line>
-                                                    </svg>
                                                     <div class="seat-number">{{seat.code}}</div>
                                                     <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
                                                     <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN</div>
@@ -305,104 +290,24 @@
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
-                                <div ng-if="!row.leftDesk || row.leftDesk.seats.length === 0"></div>
-
-                                <div class="bus-corridor">KORİDOR</div>
-
-                                <!-- Right 2D Desk -->
-                                <div class="two-person-desk"
-                                     ng-if="row.rightDesk && row.rightDesk.seats.length > 0"
-                                     ng-class="{'desk-vertical': row.rightDesk.orientation === 'vertical'}">
-
-                                    <!-- HORIZONTAL (YATAY) DESK VIEW -->
-                                    <div ng-if="row.rightDesk.orientation !== 'vertical'">
-                                        <div class="desk-surface-2d">
-                                            <div class="desk-surface-header">
-                                                <span>{{row.rightDesk.title}} ({{row.rightDesk.seats.length}} Kişilik &bull; Yatay)</span>
-                                                <span style="font-size: 9.5px; color: var(--ray-blue);">{{row.rightDesk.monitorBadge}} &bull; {{row.rightDesk.specBadge}}</span>
-                                            </div>
-                                            <div class="desk-monitors-row">
-                                                <div class="monitor-2d-rig" ng-repeat="s in row.rightDesk.seats track by $index">
-                                                    <div class="monitor-screen-bar"></div>
-                                                    <div class="keyboard-pad-2d"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="desk-seats-pair">
-                                            <div class="bus-seat"
-                                                 ng-repeat="seat in row.rightDesk.seats"
-                                                 ng-class="getBusSeatClass(seat)"
-                                                 ng-click="selectWorkspace(seat)">
-                                                <svg class="armchair-svg" viewBox="0 0 28 28" aria-hidden="true">
-                                                    <path d="M6 11V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v4"></path>
-                                                    <path d="M6 11a3 3 0 0 0-3 3v5a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2v-5a3 3 0 0 0-3-3v5H6v-5z"></path>
-                                                    <line x1="6" y1="14" x2="22" y2="14"></line>
-                                                    <line x1="7" y1="21" x2="7" y2="24"></line>
-                                                    <line x1="21" y1="21" x2="21" y2="24"></line>
-                                                </svg>
-                                                <div class="seat-number">{{seat.code}}</div>
-                                                <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
-                                                <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN</div>
-                                                <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">DOLU</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- VERTICAL (DİKİNE) DESK VIEW -->
-                                    <div ng-if="row.rightDesk.orientation === 'vertical'">
-                                        <div class="desk-surface-header" style="margin-bottom: 6px;">
-                                            <span>{{row.rightDesk.title}} ({{row.rightDesk.seats.length}} Kişilik &bull; Dikine)</span>
-                                            <span style="font-size: 9.5px; color: var(--ray-blue);">{{row.rightDesk.monitorBadge}}</span>
-                                        </div>
-                                        <div class="desk-vertical-body">
-                                            <div class="desk-surface-2d vertical-surface">
-                                                <div class="desk-monitors-col">
-                                                    <div class="monitor-2d-rig-vert" ng-repeat="s in row.rightDesk.seats track by $index">
-                                                        <div class="monitor-screen-bar-vert"></div>
-                                                        <div class="keyboard-pad-2d-vert"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="desk-seats-pair vertical-seats">
-                                                <div class="bus-seat"
-                                                     ng-repeat="seat in row.rightDesk.seats"
-                                                     ng-class="getBusSeatClass(seat)"
-                                                     ng-click="selectWorkspace(seat)">
-                                                    <svg class="armchair-svg" viewBox="0 0 28 28" aria-hidden="true">
-                                                        <path d="M6 11V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v4"></path>
-                                                        <path d="M6 11a3 3 0 0 0-3 3v5a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2v-5a3 3 0 0 0-3-3v5H6v-5z"></path>
-                                                        <line x1="6" y1="14" x2="22" y2="14"></line>
-                                                        <line x1="7" y1="21" x2="7" y2="24"></line>
-                                                        <line x1="21" y1="21" x2="21" y2="24"></line>
-                                                    </svg>
-                                                    <div class="seat-number">{{seat.code}}</div>
-                                                    <div class="seat-subtext" ng-if="!seat.isReserved">BOŞ</div>
-                                                    <div class="seat-subtext" ng-if="seat.isReserved && isMyReservation(seat)">SİZİN</div>
-                                                    <div class="seat-subtext" ng-if="seat.isReserved && !isMyReservation(seat)">DOLU</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div ng-if="!row.rightDesk || row.rightDesk.seats.length === 0"></div>
                             </div>
+                        </div>
 
-                            <!-- MEETING ROOMS -->
-                            <div class="rooms-section-divider">
-                                TOPLANTI ODALARI (AYNI GÜNDE EN FAZLA 1 ODA SEÇİLEBİLİR)
-                            </div>
-                            <div class="rooms-row">
-                                <div class="bus-seat"
-                                     ng-repeat="room in meetingRooms"
-                                     ng-class="getBusSeatClass(room)"
-                                     ng-click="selectWorkspace(room)">
-                                    <div class="seat-number" style="font-size: 13.5px;">{{room.code}}</div>
-                                    <div class="seat-subtext" ng-if="!room.isReserved">BOŞ ({{room.capacity}}K)</div>
-                                    <div class="seat-subtext" ng-if="room.isReserved && isMyReservation(room)">SİZİN ODANIZ</div>
-                                    <div class="seat-subtext" ng-if="room.isReserved && !isMyReservation(room)">DOLU</div>
-                                </div>
+                        <!-- MEETING ROOMS -->
+                        <div class="rooms-section-divider" ng-if="meetingRooms.length > 0">
+                            TOPLANTI ODALARI (AYNI GÜNDE EN FAZLA 1 ODA SEÇİLEBİLİR)
+                        </div>
+                        <div class="rooms-row" ng-if="meetingRooms.length > 0">
+                            <div class="bus-seat"
+                                 ng-repeat="room in meetingRooms"
+                                 ng-class="getBusSeatClass(room)"
+                                 ng-click="selectWorkspace(room)">
+                                <div class="seat-number" style="font-size: 13.5px;">{{room.code}}</div>
+                                <div class="seat-subtext" ng-if="!room.isReserved">BOŞ ({{room.capacity}}K)</div>
+                                <div class="seat-subtext" ng-if="room.isReserved && isMyReservation(room)">SİZİN ODANIZ</div>
+                                <div class="seat-subtext" ng-if="room.isReserved && !isMyReservation(room)">DOLU</div>
                             </div>
                         </div>
                     </div>
@@ -931,59 +836,50 @@
                                      ng-click="selectCanvasDesk(desk, $event)">
 
                                     <div class="canvas-desk-drag-handle">
-                                        <span>✋ {{desk.title}} ({{desk.seats.length}}K)</span>
+                                        <span>✋ {{desk.title}} ({{desk.seats.length}}K &bull; {{desk.orientation === 'vertical' ? 'Dikey' : 'Yatay'}})</span>
                                         <span style="color: var(--ray-blue); font-size: 10px;">⚙️ Düzenle</span>
                                     </div>
 
-                                    <!-- HORIZONTAL DESK WITH ARMCHAIR SEATS -->
+                                    <!-- HORIZONTAL (YATAY) DESK: Table on Top, Armchair Seats in Horizontal Row Below -->
                                     <div ng-if="desk.orientation !== 'vertical'">
-                                        <div class="desk-surface-2d" style="margin-bottom: 8px; padding: 6px 8px;">
+                                        <div class="desk-surface-2d" style="margin-bottom: 10px; padding: 8px 10px;">
+                                            <div class="desk-surface-header">
+                                                <span>YATAY MASA</span>
+                                                <span>{{desk.seats.length}} KOLTUK</span>
+                                            </div>
                                             <div class="desk-monitors-row">
                                                 <div class="monitor-2d-rig" ng-repeat="s in desk.seats track by $index">
-                                                    <div class="monitor-screen-bar" style="width: 24px;"></div>
-                                                    <div class="keyboard-pad-2d" style="width: 14px;"></div>
+                                                    <div class="monitor-screen-bar" style="width: 26px;"></div>
+                                                    <div class="keyboard-pad-2d" style="width: 16px;"></div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="desk-seats-pair" style="gap: 8px;">
+                                        <div class="desk-seats-pair">
                                             <div class="bus-seat seat-empty"
-                                                 style="width: 62px; height: 60px; padding: 4px;"
                                                  ng-repeat="seat in desk.seats">
-                                                <svg class="armchair-svg" viewBox="0 0 28 28" aria-hidden="true">
-                                                    <path d="M6 11V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v4"></path>
-                                                    <path d="M6 11a3 3 0 0 0-3 3v5a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2v-5a3 3 0 0 0-3-3v5H6v-5z"></path>
-                                                    <line x1="6" y1="14" x2="22" y2="14"></line>
-                                                    <line x1="7" y1="21" x2="7" y2="24"></line>
-                                                    <line x1="21" y1="21" x2="21" y2="24"></line>
-                                                </svg>
-                                                <div class="seat-number" style="font-size: 11.5px;">{{seat.code}}</div>
+                                                <div class="seat-number">{{seat.code}}</div>
+                                                <div class="seat-subtext">KOLTUK {{$index + 1}}</div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- VERTICAL DESK WITH ARMCHAIR SEATS -->
+                                    <!-- VERTICAL (DİKEY) DESK: Tall Vertical Table on Left, Armchair Seats Stacked Vertically on Right -->
                                     <div ng-if="desk.orientation === 'vertical'">
-                                        <div class="desk-vertical-body" style="gap: 8px;">
-                                            <div class="desk-surface-2d vertical-surface" style="min-width: 46px; padding: 8px 6px;">
+                                        <div class="desk-vertical-body">
+                                            <div class="desk-surface-2d vertical-surface">
+                                                <span class="vertical-desk-label">DİKEY MASA</span>
                                                 <div class="desk-monitors-col">
                                                     <div class="monitor-2d-rig-vert" ng-repeat="s in desk.seats track by $index">
-                                                        <div class="monitor-screen-bar-vert" style="height: 22px;"></div>
-                                                        <div class="keyboard-pad-2d-vert" style="height: 12px;"></div>
+                                                        <div class="monitor-screen-bar-vert"></div>
+                                                        <div class="keyboard-pad-2d-vert"></div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="desk-seats-pair vertical-seats" style="gap: 8px;">
+                                            <div class="desk-seats-pair vertical-seats">
                                                 <div class="bus-seat seat-empty"
-                                                     style="width: 62px; height: 60px; padding: 4px;"
                                                      ng-repeat="seat in desk.seats">
-                                                    <svg class="armchair-svg" viewBox="0 0 28 28" aria-hidden="true">
-                                                        <path d="M6 11V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v4"></path>
-                                                        <path d="M6 11a3 3 0 0 0-3 3v5a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2v-5a3 3 0 0 0-3-3v5H6v-5z"></path>
-                                                        <line x1="6" y1="14" x2="22" y2="14"></line>
-                                                        <line x1="7" y1="21" x2="7" y2="24"></line>
-                                                        <line x1="21" y1="21" x2="21" y2="24"></line>
-                                                    </svg>
-                                                    <div class="seat-number" style="font-size: 11.5px;">{{seat.code}}</div>
+                                                    <div class="seat-number">{{seat.code}}</div>
+                                                    <div class="seat-subtext">KOLTUK {{$index + 1}}</div>
                                                 </div>
                                             </div>
                                         </div>

@@ -42,6 +42,22 @@ public class ReservationStore
                     if (loaded != null && loaded.Users.Count > 0 && loaded.Workspaces.Count > 0 && loaded.Floors.Count > 0)
                     {
                         _data = loaded;
+                        bool migratedCoords = false;
+                        foreach (var w in _data.Workspaces.Where(x => x.Type == "Masa"))
+                        {
+                            if (w.CanvasX < 0 || w.CanvasY < 0)
+                            {
+                                int row = w.GridY > 0 ? w.GridY : ((w.GridW - 1) / 2 + 1);
+                                int side = w.GridX == 2 ? 2 : 1;
+                                w.CanvasX = side == 1 ? 6 : 54;
+                                w.CanvasY = Math.Min(78, 6 + (row - 1) * 18);
+                                migratedCoords = true;
+                            }
+                        }
+                        if (migratedCoords)
+                        {
+                            Save();
+                        }
                         return;
                     }
                 }
@@ -148,6 +164,8 @@ public class ReservationStore
                     GridY = row,
                     GridW = deskNo,
                     GridH = s,
+                    CanvasX = side == 1 ? 6 : 54,
+                    CanvasY = Math.Min(78, 6 + (row - 1) * 18),
                     IsActive = true
                 });
             }
@@ -238,6 +256,8 @@ public class ReservationStore
                     GridY = cfg.Row,
                     GridW = cfg.DeskNo,
                     GridH = s,
+                    CanvasX = cfg.Side == 1 ? 8 : 54,
+                    CanvasY = cfg.Row == 1 ? 10 : 48,
                     IsActive = true
                 });
             }
@@ -278,6 +298,8 @@ public class ReservationStore
                     GridY = 1,
                     GridW = deskNo,
                     GridH = s,
+                    CanvasX = deskNo == 1 ? 10 : 55,
+                    CanvasY = 18,
                     IsActive = true
                 });
             }
@@ -712,6 +734,8 @@ public class ReservationStore
                         GridY = row,
                         GridW = d,
                         GridH = s,
+                        CanvasX = side == 1 ? 6 : 54,
+                        CanvasY = Math.Min(78, 6 + (row - 1) * 18),
                         IsActive = true
                     });
                 }
@@ -784,10 +808,10 @@ public class ReservationStore
                 .OrderBy(w => w.GridH)
                 .ToList();
 
-            int existingCanvasX = allDeskSeats.FirstOrDefault()?.CanvasX ?? -1;
-            int existingCanvasY = allDeskSeats.FirstOrDefault()?.CanvasY ?? -1;
-            int canvasX = req.CanvasX ?? existingCanvasX;
-            int canvasY = req.CanvasY ?? existingCanvasY;
+            int existingCanvasX = allDeskSeats.FirstOrDefault()?.CanvasX ?? (side == 1 ? 6 : 54);
+            int existingCanvasY = allDeskSeats.FirstOrDefault()?.CanvasY ?? Math.Min(78, 6 + (row - 1) * 18);
+            int canvasX = (req.CanvasX.HasValue && req.CanvasX.Value >= 0) ? req.CanvasX.Value : existingCanvasX;
+            int canvasY = (req.CanvasY.HasValue && req.CanvasY.Value >= 0) ? req.CanvasY.Value : existingCanvasY;
 
             int nextWsId = _data.Workspaces.Any() ? _data.Workspaces.Max(w => w.Id) + 1 : 1;
 

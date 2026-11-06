@@ -309,13 +309,14 @@ body {
 }
 
 .navbar-inner {
-    max-width: 1360px;
+    max-width: 1740px;
+    width: 96%;
     margin: 0 auto;
     padding: 10px 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
     flex-wrap: nowrap;
 }
 
@@ -387,9 +388,10 @@ body {
 }
 
 .main-content {
-    max-width: 1240px;
+    max-width: 1740px;
+    width: 96%;
     margin: 0 auto;
-    padding: 22px 20px 80px;
+    padding: 22px 16px 80px;
 }
 
 /* ==================== DAY PICKER STRIP ==================== */
@@ -435,8 +437,8 @@ body {
 /* ==================== 2D ARCHITECTURAL DESK & SEAT LAYOUT ==================== */
 .reservation-grid {
     display: grid;
-    grid-template-columns: 1fr 370px;
-    gap: 22px;
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
     align-items: start;
 }
 
@@ -602,39 +604,58 @@ body {
 
 .desk-seats-pair {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: row;
+    flex-wrap: nowrap;
     justify-content: center;
-    gap: 10px;
-}
-
-/* VERTICAL (DİKİNE) 2D DESK LAYOUT */
-.two-person-desk.desk-vertical .desk-vertical-body {
-    display: grid;
-    grid-template-columns: 72px 1fr;
+    align-items: center;
     gap: 12px;
-    align-items: center;
-    margin-top: 8px;
 }
 
-.two-person-desk.desk-vertical .desk-surface-2d.vertical-surface {
+/* ==================== VERTICAL (DİKİNE) 2D DESK LAYOUT (MATCHING USER PAINT DIAGRAM) ==================== */
+/* Left: Tall Vertical Table | Right: Chairs Stacked Vertically One Below Another Facing Left Toward Table */
+.desk-vertical-body {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 16px;
+    margin-top: 4px;
+}
+
+.desk-surface-2d.vertical-surface {
     margin-bottom: 0;
-    justify-content: space-around;
+    width: 64px;
+    min-width: 64px;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-    padding: 10px 6px;
-    min-height: 110px;
+    padding: 12px 6px;
+    min-height: 150px;
 }
 
-.two-person-desk.desk-vertical .desk-monitors-col {
+.vertical-desk-label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--text-secondary);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    user-select: none;
+}
+
+.desk-monitors-col {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
     align-items: center;
-    height: 100%;
+    flex: 1;
     width: 100%;
-    gap: 10px;
+    gap: 14px;
 }
 
-.two-person-desk.desk-vertical .monitor-2d-rig-vert {
+.monitor-2d-rig-vert {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -643,55 +664,59 @@ body {
     width: 100%;
 }
 
-.two-person-desk.desk-vertical .monitor-screen-bar-vert {
+.monitor-screen-bar-vert {
     width: 7px;
-    height: 32px;
+    height: 34px;
     background: linear-gradient(180deg, #64748B 0%, #334155 100%);
     border-radius: 4px;
 }
 
-.two-person-desk.desk-vertical .keyboard-pad-2d-vert {
+.keyboard-pad-2d-vert {
     width: 5px;
     height: 18px;
     background: var(--border-strong);
     border-radius: 2px;
 }
 
-.two-person-desk.desk-vertical .desk-seats-pair.vertical-seats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
-    justify-items: center;
-    gap: 10px;
+.desk-seats-pair.vertical-seats {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    justify-content: space-around;
+    align-items: center;
+    gap: 14px;
+    padding: 4px 0;
 }
 
-/* ==================== REAL ARMCHAIR / KOLTUK SEAT SHAPE (MATCHING IMAGE 2) ==================== */
+/* ==================== REAL ARMCHAIR / KOLTUK SEAT SHAPE (NO INNER SMALL ICON) ==================== */
+/* 1. YATAY MASA KOLTUĞU: Üstteki Yatay Masaya Bakan Koltuk (Ayaklar Üstte Masaya Bakar, Sırtlık Altta) */
 .bus-seat {
     position: relative;
     width: 74px;
-    height: 72px;
-    margin: 2px auto 6px;
-    border-radius: 14px 14px 10px 10px;
+    height: 68px;
+    margin: 6px 4px;
+    border-radius: 10px 10px 16px 16px;
     border: 2.5px solid #334155;
     background: var(--bg-seat-empty);
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
-    padding: 6px 8px 14px;
+    justify-content: center;
+    padding: 6px 8px 10px;
     transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     user-select: none;
-    box-shadow: inset 0 -14px 0 0 rgba(148, 163, 184, 0.18);
+    box-shadow: inset 0 -14px 0 0 rgba(148, 163, 184, 0.22);
 }
 
-/* Left & Right Rounded Armrests + Two Bottom Feet (like Image 2 Armchair) */
+/* Yatay Masa Koltuğu Yan Kolçaklar (Sol & Sağ) */
 .bus-seat::before {
     content: '';
     position: absolute;
-    top: 20px;
+    top: -2px;
+    bottom: 14px;
     left: -7px;
     right: -7px;
-    bottom: -2px;
     border-radius: 10px;
     border: 2.5px solid #334155;
     pointer-events: none;
@@ -701,24 +726,65 @@ body {
         var(--bg-seat-empty) 84%, var(--bg-seat-empty) 100%);
 }
 
-/* Two Little Chair Legs at the Bottom */
+/* Yatay Masa Koltuğu Ön Ayaklar (Üstteki Yatay Masaya Bakan 2 Küçük Ayak) */
 .bus-seat::after {
     content: '';
     position: absolute;
-    bottom: -8px;
-    left: 10px;
-    right: 10px;
+    top: -8px;
+    bottom: auto;
+    left: 12px;
+    right: 12px;
     height: 6px;
     background: linear-gradient(90deg,
         #334155 0%, #334155 22%,
         transparent 22%, transparent 78%,
         #334155 78%, #334155 100%);
-    border-radius: 0 0 3px 3px;
+    border-radius: 3px 3px 0 0;
     transition: all 0.18s;
 }
 
+/* 2. DİKEY MASA KOLTUĞU: Soldaki Dikey Masaya Yan Dönmüş Koltuk (Ayaklar Solda Masaya Bakar, Kolçaklar Üst/Altta, Sırtlık Sağda!) */
+.vertical-seats .bus-seat {
+    width: 76px;
+    height: 66px;
+    margin: 4px 6px;
+    border-radius: 10px 16px 16px 10px;
+    padding: 6px 14px 6px 8px;
+    box-shadow: inset -15px 0 0 0 rgba(148, 163, 184, 0.22);
+}
+
+/* Dikey Masa Koltuğu Üst & Alt Kolçaklar */
+.vertical-seats .bus-seat::before {
+    top: -7px;
+    bottom: -7px;
+    left: -2px;
+    right: 14px;
+    border-radius: 10px;
+    border: 2.5px solid #334155;
+    background: linear-gradient(180deg,
+        var(--bg-seat-empty) 0%, var(--bg-seat-empty) 17%,
+        transparent 17%, transparent 83%,
+        var(--bg-seat-empty) 83%, var(--bg-seat-empty) 100%);
+}
+
+/* Dikey Masa Koltuğu Sol Ön Ayaklar (Soldaki Dikey Masaya Bakan 2 Küçük Ayak) */
+.vertical-seats .bus-seat::after {
+    top: 11px;
+    bottom: 11px;
+    left: -8px;
+    right: auto;
+    width: 6px;
+    height: auto;
+    border-radius: 3px 0 0 3px;
+    background: linear-gradient(180deg,
+        #334155 0%, #334155 22%,
+        transparent 22%, transparent 78%,
+        #334155 78%, #334155 100%);
+}
+
 [data-theme="dark"] .bus-seat,
-[data-theme="dark"] .bus-seat::before {
+[data-theme="dark"] .bus-seat::before,
+[data-theme="dark"] .vertical-seats .bus-seat::before {
     border-color: #64748B;
 }
 [data-theme="dark"] .bus-seat::after {
@@ -727,18 +793,28 @@ body {
         transparent 22%, transparent 78%,
         #64748B 78%, #64748B 100%);
 }
+[data-theme="dark"] .vertical-seats .bus-seat::after {
+    background: linear-gradient(180deg,
+        #64748B 0%, #64748B 22%,
+        transparent 22%, transparent 78%,
+        #64748B 78%, #64748B 100%);
+}
 
 /* Meeting Room Card overrides armchair width so room name fits nicely */
 .rooms-row .bus-seat {
     width: 100%;
-    max-width: 150px;
+    max-width: 170px;
     height: 70px;
 }
 
 .bus-seat.seat-empty:hover {
     border-color: var(--ray-blue);
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: inset 0 -14px 0 0 rgba(1, 53, 235, 0.14), 0 6px 14px var(--ray-blue-soft);
+}
+.vertical-seats .bus-seat.seat-empty:hover {
+    transform: translateX(-2px);
+    box-shadow: inset -15px 0 0 0 rgba(1, 53, 235, 0.14), 0 6px 14px var(--ray-blue-soft);
 }
 .bus-seat.seat-empty:hover::before {
     border-color: var(--ray-blue);
@@ -760,24 +836,15 @@ body {
     z-index: 2;
 }
 
-/* Seat Cushion Horizontal Line inside Armchair */
-.armchair-cushion-bar {
-    position: absolute;
-    bottom: 11px;
-    left: 10px;
-    right: 10px;
-    height: 3px;
-    background: #334155;
-    border-radius: 2px;
-    opacity: 0.45;
-}
-
 /* DOLU KOLTUK -> KIRMIZI (#FF0025) ARMCHAIR */
 .bus-seat.seat-reserved {
     background: #FF0025;
     border-color: #B8001B;
     color: #FFFFFF;
     box-shadow: inset 0 -14px 0 0 rgba(0, 0, 0, 0.18), 0 6px 14px rgba(255, 0, 37, 0.25);
+}
+.vertical-seats .bus-seat.seat-reserved {
+    box-shadow: inset -15px 0 0 0 rgba(0, 0, 0, 0.18), 0 6px 14px rgba(255, 0, 37, 0.25);
 }
 .bus-seat.seat-reserved::before {
     border-color: #B8001B;
@@ -786,8 +853,21 @@ body {
         transparent 16%, transparent 84%,
         #E00020 84%, #E00020 100%);
 }
+.vertical-seats .bus-seat.seat-reserved::before {
+    border-color: #B8001B;
+    background: linear-gradient(180deg,
+        #E00020 0%, #E00020 17%,
+        transparent 17%, transparent 83%,
+        #E00020 83%, #E00020 100%);
+}
 .bus-seat.seat-reserved::after {
     background: linear-gradient(90deg,
+        #991B1B 0%, #991B1B 22%,
+        transparent 22%, transparent 78%,
+        #991B1B 78%, #991B1B 100%);
+}
+.vertical-seats .bus-seat.seat-reserved::after {
+    background: linear-gradient(180deg,
         #991B1B 0%, #991B1B 22%,
         transparent 22%, transparent 78%,
         #991B1B 78%, #991B1B 100%);
@@ -802,6 +882,9 @@ body {
     color: #FFFFFF;
     box-shadow: inset 0 -14px 0 0 rgba(0, 0, 0, 0.18), 0 6px 14px rgba(1, 53, 235, 0.28);
 }
+.vertical-seats .bus-seat.seat-mine {
+    box-shadow: inset -15px 0 0 0 rgba(0, 0, 0, 0.18), 0 6px 14px rgba(1, 53, 235, 0.28);
+}
 .bus-seat.seat-mine::before {
     border-color: #002299;
     background: linear-gradient(90deg,
@@ -809,8 +892,21 @@ body {
         transparent 16%, transparent 84%,
         #0028B8 84%, #0028B8 100%);
 }
+.vertical-seats .bus-seat.seat-mine::before {
+    border-color: #002299;
+    background: linear-gradient(180deg,
+        #0028B8 0%, #0028B8 17%,
+        transparent 17%, transparent 83%,
+        #0028B8 83%, #0028B8 100%);
+}
 .bus-seat.seat-mine::after {
     background: linear-gradient(90deg,
+        #001F8E 0%, #001F8E 22%,
+        transparent 22%, transparent 78%,
+        #001F8E 78%, #001F8E 100%);
+}
+.vertical-seats .bus-seat.seat-mine::after {
+    background: linear-gradient(180deg,
         #001F8E 0%, #001F8E 22%,
         transparent 22%, transparent 78%,
         #001F8E 78%, #001F8E 100%);
@@ -1408,11 +1504,11 @@ body {
     border-style: dashed;
 }
 
-/* ==================== ADMIN FLOOR & DESK DESIGN STUDIO (SQUARE DRAG-DROP CANVAS) ==================== */
+/* ==================== ADMIN FLOOR & DESK DESIGN STUDIO (WIDE DRAG-DROP CANVAS) ==================== */
 .studio-layout-grid {
     display: grid;
-    grid-template-columns: 330px 1fr;
-    gap: 20px;
+    grid-template-columns: 340px 1fr;
+    gap: 24px;
     align-items: start;
 }
 
@@ -1501,7 +1597,7 @@ body {
     gap: 12px;
 }
 
-/* EMPTY SQUARE FLOOR CANVAS FOR DRAG & DROP */
+/* WIDE FLOOR CANVAS FOR DRAG & DROP AND RESERVATION MAP */
 .square-floor-canvas-wrap {
     width: 100%;
     display: flex;
@@ -1511,9 +1607,8 @@ body {
 .square-floor-canvas {
     position: relative;
     width: 100%;
-    max-width: 820px;
-    aspect-ratio: 1 / 1;
-    min-height: 640px;
+    min-height: 760px;
+    height: 780px;
     background-color: var(--bg-canvas);
     background-image:
         linear-gradient(to right, rgba(1, 53, 235, 0.07) 1px, transparent 1px),
@@ -1523,6 +1618,10 @@ body {
     border-radius: 24px;
     overflow: auto;
     box-shadow: inset 0 2px 16px rgba(15, 23, 42, 0.05);
+}
+
+.square-floor-canvas.reservation-floor-canvas .canvas-placed-desk {
+    cursor: default;
 }
 
 .square-canvas-watermark {

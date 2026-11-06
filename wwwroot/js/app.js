@@ -800,7 +800,22 @@
             if (raw) {
                 try {
                     var parsed = JSON.parse(raw);
-                    if (parsed && parsed.floors && parsed.floors.length > 0) return parsed;
+                    if (parsed && parsed.floors && parsed.floors.length > 0) {
+                        var migrated = false;
+                        (parsed.workspaces || []).forEach(function (w) {
+                            if (w.type === 'Masa' && (typeof w.canvasX !== 'number' || w.canvasX < 0 || typeof w.canvasY !== 'number' || w.canvasY < 0)) {
+                                var r = w.gridY > 0 ? w.gridY : (Math.floor(((w.gridW || 1) - 1) / 2) + 1);
+                                var s = w.gridX === 2 ? 2 : 1;
+                                w.canvasX = (s === 1) ? 6 : 54;
+                                w.canvasY = Math.min(78, 6 + (r - 1) * 18);
+                                migrated = true;
+                            }
+                        });
+                        if (migrated) {
+                            localStorage.setItem('ray_ofis_static_db_v5', JSON.stringify(parsed));
+                        }
+                        return parsed;
+                    }
                 } catch (e) {}
             }
             var today = formatDateISO(new Date());
@@ -829,7 +844,7 @@
                 var side = (deskNo % 2 === 1) ? 1 : 2;
                 for (var s = 1; s <= 2; s++) {
                     var c1 = buildSeatCodeClient(1, deskNo, s);
-                    workspaces.push({ id: idCounter++, floorId: 1, code: c1, name: buildSeatNameClient(1, deskNo, s, c1), type: 'Masa', zone: 'Masa ' + deskNo, capacity: 1, orientation: 'horizontal', features: buildFallbackFeatures(deskNo, s === 1), gridX: side, gridY: row, gridW: deskNo, gridH: s, isActive: true });
+                    workspaces.push({ id: idCounter++, floorId: 1, code: c1, name: buildSeatNameClient(1, deskNo, s, c1), type: 'Masa', zone: 'Masa ' + deskNo, capacity: 1, orientation: 'horizontal', features: buildFallbackFeatures(deskNo, s === 1), gridX: side, gridY: row, gridW: deskNo, gridH: s, canvasX: side === 1 ? 6 : 54, canvasY: Math.min(78, 6 + (row - 1) * 18), isActive: true });
                 }
             }
             workspaces.push({ id: idCounter++, floorId: 1, code: 'ODA-1', name: 'Toplantı Odası 1 (Sprint)', type: 'Oda', zone: 'Toplantı Odaları', capacity: 6, orientation: 'horizontal', features: ['65" 4K Akıllı Ekran', 'Cam Yazı Tahtası', 'Ses Yalıtımlı Kabin', 'Kablosuz HDMI Sunum'], isActive: true });
@@ -846,7 +861,7 @@
             floor2Desks.forEach(function (cfg) {
                 for (var s = 1; s <= cfg.seats; s++) {
                     var c2 = buildSeatCodeClient(2, cfg.deskNo, s);
-                    workspaces.push({ id: idCounter++, floorId: 2, code: c2, name: buildSeatNameClient(2, cfg.deskNo, s, c2), type: 'Masa', zone: 'Masa ' + cfg.deskNo, capacity: 1, orientation: cfg.orientation, features: buildFallbackFeatures(cfg.deskNo, s === 1), gridX: cfg.side, gridY: cfg.row, gridW: cfg.deskNo, gridH: s, isActive: true });
+                    workspaces.push({ id: idCounter++, floorId: 2, code: c2, name: buildSeatNameClient(2, cfg.deskNo, s, c2), type: 'Masa', zone: 'Masa ' + cfg.deskNo, capacity: 1, orientation: cfg.orientation, features: buildFallbackFeatures(cfg.deskNo, s === 1), gridX: cfg.side, gridY: cfg.row, gridW: cfg.deskNo, gridH: s, canvasX: cfg.side === 1 ? 8 : 54, canvasY: cfg.row === 1 ? 10 : 48, isActive: true });
                 }
             });
             workspaces.push({ id: idCounter++, floorId: 2, code: 'ODA-5', name: 'Ar-Ge Beyin Fırtınası Odası', type: 'Oda', zone: 'Toplantı Odaları', capacity: 10, orientation: 'horizontal', features: ['75" Akıllı Tahta', 'Çift Monitör Sunum Masası', 'Ses Yalıtımlı Akustik Duvar'], isActive: true });
@@ -854,7 +869,7 @@
             for (var d3 = 1; d3 <= 2; d3++) {
                 for (var s3 = 1; s3 <= 3; s3++) {
                     var c3 = buildSeatCodeClient(3, d3, s3);
-                    workspaces.push({ id: idCounter++, floorId: 3, code: c3, name: buildSeatNameClient(3, d3, s3, c3), type: 'Masa', zone: 'Masa ' + d3, capacity: 1, orientation: d3 === 1 ? 'horizontal' : 'vertical', features: buildFallbackFeatures(d3, s3 === 1), gridX: d3, gridY: 1, gridW: d3, gridH: s3, isActive: true });
+                    workspaces.push({ id: idCounter++, floorId: 3, code: c3, name: buildSeatNameClient(3, d3, s3, c3), type: 'Masa', zone: 'Masa ' + d3, capacity: 1, orientation: d3 === 1 ? 'horizontal' : 'vertical', features: buildFallbackFeatures(d3, s3 === 1), gridX: d3, gridY: 1, gridW: d3, gridH: s3, canvasX: d3 === 1 ? 10 : 55, canvasY: 18, isActive: true });
                 }
             }
 
@@ -1529,6 +1544,8 @@
             var startCanvasY = desk.canvasY;
             var rect = canvasEl.getBoundingClientRect();
 
+            var wasMoved = false;
+
             function onMove(moveEv) {
                 var curX = (moveEv.touches && moveEv.touches.length > 0) ? moveEv.touches[0].clientX : moveEv.clientX;
                 var curY = (moveEv.touches && moveEv.touches.length > 0) ? moveEv.touches[0].clientY : moveEv.clientY;
@@ -1536,6 +1553,7 @@
                 var dyPx = curY - startClientY;
 
                 if (Math.abs(dxPx) > 4 || Math.abs(dyPx) > 4) {
+                    wasMoved = true;
                     dragMovedSignificantly = true;
                 }
 
@@ -1543,6 +1561,10 @@
                 var newY = Math.round(startCanvasY + (dyPx / rect.height) * 100);
                 desk.canvasX = Math.min(Math.max(newX, 2), 78);
                 desk.canvasY = Math.min(Math.max(newY, 4), 82);
+                (desk.seats || []).forEach(function (s) {
+                    s.canvasX = desk.canvasX;
+                    s.canvasY = desk.canvasY;
+                });
                 $scope.$applyAsync();
             }
 
@@ -1552,14 +1574,25 @@
                 window.removeEventListener('touchmove', onMove);
                 window.removeEventListener('touchend', onUp);
 
+                var movedNow = wasMoved;
+                var finalX = desk.canvasX;
+                var finalY = desk.canvasY;
+                var newSide = finalX >= 45 ? 2 : 1;
+
+                if (movedNow) {
+                    updateDeskGroupConfig(desk, desk.seats.length, desk.orientation, newSide, finalX, finalY, true);
+                }
+
                 $scope.$applyAsync(function () {
                     $scope.draggingDesk = null;
-                    if (dragMovedSignificantly) {
-                        var newSide = desk.canvasX >= 45 ? 2 : 1;
-                        updateDeskGroupConfig(desk, desk.seats.length, desk.orientation, newSide, desk.canvasX, desk.canvasY, true);
-                        $scope.showToast(desk.title + ' yeni konumuna yerleştirildi.', false);
+                    if (movedNow) {
+                        $scope.showToast(desk.title + ' yeni konumuna kaydedildi.', false);
                     }
                 });
+
+                $timeout(function () {
+                    dragMovedSignificantly = false;
+                }, 80);
             }
 
             window.addEventListener('mousemove', onMove);
