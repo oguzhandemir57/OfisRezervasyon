@@ -144,7 +144,7 @@
                             Günü Seçin — 14 Günlük Planlama (Aynı Günde 1 Masa &amp; 1 Toplantı Odası Ayırtılabilir)
                         </div>
                         <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">
-                            Seçili Tarih: <strong style="color: var(--ray-blue);">{{selectedDate}}</strong>
+                            Seçili Tarih: <strong style="color: var(--ray-blue);">{{formatDateTR(selectedDate)}}</strong>
                         </div>
                     </div>
                     <div class="day-strip">
@@ -153,7 +153,7 @@
                              ng-class="{'active': selectedDate === d.iso}"
                              ng-click="selectDate(d.iso)">
                             <div class="day-pill-name">{{d.dayName}}</div>
-                            <div class="day-pill-num">{{d.dayNum}} {{d.monthName}}</div>
+                            <div class="day-pill-num">{{d.dateTR}}</div>
                         </div>
                     </div>
                 </div>
@@ -198,7 +198,7 @@
                                 {{selectedFloor ? selectedFloor.name : '2 Boyutlu Ofis Masa & Oda Planı'}}
                             </h2>
                             <p style="font-size: 13px; color: var(--text-secondary);">
-                                Seçili Gün: <strong style="color: var(--ray-blue);">{{selectedDate}}</strong> &bull;
+                                Seçili Gün: <strong style="color: var(--ray-blue);">{{formatDateTR(selectedDate)}}</strong> &bull;
                                 Boş: <strong style="color: var(--green-live);">{{summary.available}}</strong> &bull;
                                 Dolu: <strong style="color: var(--ray-red);">{{summary.reserved}}</strong>
                                 &mdash; Donanım özelliklerini görmek için masaya tıklayın.
@@ -356,7 +356,7 @@
                             <div ng-if="!selectedItem.isReserved">
                                 <form ng-submit="createReservation()">
                                     <div class="form-group">
-                                        <label>Seçili Gün: <strong style="color: var(--ray-blue);">{{selectedDate}}</strong> &mdash; Saat Dilimi</label>
+                                        <label>Seçili Gün: <strong style="color: var(--ray-blue);">{{formatDateTR(selectedDate)}}</strong> &mdash; Saat Dilimi</label>
                                         <select class="form-control" ng-model="bookingForm.timeSlot" ng-options="t for t in timeSlots"></select>
                                     </div>
                                     <div class="form-group">
@@ -380,7 +380,7 @@
                                             ? 'Masanız doğrulandı, şu anda Ofistekiler sayfasında aktif görünüyorsunuz.'
                                             : (isToday(selectedItem.reservation.date)
                                                 ? 'Ofisteyseniz aşağıdaki butonla Check-In doğrulaması yapabilirsiniz.'
-                                                : 'Check-In doğrulaması yalnızca rezervasyon gününde (' + selectedItem.reservation.date + ') yapılabilir.')}}
+                                                : 'Check-In doğrulaması yalnızca rezervasyon gününde (' + formatDateTR(selectedItem.reservation.date) + ') yapılabilir.')}}
                                     </div>
 
                                     <div class="calendar-btn-group">
@@ -404,7 +404,7 @@
                                     </button>
                                     <div ng-if="selectedItem.reservation.status !== 'CheckedIn' && !isToday(selectedItem.reservation.date)"
                                          style="padding: 10px 12px; border-radius: 12px; background: var(--bg-subtle); border: 1px solid var(--border-color); font-size: 12px; font-weight: 700; color: var(--text-secondary); text-align: center;">
-                                        🕒 Check-In Sadece Rezervasyon Gününde ({{selectedItem.reservation.date}}) Yapılabilir
+                                        🕒 Check-In Sadece Rezervasyon Gününde ({{formatDateTR(selectedItem.reservation.date)}}) Yapılabilir
                                     </div>
                                     <button class="btn btn-soft-red"
                                             ng-click="cancelReservation(selectedItem.reservation.id)">
@@ -440,7 +440,7 @@
                             </span>
                             <h2 style="font-size: 22px; font-weight: 800; margin-top: 2px;">Ofis Check-In &amp; Masa Doğrulama</h2>
                             <p style="font-size: 13.5px; color: var(--text-secondary);">
-                                Yalnızca <strong>bugün ({{todayDate}})</strong> için ayırttığınız masalara Check-In yapabilirsiniz. İleri tarihli masalar o gün geldiğinde doğrulanabilir.
+                                Yalnızca <strong>bugün ({{formatDateTR(todayDate)}})</strong> için ayırttığınız masalara Check-In yapabilirsiniz. İleri tarihli masalar o gün geldiğinde doğrulanabilir.
                             </p>
                         </div>
                         <button class="btn btn-ray-blue" ng-click="switchTab('floorplan')">+ Yeni Masa Ayırt</button>
@@ -460,7 +460,7 @@
                         <div>
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                 <span style="font-size: 12.5px; font-weight: 800; padding: 4px 12px; border-radius: 99px; background: var(--ray-blue-soft); color: var(--ray-blue);">
-                                    Tarih: {{r.date}} {{isToday(r.date) ? '(Bugün)' : ''}}
+                                    Tarih: {{formatDateTR(r.date)}} {{isToday(r.date) ? '(Bugün)' : ''}}
                                 </span>
                                 <span ng-if="r.status === 'CheckedIn'" style="font-size: 12px; font-weight: 800; color: var(--green-live);">
                                     ✓ Doğrulandı (Ofiste)
@@ -511,7 +511,7 @@
                             <!-- FUTURE DATE: DISABLED / INFO MESSAGE -->
                             <div ng-if="r.status !== 'CheckedIn' && !isToday(r.date)"
                                  style="flex: 1; padding: 11px 12px; border-radius: 12px; background: var(--bg-subtle); border: 1px solid var(--border-color); color: var(--text-secondary); font-weight: 700; font-size: 12px; text-align: center;">
-                                🕒 Sadece {{r.date}} Gününde Check-In Yapılabilir
+                                🕒 Sadece {{formatDateTR(r.date)}} Gününde Check-In Yapılabilir
                             </div>
 
                             <!-- ALREADY CHECKED IN -->
@@ -545,14 +545,14 @@
                     </div>
                     <div class="stat-card">
                         <h4>Seçili Tarih</h4>
-                        <div class="stat-val" style="font-size: 20px;">{{selectedDate}}</div>
+                        <div class="stat-val" style="font-size: 20px;">{{formatDateTR(selectedDate)}}</div>
                     </div>
                 </div>
 
                 <div class="presence-header-card">
                     <div>
                         <span style="font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: var(--green-live); letter-spacing: 0.8px;">
-                            ● TÜM OFİS KATLARI CANLI DURUMU ({{selectedDate}})
+                            ● TÜM OFİS KATLARI CANLI DURUMU ({{formatDateTR(selectedDate)}})
                         </span>
                         <h2 style="font-size: 23px; font-weight: 800; margin-top: 4px;">Ofistekiler &amp; Masa Ayırtanlar (Bütün Katlar)</h2>
                         <p style="font-size: 13.5px; color: var(--text-secondary);">
@@ -561,22 +561,25 @@
                     </div>
 
                     <div style="display: flex; flex-wrap: wrap; gap: 6px; background: var(--bg-subtle); padding: 5px; border-radius: 14px; border: 1px solid var(--border-color);">
-                        <button class="btn btn-sm"
+                        <button type="button"
+                                class="btn btn-sm"
                                 ng-class="presenceFilter === 'ALL' ? 'btn-ray-blue' : ''"
                                 ng-style="presenceFilter !== 'ALL' && {'background':'transparent','color':'var(--text-secondary)'}"
-                                ng-click="presenceFilter = 'ALL'">
+                                ng-click="setPresenceFilter('ALL')">
                             Tümü: Masa Ayırtan &amp; Check-In ({{peopleInOffice.length}})
                         </button>
-                        <button class="btn btn-sm"
+                        <button type="button"
+                                class="btn btn-sm"
                                 ng-class="presenceFilter === 'CHECKED_IN' ? 'btn-ray-blue' : ''"
                                 ng-style="presenceFilter !== 'CHECKED_IN' && {'background':'transparent','color':'var(--text-secondary)'}"
-                                ng-click="presenceFilter = 'CHECKED_IN'">
+                                ng-click="setPresenceFilter('CHECKED_IN')">
                             ✓ Check-In Yapanlar ({{getCheckedInCount()}})
                         </button>
-                        <button class="btn btn-sm"
+                        <button type="button"
+                                class="btn btn-sm"
                                 ng-class="presenceFilter === 'RESERVED' ? 'btn-ray-blue' : ''"
                                 ng-style="presenceFilter !== 'RESERVED' && {'background':'transparent','color':'var(--text-secondary)'}"
-                                ng-click="presenceFilter = 'RESERVED'">
+                                ng-click="setPresenceFilter('RESERVED')">
                             🪑 Masa Ayırtanlar ({{getReservedOnlyCount()}})
                         </button>
                     </div>
@@ -591,7 +594,7 @@
                         <button type="button"
                                 class="floor-pill"
                                 ng-class="{'active': presenceFloorFilter === 0}"
-                                ng-click="presenceFloorFilter = 0">
+                                ng-click="setPresenceFloorFilter(0)">
                             <span>Bütün Katlar</span>
                             <span style="font-size: 11.5px; opacity: 0.9;">({{getFloorPresenceCount(0)}} Kişi)</span>
                         </button>
@@ -599,7 +602,7 @@
                                 class="floor-pill"
                                 ng-repeat="f in floors"
                                 ng-class="{'active': presenceFloorFilter === f.id}"
-                                ng-click="presenceFloorFilter = f.id">
+                                ng-click="setPresenceFloorFilter(f.id)">
                             <span>{{f.name}}</span>
                             <span style="font-size: 11.5px; opacity: 0.9;">({{getFloorPresenceCount(f.id)}} Kişi)</span>
                         </button>
@@ -802,66 +805,127 @@
                         </div>
 
                         <!-- 2. CLICKED DESK INSPECTOR BAR (OPENS WHEN USER CLICKS ANY PLACED DESK ON SQUARE CANVAS) -->
-                        <div class="canvas-inspector-card" ng-if="selectedCanvasDesk">
-                            <div>
-                                <div style="font-size: 10.5px; font-weight: 800; color: var(--ray-blue); text-transform: uppercase;">
-                                    🎯 SEÇİLEN MASA AYARLARI (MASAYA TIKLANDI)
+                        <div class="canvas-inspector-card" ng-if="selectedCanvasDesk" style="flex-direction: column; align-items: stretch; gap: 14px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                                <div>
+                                    <div style="font-size: 10.5px; font-weight: 800; color: var(--ray-blue); text-transform: uppercase;">
+                                        🎯 SEÇİLEN MASA AYARLARI (MASAYA TIKLANDI)
+                                    </div>
+                                    <div style="font-size: 18px; font-weight: 900; color: var(--text-main);">
+                                        {{selectedCanvasDesk.title}}
+                                        <span style="font-size: 13px; color: var(--ray-blue); font-weight: 800;">
+                                            ({{selectedCanvasDesk.seats.length}} Kişilik Koltuk &bull; {{selectedCanvasDesk.orientation === 'vertical' ? 'Dikine' : 'Yatay'}})
+                                        </span>
+                                    </div>
                                 </div>
-                                <div style="font-size: 18px; font-weight: 900; color: var(--text-main);">
-                                    {{selectedCanvasDesk.title}}
-                                    <span style="font-size: 13px; color: var(--ray-blue); font-weight: 800;">
-                                        ({{selectedCanvasDesk.seats.length}} Kişilik Koltuk &bull; {{selectedCanvasDesk.orientation === 'vertical' ? 'Dikine' : 'Yatay'}})
-                                    </span>
+
+                                <div class="inspector-controls-group">
+                                    <!-- Seat Count Stepper (- / +) -->
+                                    <div style="display: flex; align-items: center; gap: 6px; background: var(--bg-surface); padding: 6px 10px; border-radius: 12px; border: 1px solid var(--border-color);">
+                                        <span style="font-size: 12px; font-weight: 800; color: var(--text-secondary); margin-right: 4px;">Koltuk Sayısı:</span>
+                                        <button type="button" class="seat-stepper-btn" ng-click="changeDeskSeatCount(selectedCanvasDesk, selectedCanvasDesk.seats.length - 1)">−</button>
+                                        <span style="font-size: 14px; font-weight: 900; min-width: 58px; text-align: center; color: var(--ray-blue);">
+                                            {{selectedCanvasDesk.seats.length}} Kişi
+                                        </span>
+                                        <button type="button" class="seat-stepper-btn" ng-click="changeDeskSeatCount(selectedCanvasDesk, selectedCanvasDesk.seats.length + 1)">+</button>
+                                    </div>
+
+                                    <!-- Quick Seat Count Pills (1..8) -->
+                                    <div class="orient-pill-group">
+                                        <button type="button"
+                                                class="orient-pill-btn"
+                                                ng-repeat="cnt in [1,2,3,4,5,6,8]"
+                                                ng-class="{'active': selectedCanvasDesk.seats.length === cnt}"
+                                                ng-click="changeDeskSeatCount(selectedCanvasDesk, cnt)">
+                                            {{cnt}}K
+                                        </button>
+                                    </div>
+
+                                    <!-- Orientation Toggle (Yatay / Dikine) -->
+                                    <div class="orient-pill-group">
+                                        <button type="button"
+                                                class="orient-pill-btn"
+                                                ng-class="{'active': selectedCanvasDesk.orientation !== 'vertical'}"
+                                                ng-click="setDeskOrientation(selectedCanvasDesk, 'horizontal')">
+                                            ↔️ Yatay
+                                        </button>
+                                        <button type="button"
+                                                class="orient-pill-btn"
+                                                ng-class="{'active': selectedCanvasDesk.orientation === 'vertical'}"
+                                                ng-click="setDeskOrientation(selectedCanvasDesk, 'vertical')">
+                                            ↕️ Dikine
+                                        </button>
+                                    </div>
+
+                                    <!-- Delete Desk -->
+                                    <button type="button" class="btn btn-soft-red btn-sm" ng-click="deleteDeskModule(selectedCanvasDesk)">
+                                        🗑️ Masayı Sil
+                                    </button>
                                 </div>
                             </div>
 
-                            <div class="inspector-controls-group">
-                                <!-- Seat Count Stepper (- / +) -->
-                                <div style="display: flex; align-items: center; gap: 6px; background: var(--bg-surface); padding: 6px 10px; border-radius: 12px; border: 1px solid var(--border-color);">
-                                    <span style="font-size: 12px; font-weight: 800; color: var(--text-secondary); margin-right: 4px;">Koltuk Sayısı:</span>
-                                    <button type="button" class="seat-stepper-btn" ng-click="changeDeskSeatCount(selectedCanvasDesk, selectedCanvasDesk.seats.length - 1)">−</button>
-                                    <span style="font-size: 14px; font-weight: 900; min-width: 58px; text-align: center; color: var(--ray-blue);">
-                                        {{selectedCanvasDesk.seats.length}} Kişi
+                            <!-- DESK HARDWARE & LOCATION FEATURES EDITOR (ÇİFT MONİTÖR, GENİŞ EKRAN, THUNDERBOLT VB.) -->
+                            <div style="padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                                    <div style="font-size: 11.5px; font-weight: 800; color: var(--ray-blue); text-transform: uppercase; letter-spacing: 0.4px;">
+                                        🖥️ Masa Donanım &amp; Konum Özellikleri Ekle / Çıkar (Çift Monitör, Geniş Ekran, Thunderbolt vb.)
+                                    </div>
+                                    <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: 600;">
+                                        Rezervasyon ekranında masaya tıklandığında kullanıcılara gösterilir
                                     </span>
-                                    <button type="button" class="seat-stepper-btn" ng-click="changeDeskSeatCount(selectedCanvasDesk, selectedCanvasDesk.seats.length + 1)">+</button>
                                 </div>
 
-                                <!-- Quick Seat Count Pills (1..8) -->
-                                <div class="orient-pill-group">
-                                    <button type="button"
-                                            class="orient-pill-btn"
-                                            ng-repeat="cnt in [1,2,3,4,5,6,8]"
-                                            ng-class="{'active': selectedCanvasDesk.seats.length === cnt}"
-                                            ng-click="changeDeskSeatCount(selectedCanvasDesk, cnt)">
-                                        {{cnt}}K
-                                    </button>
+                                <!-- Active Features on Selected Desk (Click X to remove) -->
+                                <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                                    <span style="font-size: 11.5px; font-weight: 800; color: var(--text-secondary); margin-right: 4px;">Seçili Masanın Özellikleri:</span>
+                                    <span ng-if="!selectedCanvasDesk.features || selectedCanvasDesk.features.length === 0"
+                                          style="font-size: 12px; color: var(--text-muted); font-style: italic;">
+                                        Henüz özellik eklenmedi. Aşağıdan seçin veya yeni özellik yazın.
+                                    </span>
+                                    <span ng-repeat="feat in selectedCanvasDesk.features track by $index"
+                                          style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 99px; background: var(--ray-blue); color: #FFFFFF; font-size: 12px; font-weight: 700;">
+                                        <span>✓ {{feat}}</span>
+                                        <button type="button"
+                                                ng-click="removeDeskFeature(selectedCanvasDesk, $index)"
+                                                style="background: rgba(255,255,255,0.22); border: none; color: #FFFFFF; border-radius: 50%; width: 18px; height: 18px; line-height: 16px; font-size: 11px; font-weight: 900; cursor: pointer; padding: 0;"
+                                                title="Özelliği Kaldır">✕</button>
+                                    </span>
                                 </div>
 
-                                <!-- Orientation Toggle (Yatay / Dikine) -->
-                                <div class="orient-pill-group">
-                                    <button type="button"
-                                            class="orient-pill-btn"
-                                            ng-class="{'active': selectedCanvasDesk.orientation !== 'vertical'}"
-                                            ng-click="setDeskOrientation(selectedCanvasDesk, 'horizontal')">
-                                        ↔️ Yatay
-                                    </button>
-                                    <button type="button"
-                                            class="orient-pill-btn"
-                                            ng-class="{'active': selectedCanvasDesk.orientation === 'vertical'}"
-                                            ng-click="setDeskOrientation(selectedCanvasDesk, 'vertical')">
-                                        ↕️ Dikine
-                                    </button>
-                                </div>
+                                <!-- Quick Preset Feature Buttons + Custom Feature Input -->
+                                <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;">
+                                    <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                                        <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-right: 2px;">Hızlı Ekle/Çıkar:</span>
+                                        <button type="button"
+                                                class="btn btn-sm"
+                                                ng-repeat="pf in presetDeskFeatures"
+                                                ng-class="hasDeskFeature(selectedCanvasDesk, pf) ? 'btn-ray-blue' : 'btn-soft-blue'"
+                                                style="padding: 5px 10px; font-size: 11.5px; border-radius: 99px;"
+                                                ng-click="togglePresetDeskFeature(selectedCanvasDesk, pf)">
+                                            {{hasDeskFeature(selectedCanvasDesk, pf) ? '✓ ' : '+ '}}{{pf}}
+                                        </button>
+                                    </div>
 
-                                <!-- Delete Desk -->
-                                <button type="button" class="btn btn-soft-red btn-sm" ng-click="deleteDeskModule(selectedCanvasDesk)">
-                                    🗑️ Masayı Sil
-                                </button>
+                                    <div style="display: flex; gap: 6px; align-items: center; min-width: 270px; flex: 1; max-width: 380px;">
+                                        <input type="text"
+                                               class="form-control"
+                                               style="padding: 7px 11px; font-size: 12.5px;"
+                                               ng-model="customFeatureForm.text"
+                                               ng-keypress="($event.which === 13) && addCustomDeskFeature(selectedCanvasDesk)"
+                                               placeholder="Özel özellik yazın (Örn: Thunderbolt 4, 4K Ekran)...">
+                                        <button type="button"
+                                                class="btn btn-ray-blue btn-sm"
+                                                style="white-space: nowrap; padding: 8px 14px;"
+                                                ng-click="addCustomDeskFeature(selectedCanvasDesk)">
+                                            + Özellik Ekle
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <div ng-if="!selectedCanvasDesk" style="margin-bottom: 12px; padding: 10px 14px; border-radius: 12px; background: var(--bg-subtle); border: 1px dashed var(--border-strong); font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">
-                            💡 <strong>İpucu:</strong> Aşağıdaki kare alandaki herhangi bir masaya <strong>tıklayarak</strong> kaç kişilik olduğunu (koltuk sayısını) ve yönünü değiştirebilir, masayı basılı tutarak kare alanda istediğiniz konuma <strong>sürükleyip bırakabilirsiniz</strong>.
+                            💡 <strong>İpucu:</strong> Aşağıdaki kare alandaki herhangi bir masaya <strong>tıklayarak</strong> kaç kişilik olduğunu, yönünü ve <strong>masa özelliklerini (Çift Monitör, Geniş Ekran, Thunderbolt vb.)</strong> ayarlayabilir; masayı basılı tutarak istediğiniz konuma <strong>sürükleyip bırakabilirsiniz</strong>.
                         </div>
 
                         <!-- 3. EMPTY SQUARE FLOOR CANVAS (DRAG & DROP AREA) -->
@@ -892,7 +956,7 @@
 
                                     <div class="canvas-desk-drag-handle">
                                         <span>✋ {{desk.title}} ({{desk.seats.length}}K &bull; {{desk.orientation === 'vertical' ? 'Dikey' : 'Yatay'}})</span>
-                                        <span style="color: var(--ray-blue); font-size: 10px;">⚙️ Düzenle</span>
+                                        <span style="color: var(--ray-blue); font-size: 10px;">⚙️ {{desk.features.length}} Özellik</span>
                                     </div>
 
                                     <!-- HORIZONTAL (YATAY) DESK: Table on Top, Armchair Seats in Horizontal Row Below -->
@@ -900,7 +964,7 @@
                                         <div class="desk-surface-2d" style="margin-bottom: 10px; padding: 8px 10px;">
                                             <div class="desk-surface-header">
                                                 <span>YATAY MASA</span>
-                                                <span>{{desk.seats.length}} KOLTUK</span>
+                                                <span style="color: var(--ray-blue);">{{desk.monitorBadge}}</span>
                                             </div>
                                             <div class="desk-monitors-row">
                                                 <div class="monitor-2d-rig" ng-repeat="s in desk.seats track by $index">
@@ -951,7 +1015,7 @@
             <div ng-if="activeTab === 'adminDashboard' && adminData">
                 <div class="summary-strip">
                     <div class="stat-card">
-                        <h4>Seçili Gün ({{selectedDate}}) Doluluk</h4>
+                        <h4>Seçili Gün ({{formatDateTR(selectedDate)}}) Doluluk</h4>
                         <div class="stat-val" style="color: var(--ray-blue);">%{{adminData.kpis.occupancyRate}}</div>
                     </div>
                     <div class="stat-card">
@@ -993,7 +1057,7 @@
                             </thead>
                             <tbody>
                                 <tr ng-repeat="r in adminData.allReservations | filter:adminSearch">
-                                    <td style="font-weight: 800; color: var(--ray-blue);">{{r.date}}</td>
+                                    <td style="font-weight: 800; color: var(--ray-blue);">{{formatDateTR(r.date)}}</td>
                                     <td><strong style="color: var(--ray-red);">{{r.workspaceCode}}</strong> ({{r.workspaceName}})</td>
                                     <td style="font-weight: 700;">{{r.userFullName}}</td>
                                     <td>{{r.userDepartment}}</td>
@@ -1063,7 +1127,7 @@
                     {{changeConfirmPopup.itemType === 'Oda' ? 'Toplantı Odanızı' : 'Masanızı'}} Değiştirmek İster misiniz?
                 </h3>
                 <p style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 20px;">
-                    <strong>{{changeConfirmPopup.date}}</strong> tarihinde zaten <strong>{{changeConfirmPopup.existingCode}}</strong> için rezervasyonunuz bulunuyor.<br><br>
+                    <strong>{{formatDateTR(changeConfirmPopup.date)}}</strong> tarihinde zaten <strong>{{changeConfirmPopup.existingCode}}</strong> için rezervasyonunuz bulunuyor.<br><br>
                     Onaylarsanız eski rezervasyonunuz (<strong>{{changeConfirmPopup.existingCode}}</strong>) <strong>otomatik olarak iptal edilecek</strong> ve <strong>{{changeConfirmPopup.newCode}}</strong> adınıza tanımlanacaktır.
                 </p>
                 <div style="display: flex; gap: 10px;">

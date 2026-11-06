@@ -551,7 +551,7 @@
                     saveFallbackStore(db);
                     var pWs = db.workspaces.find(function (w) { return w.id === pendingToday.workspaceItemId; });
                     return {
-                        replyHtml: '✅ Harika <strong>' + user.fullName + '</strong>! Bugünkü (<strong>' + todayStr + '</strong>) <strong>' + (pWs ? pWs.code : '') + '</strong> rezervasyonunuz için <strong>Ofis Check-In</strong> doğrulamanızı tamamladım.',
+                        replyHtml: '✅ Harika <strong>' + user.fullName + '</strong>! Bugünkü (<strong>' + formatDateTR(todayStr) + '</strong>) <strong>' + (pWs ? pWs.code : '') + '</strong> rezervasyonunuz için <strong>Ofis Check-In</strong> doğrulamanızı tamamladım.',
                         action: 'CHECKED_IN',
                         targetDate: todayStr,
                         showPopup: true,
@@ -566,14 +566,14 @@
                 if (futureR) {
                     var fWs = db.workspaces.find(function (w) { return w.id === futureR.workspaceItemId; });
                     return {
-                        replyHtml: '⚠️ <strong>' + futureR.date + '</strong> tarihli <strong>' + (fWs ? fWs.code : '') + '</strong> rezervasyonunuz ileri bir tarihe ait. <strong>Check-In işlemi yalnızca aynı gün içinde (' + todayStr + ') yapılabilir.</strong>',
+                        replyHtml: '⚠️ <strong>' + formatDateTR(futureR.date) + '</strong> tarihli <strong>' + (fWs ? fWs.code : '') + '</strong> rezervasyonunuz ileri bir tarihe ait. <strong>Check-In işlemi yalnızca aynı gün içinde (' + formatDateTR(todayStr) + ') yapılabilir.</strong>',
                         action: 'NONE',
                         targetDate: todayStr,
                         buttons: [{ label: '✨ Bugün İçin Masa Seç', command: 'Bana bugün boş masa ayırt', style: 'blue' }]
                     };
                 }
                 return {
-                    replyHtml: 'Bugün (<strong>' + todayStr + '</strong>) için Check-In bekleyen aktif bir masa rezervasyonunuz bulunmuyor.',
+                    replyHtml: 'Bugün (<strong>' + formatDateTR(todayStr) + '</strong>) için Check-In bekleyen aktif bir masa rezervasyonunuz bulunmuyor.',
                     action: 'NONE',
                     targetDate: todayStr,
                     buttons: [{ label: '✨ Bugün Boş Masaları Göster', command: 'Bana bugün boş masa ayırt', style: 'blue' }]
@@ -588,12 +588,12 @@
                     saveFallbackStore(db);
                     var cWs = db.workspaces.find(function (w) { return w.id === activeR.workspaceItemId; });
                     return {
-                        replyHtml: '🗑️ <strong>' + activeR.date + '</strong> tarihli <strong>' + (cWs ? cWs.code : '') + '</strong> rezervasyonunuz iptal edildi.',
+                        replyHtml: '🗑️ <strong>' + formatDateTR(activeR.date) + '</strong> tarihli <strong>' + (cWs ? cWs.code : '') + '</strong> rezervasyonunuz iptal edildi.',
                         action: 'CANCELLED',
                         targetDate: activeR.date,
                         showPopup: true,
                         popupTitle: 'Rezervasyon İptal Edildi',
-                        popupMessage: activeR.date + ' tarihli ' + (cWs ? cWs.code : '') + ' rezervasyonunuz iptal edildi.',
+                        popupMessage: formatDateTR(activeR.date) + ' tarihli ' + (cWs ? cWs.code : '') + ' rezervasyonunuz iptal edildi.',
                         buttons: [{ label: '✨ Yeni Masa Seç', command: 'Bana bugün boş masa ayırt', style: 'blue' }]
                     };
                 }
@@ -616,8 +616,8 @@
                     });
                 return {
                     replyHtml: checkedPeople.length > 0
-                        ? '<strong>' + targetDate + '</strong> tarihinde ofiste Check-In yapmış <strong>' + checkedPeople.length + ' kişi</strong> var:<br>• ' + checkedPeople.join('<br>• ')
-                        : '<strong>' + targetDate + '</strong> tarihinde henüz ofiste Check-In yapmış kimse görünmüyor.',
+                        ? '<strong>' + formatDateTR(targetDate) + '</strong> tarihinde ofiste Check-In yapmış <strong>' + checkedPeople.length + ' kişi</strong> var:<br>• ' + checkedPeople.join('<br>• ')
+                        : '<strong>' + formatDateTR(targetDate) + '</strong> tarihinde henüz ofiste Check-In yapmış kimse görünmüyor.',
                     action: 'SHOW_PRESENCE',
                     targetDate: targetDate,
                     buttons: [{ label: '✨ Bana Boş Masa Ayırt', command: 'Bana bugün boş masa ayırt', style: 'blue' }]
@@ -645,7 +645,7 @@
                     var alts = db.workspaces.filter(function (w) { return w.type === matchedWs.type && dayBusyIds.indexOf(w.id) === -1; });
                     var altBold = alts.map(function (a) { return '<strong>' + a.code + '</strong>'; }).join(', ');
                     return {
-                        replyHtml: 'Üzgünüm, <strong>' + targetDate + '</strong> tarihinde <strong>' + matchedWs.code + '</strong> dolu.<br>Boş olanlar: ' + altBold + '<br>Hangisini istersiniz?',
+                        replyHtml: 'Üzgünüm, <strong>' + formatDateTR(targetDate) + '</strong> tarihinde <strong>' + matchedWs.code + '</strong> dolu.<br>Boş olanlar: ' + altBold + '<br>Hangisini istersiniz?',
                         action: 'NONE',
                         targetDate: targetDate,
                         buttons: alts.slice(0, 8).map(function (a) {
@@ -671,7 +671,7 @@
                     }).join(', ');
 
                     return {
-                        replyHtml: '⚠️ <strong>' + targetDate + '</strong> tarihinde zaten <strong>' + oldCodesList + '</strong> (' + typeLabel + ') rezervasyonunuz var.<br>Eski rezervasyonunuzu otomatik iptal edip <strong>' + matchedWs.code + '</strong> ile <strong>değiştirmek ister misiniz?</strong>',
+                        replyHtml: '⚠️ <strong>' + formatDateTR(targetDate) + '</strong> tarihinde zaten <strong>' + oldCodesList + '</strong> (' + typeLabel + ') rezervasyonunuz var.<br>Eski rezervasyonunuzu otomatik iptal edip <strong>' + matchedWs.code + '</strong> ile <strong>değiştirmek ister misiniz?</strong>',
                         action: 'ASK_CHANGE',
                         targetDate: targetDate,
                         buttons: [
@@ -713,15 +713,15 @@
 
                 return {
                     replyHtml: cancelledCodes
-                        ? '🔄 Eski rezervasyonunuz (<strong>' + cancelledCodes + '</strong>) otomatik iptal edildi ve <strong>' + targetDate + '</strong> günü için <strong>' + matchedWs.code + ' — ' + matchedWs.name + '</strong> adınıza ayrıldı!'
-                        : '🎉 Tamamdır <strong>' + user.fullName + '</strong>! <strong>' + targetDate + '</strong> tarihi için <strong>' + matchedWs.code + ' — ' + matchedWs.name + '</strong> sizin adınıza ayrıldı!',
+                        ? '🔄 Eski rezervasyonunuz (<strong>' + cancelledCodes + '</strong>) otomatik iptal edildi ve <strong>' + formatDateTR(targetDate) + '</strong> günü için <strong>' + matchedWs.code + ' — ' + matchedWs.name + '</strong> adınıza ayrıldı!'
+                        : '🎉 Tamamdır <strong>' + user.fullName + '</strong>! <strong>' + formatDateTR(targetDate) + '</strong> tarihi için <strong>' + matchedWs.code + ' — ' + matchedWs.name + '</strong> sizin adınıza ayrıldı!',
                     action: 'RESERVED',
                     targetDate: targetDate,
                     showPopup: true,
                     popupTitle: cancelledCodes ? 'Rezervasyon Değiştirildi!' : 'Rezervasyon Tamamlandı!',
                     popupMessage: cancelledCodes
-                        ? 'Eski rezervasyonunuz (' + cancelledCodes + ') iptal edildi ve ' + targetDate + ' günü için ' + matchedWs.code + ' (' + matchedWs.name + ') adınıza tanımlandı.'
-                        : targetDate + ' günü (' + timeSlot + ') için ' + matchedWs.code + ' (' + matchedWs.name + ') adınıza ayrıldı.',
+                        ? 'Eski rezervasyonunuz (' + cancelledCodes + ') iptal edildi ve ' + formatDateTR(targetDate) + ' günü için ' + matchedWs.code + ' (' + matchedWs.name + ') adınıza tanımlandı.'
+                        : formatDateTR(targetDate) + ' günü (' + timeSlot + ') için ' + matchedWs.code + ' (' + matchedWs.name + ') adınıza ayrıldı.',
                     reservedItem: rItem,
                     buttons: btns
                 };
@@ -741,7 +741,7 @@
                 });
                 var boldCodes = freeItems.map(function (w) { return '<strong>' + w.code + '</strong>'; }).join(', ');
                 return {
-                    replyHtml: '📅 <strong>' + targetDate + '</strong> için boş ' + (wantsRoom ? 'oda' : 'masa') + ' numaraları:<br>' + boldCodes + '<br><strong>Hangisini istersiniz? Seçin:</strong>',
+                    replyHtml: '📅 <strong>' + formatDateTR(targetDate) + '</strong> için boş ' + (wantsRoom ? 'oda' : 'masa') + ' numaraları:<br>' + boldCodes + '<br><strong>Hangisini istersiniz? Seçin:</strong>',
                     action: 'LIST_OPTIONS',
                     targetDate: targetDate,
                     buttons: freeItems.map(function (w) {
@@ -942,6 +942,18 @@
             return year + '-' + month + '-' + day;
         }
 
+        function formatDateTR(isoStr) {
+            if (!isoStr) return '';
+            var s = String(isoStr).trim();
+            var parts = s.split('-');
+            if (parts.length === 3 && parts[0].length === 4) {
+                return parts[2] + '/' + parts[1] + '/' + parts[0];
+            }
+            return s;
+        }
+
+        $scope.formatDateTR = formatDateTR;
+
         function buildDaysStrip() {
             var dayNames = ['Pazar', 'Pzt', 'Salı', 'Çar', 'Per', 'Cuma', 'Cmt'];
             var monthNames = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
@@ -953,10 +965,11 @@
                 var iso = formatDateISO(d);
                 list.push({
                     iso: iso,
+                    dateTR: formatDateTR(iso),
                     dayName: i === 0 ? 'Bugün' : (i === 1 ? 'Yarın' : dayNames[d.getDay()]),
                     dayNum: d.getDate(),
                     monthName: monthNames[d.getMonth()],
-                    fullLabel: d.getDate() + ' ' + monthNames[d.getMonth()] + ' ' + d.getFullYear()
+                    fullLabel: formatDateTR(iso)
                 });
             }
             $scope.daysStrip = list;
@@ -965,6 +978,27 @@
         }
 
         $scope.presenceFloorFilter = 0;
+
+        $scope.setPresenceFilter = function (filterMode) {
+            $scope.presenceFilter = filterMode || 'ALL';
+        };
+
+        $scope.setPresenceFloorFilter = function (floorId) {
+            $scope.presenceFloorFilter = floorId ? parseInt(floorId, 10) : 0;
+        };
+
+        $scope.presetDeskFeatures = [
+            'Çift Monitör (2x27" IPS)',
+            'Geniş Ekran (34" UltraWide)',
+            'Thunderbolt 4 Hızlı Şarj Dock',
+            'Yükseklik Ayarlanabilir Motorlu Masa',
+            'Cam Kenarı Masa (Gün Işığı)',
+            '27" 4K Monitör + Laptop Standı',
+            'Ergonomik Bel Destekli Koltuk',
+            'Kablosuz Şarj & Gigabit Ethernet'
+        ];
+
+        $scope.customFeatureForm = { text: '' };
 
         function buildBusLayoutAndPresence(items, allFloorsPresence) {
             var desksMap = {};
@@ -999,6 +1033,9 @@
                         var rowIdx = item.gridY || (Math.floor((deskNo - 1) / 2) + 1);
                         var defaultX = (sideCol === 1) ? 5 : 53;
                         var defaultY = Math.min(6 + (rowIdx - 1) * 18, 78);
+                        var deskFeatures = (Array.isArray(item.features) && item.features.length > 0)
+                            ? item.features.slice()
+                            : buildFallbackFeatures(deskNo, true);
                         desksMap[deskNo] = {
                             deskNo: deskNo,
                             floorId: item.floorId || $scope.selectedFloorId || 1,
@@ -1008,8 +1045,9 @@
                             gridY: rowIdx,
                             canvasX: (typeof item.canvasX === 'number' && item.canvasX >= 0) ? item.canvasX : defaultX,
                             canvasY: (typeof item.canvasY === 'number' && item.canvasY >= 0) ? item.canvasY : defaultY,
-                            specBadge: (deskNo % 2 === 1) ? 'Yükseklik Ayarlı' : 'Geniş Yüzey',
-                            monitorBadge: (deskNo <= 4) ? 'Çift Monitör' : (deskNo <= 7 ? '34" UltraWide' : '4K Ekran'),
+                            features: deskFeatures,
+                            specBadge: deskFeatures[0] || ((deskNo % 2 === 1) ? 'Yükseklik Ayarlı' : 'Geniş Yüzey'),
+                            monitorBadge: deskFeatures[0] || ((deskNo <= 4) ? 'Çift Monitör' : (deskNo <= 7 ? '34" UltraWide' : '4K Ekran')),
                             seats: []
                         };
                     }
@@ -1058,6 +1096,7 @@
         }
 
         $scope.getFilteredPresence = function () {
+            var targetFloor = parseInt($scope.presenceFloorFilter, 10) || 0;
             return ($scope.peopleInOffice || []).filter(function (p) {
                 if ($scope.presenceFilter === 'CHECKED_IN' && p.status !== 'CheckedIn') {
                     return false;
@@ -1065,7 +1104,7 @@
                 if ($scope.presenceFilter === 'RESERVED' && p.status === 'CheckedIn') {
                     return false;
                 }
-                if ($scope.presenceFloorFilter && p.floorId !== $scope.presenceFloorFilter) {
+                if (targetFloor > 0 && (parseInt(p.floorId, 10) || 1) !== targetFloor) {
                     return false;
                 }
                 return true;
@@ -1073,6 +1112,7 @@
         };
 
         $scope.getFloorPresenceCount = function (floorId) {
+            var targetFloor = parseInt(floorId, 10) || 0;
             return ($scope.peopleInOffice || []).filter(function (p) {
                 if ($scope.presenceFilter === 'CHECKED_IN' && p.status !== 'CheckedIn') {
                     return false;
@@ -1080,7 +1120,7 @@
                 if ($scope.presenceFilter === 'RESERVED' && p.status === 'CheckedIn') {
                     return false;
                 }
-                return floorId ? (p.floorId === floorId) : true;
+                return targetFloor > 0 ? ((parseInt(p.floorId, 10) || 1) === targetFloor) : true;
             }).length;
         };
 
@@ -1410,12 +1450,15 @@
                 });
         };
 
-        function updateDeskGroupConfig(desk, newSeatCount, newOrientation, newGridX, newCanvasX, newCanvasY, silentToast) {
+        function updateDeskGroupConfig(desk, newSeatCount, newOrientation, newGridX, newCanvasX, newCanvasY, silentToast, newFeatures) {
             if (!desk) return;
             var targetSeats = Math.min(Math.max(parseInt(newSeatCount) || 2, 1), 8);
             var cX = (typeof newCanvasX === 'number') ? newCanvasX : (typeof desk.canvasX === 'number' ? desk.canvasX : -1);
             var cY = (typeof newCanvasY === 'number') ? newCanvasY : (typeof desk.canvasY === 'number' ? desk.canvasY : -1);
             var derivedGridX = newGridX || (cX >= 45 ? 2 : 1);
+            var featuresToSave = Array.isArray(newFeatures)
+                ? newFeatures.slice()
+                : (Array.isArray(desk.features) ? desk.features.slice() : null);
 
             var payload = {
                 floorId: desk.floorId || $scope.selectedFloorId || 1,
@@ -1425,7 +1468,8 @@
                 gridX: derivedGridX,
                 gridY: desk.gridY || 1,
                 canvasX: cX,
-                canvasY: cY
+                canvasY: cY,
+                features: featuresToSave
             };
 
             $http.post('/api/admin/desks/update', payload)
@@ -1454,6 +1498,9 @@
                             existing.canvasY = payload.canvasY;
                             existing.code = code;
                             existing.name = buildSeatNameClient(payload.floorId, payload.deskNo, s, code);
+                            if (Array.isArray(payload.features)) {
+                                existing.features = payload.features.slice();
+                            }
                         } else {
                             db.workspaces.push({
                                 id: nextWsId++,
@@ -1464,7 +1511,7 @@
                                 zone: 'Masa ' + payload.deskNo,
                                 capacity: 1,
                                 orientation: payload.orientation,
-                                features: buildFallbackFeatures(payload.deskNo, s === 1),
+                                features: Array.isArray(payload.features) ? payload.features.slice() : buildFallbackFeatures(payload.deskNo, s === 1),
                                 gridX: payload.gridX,
                                 gridY: payload.gridY,
                                 gridW: payload.deskNo,
@@ -1487,6 +1534,61 @@
                     loadWorkspaces();
                 });
         }
+
+        $scope.hasDeskFeature = function (desk, featName) {
+            if (!desk || !Array.isArray(desk.features) || !featName) return false;
+            var target = featName.trim().toLowerCase();
+            return desk.features.some(function (f) {
+                return String(f).trim().toLowerCase() === target;
+            });
+        };
+
+        $scope.togglePresetDeskFeature = function (desk, featName) {
+            if (!desk || !featName) return;
+            desk.features = Array.isArray(desk.features) ? desk.features.slice() : [];
+            var target = featName.trim().toLowerCase();
+            var existingIdx = -1;
+            for (var i = 0; i < desk.features.length; i++) {
+                if (String(desk.features[i]).trim().toLowerCase() === target) {
+                    existingIdx = i;
+                    break;
+                }
+            }
+            if (existingIdx !== -1) {
+                desk.features.splice(existingIdx, 1);
+                $scope.showToast(desk.title + ' masasından "' + featName + '" özelliği kaldırıldı.', false);
+            } else {
+                desk.features.push(featName);
+                $scope.showToast(desk.title + ' masasına "' + featName + '" özelliği eklendi!', false);
+            }
+            updateDeskGroupConfig(desk, desk.seats.length, desk.orientation, desk.gridX, desk.canvasX, desk.canvasY, true, desk.features);
+        };
+
+        $scope.addCustomDeskFeature = function (desk) {
+            if (!desk) return;
+            var raw = ($scope.customFeatureForm && $scope.customFeatureForm.text) ? $scope.customFeatureForm.text.trim() : '';
+            if (!raw) {
+                $scope.showToast('Lütfen eklenecek masa özelliğini yazın (örn. Çift Monitör, Thunderbolt).', true);
+                return;
+            }
+            desk.features = Array.isArray(desk.features) ? desk.features.slice() : [];
+            if ($scope.hasDeskFeature(desk, raw)) {
+                $scope.showToast('Bu özellik zaten masada tanımlı.', true);
+                return;
+            }
+            desk.features.push(raw);
+            $scope.customFeatureForm.text = '';
+            $scope.showToast(desk.title + ' masasına "' + raw + '" özelliği eklendi!', false);
+            updateDeskGroupConfig(desk, desk.seats.length, desk.orientation, desk.gridX, desk.canvasX, desk.canvasY, true, desk.features);
+        };
+
+        $scope.removeDeskFeature = function (desk, idx) {
+            if (!desk || !Array.isArray(desk.features)) return;
+            var removed = desk.features[idx];
+            desk.features.splice(idx, 1);
+            $scope.showToast(desk.title + ' masasından "' + removed + '" kaldırıldı.', false);
+            updateDeskGroupConfig(desk, desk.seats.length, desk.orientation, desk.gridX, desk.canvasX, desk.canvasY, true, desk.features);
+        };
 
         $scope.setDeskOrientation = function (desk, orientation) {
             updateDeskGroupConfig(desk, desk.seats.length, orientation, desk.gridX, desk.canvasX, desk.canvasY, false);
@@ -1819,7 +1921,7 @@
                             date: payload.date,
                             timeSlot: payload.timeSlot,
                             note: payload.note,
-                            message: payload.date + ' tarihinde zaten ' + oldCodes + ' (' + (targetWs.type === 'Oda' ? 'toplantı odası' : 'masa') + ') rezervasyonunuz bulunuyor. Eski rezervasyonunuzu otomatik iptal edip ' + targetWs.code + ' ile değiştirmek ister misiniz?'
+                            message: formatDateTR(payload.date) + ' tarihinde zaten ' + oldCodes + ' (' + (targetWs.type === 'Oda' ? 'toplantı odası' : 'masa') + ') rezervasyonunuz bulunuyor. Eski rezervasyonunuzu otomatik iptal edip ' + targetWs.code + ' ile değiştirmek ister misiniz?'
                         };
                         return;
                     }
@@ -1850,8 +1952,8 @@
                     $scope.openResultPopup(
                         cancelledOld ? 'Rezervasyon Değiştirildi!' : 'Rezervasyon Tamamlandı!',
                         cancelledOld
-                            ? 'Eski rezervasyonunuz (' + cancelledOld + ') otomatik iptal edildi ve ' + payload.date + ' günü için ' + targetWs.code + ' (' + targetWs.name + ') adınıza tanımlandı!'
-                            : payload.date + ' tarihli ' + targetWs.code + ' (' + targetWs.name + ') rezervasyonunuz başarıyla tamamlandı!',
+                            ? 'Eski rezervasyonunuz (' + cancelledOld + ') otomatik iptal edildi ve ' + formatDateTR(payload.date) + ' günü için ' + targetWs.code + ' (' + targetWs.name + ') adınıza tanımlandı!'
+                            : formatDateTR(payload.date) + ' tarihli ' + targetWs.code + ' (' + targetWs.name + ') rezervasyonunuz başarıyla tamamlandı!',
                         { code: targetWs.code, name: targetWs.name, date: payload.date, timeSlot: payload.timeSlot }
                     );
                     loadWorkspaces();
@@ -1864,7 +1966,7 @@
         $scope.checkInReservation = function (reservationId, resDate) {
             if (!$scope.currentUser) return;
             if (resDate && resDate !== $scope.todayDate) {
-                $scope.showToast('Check-In işlemi yalnızca aynı gün (' + $scope.todayDate + ') içindeki rezervasyonlar için yapılabilir!', true);
+                $scope.showToast('Check-In işlemi yalnızca aynı gün (' + formatDateTR($scope.todayDate) + ') içindeki rezervasyonlar için yapılabilir!', true);
                 return;
             }
             $http.post('/api/reservations/' + reservationId + '/checkin?userId=' + $scope.currentUser.id, {})
@@ -1883,7 +1985,7 @@
                     var r = db.reservations.find(function (x) { return x.id === reservationId; });
                     if (r) {
                         if (r.date !== $scope.todayDate) {
-                            $scope.showToast('Check-In yalnızca rezervasyon gününde (' + r.date + ') yapılabilir!', true);
+                            $scope.showToast('Check-In yalnızca rezervasyon gününde (' + formatDateTR(r.date) + ') yapılabilir!', true);
                             return;
                         }
                         r.status = 'CheckedIn';

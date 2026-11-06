@@ -136,6 +136,17 @@ public class ReservationStore
         return $"{prefix}Masa {deskNo} - {seatIdx}. Koltuk ({code})";
     }
 
+    private static string FormatDateTR(string? isoDate)
+    {
+        if (string.IsNullOrWhiteSpace(isoDate)) return "";
+        var parts = isoDate.Trim().Split('-');
+        if (parts.Length == 3 && parts[0].Length == 4)
+        {
+            return $"{parts[2]}/{parts[1]}/{parts[0]}";
+        }
+        return isoDate;
+    }
+
     private void SeedDefaultData()
     {
         _data.Users = new List<User>
@@ -540,7 +551,7 @@ public class ReservationStore
 
             if (existingOnWorkspace != null)
             {
-                return new { success = false, message = $"{workspace.Code} seçilen tarihte ({req.Date}) zaten dolu." };
+                return new { success = false, message = $"{workspace.Code} seçilen tarihte ({FormatDateTR(req.Date)}) zaten dolu." };
             }
 
             // RULE: 1 user can reserve at most 1 item of the same type ("Masa" or "Oda") per day.
@@ -572,7 +583,7 @@ public class ReservationStore
                         itemType = workspace.Type,
                         date = req.Date,
                         timeSlot = req.TimeSlot,
-                        message = $"{req.Date} tarihinde zaten {oldCodes} ({typeText}) rezervasyonunuz bulunuyor. Eski rezervasyonunuzu otomatik iptal edip {workspace.Code} ile değiştirmek ister misiniz?"
+                        message = $"{FormatDateTR(req.Date)} tarihinde zaten {oldCodes} ({typeText}) rezervasyonunuz bulunuyor. Eski rezervasyonunuzu otomatik iptal edip {workspace.Code} ile değiştirmek ister misiniz?"
                     };
                 }
                 else
@@ -602,8 +613,8 @@ public class ReservationStore
             Save();
 
             string msg = replacedOldCode != null
-                ? $"Eski rezervasyonunuz ({replacedOldCode}) otomatik iptal edildi ve {req.Date} günü için {workspace.Code} ({workspace.Name}) adınıza tanımlandı!"
-                : $"{workspace.Code} ({workspace.Name}) için {req.Date} tarihli rezervasyonunuz başarıyla tamamlandı!";
+                ? $"Eski rezervasyonunuz ({replacedOldCode}) otomatik iptal edildi ve {FormatDateTR(req.Date)} günü için {workspace.Code} ({workspace.Name}) adınıza tanımlandı!"
+                : $"{workspace.Code} ({workspace.Name}) için {FormatDateTR(req.Date)} tarihli rezervasyonunuz başarıyla tamamlandı!";
 
             return new
             {
@@ -657,7 +668,7 @@ public class ReservationStore
             var today = DateTime.Today.ToString("yyyy-MM-dd");
             if (res.Date != today)
             {
-                return (false, $"Check-In işlemi yalnızca rezervasyon gününde ({res.Date}) yapılabilir. Yarın veya ileri tarihli masalar önceden Check-In yapılamaz.");
+                return (false, $"Check-In işlemi yalnızca rezervasyon gününde ({FormatDateTR(res.Date)}) yapılabilir. Yarın veya ileri tarihli masalar önceden Check-In yapılamaz.");
             }
 
             res.Status = "CheckedIn";
@@ -880,14 +891,14 @@ public class ReservationStore
                     existingSeat.CanvasY = canvasY;
                     existingSeat.Code = code;
                     existingSeat.Name = BuildSeatName(req.FloorId, req.DeskNo, s, code);
-                    if (req.Features != null && req.Features.Count > 0)
+                    if (req.Features != null)
                     {
                         existingSeat.Features = new List<string>(req.Features);
                     }
                 }
                 else
                 {
-                    var baseFeatures = (req.Features != null && req.Features.Count > 0)
+                    var baseFeatures = (req.Features != null)
                         ? new List<string>(req.Features)
                         : (allDeskSeats.FirstOrDefault()?.Features ?? GetDeskFeatures(req.DeskNo, s == 1));
 
