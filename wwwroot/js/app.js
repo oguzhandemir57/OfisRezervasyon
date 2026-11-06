@@ -24,7 +24,8 @@
         $scope.isLoading = false;
 
         $scope.daysStrip = [];
-        $scope.selectedDate = '';
+        $scope.todayDate = formatDateISO(new Date());
+        $scope.selectedDate = $scope.todayDate;
         $scope.selectedDateObj = new Date();
 
         $scope.workspaces = [];
@@ -51,7 +52,11 @@
         $scope.adminSearch = '';
         $scope.toasts = [];
 
-        // ==================== POP-UP MODALS (COMPLETION & CHANGE CONFIRMATION) ====================
+        $scope.isToday = function (dateStr) {
+            return dateStr === $scope.todayDate;
+        };
+
+        // ==================== POP-UP MODALS ====================
         $scope.resultPopup = {
             visible: false,
             title: '',
@@ -65,6 +70,7 @@
             newWorkspaceId: 0,
             newCode: '',
             newName: '',
+            itemType: 'Masa',
             date: '',
             timeSlot: '',
             note: '',
@@ -114,9 +120,7 @@
             return {
                 googleDates: cleanDate + 'T' + startH + '/' + cleanDate + 'T' + endH,
                 outlookStart: dateStr + 'T' + isoStart,
-                outlookEnd: dateStr + 'T' + isoEnd,
-                icsStart: cleanDate + 'T' + startH,
-                icsEnd: cleanDate + 'T' + endH
+                outlookEnd: dateStr + 'T' + isoEnd
             };
         }
 
@@ -129,7 +133,7 @@
             var dt = getSlotStartEnd(date, slot);
 
             var title = encodeURIComponent('RAY OFİS Masa Rezervasyonu: ' + code + ' (' + name + ')');
-            var details = encodeURIComponent('RAY Ofis Rezervasyon Sistemi üzerinden ayrıldı.\nMasa/Oda: ' + code + ' - ' + name + '\nSaat: ' + slot + '\nOfise geldiğinizde Check-In yapmayı unutmayın.');
+            var details = encodeURIComponent('RAY Ofis Rezervasyon Sistemi üzerinden ayrıldı.\nMasa/Oda: ' + code + ' - ' + name + '\nSaat: ' + slot + '\nOfise geldiğinizde aynı gün Check-In yapmayı unutmayın.');
             var location = encodeURIComponent('RAY Merkez Ofis - ' + code);
 
             var url = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + title + '&dates=' + dt.googleDates + '&details=' + details + '&location=' + location;
@@ -145,14 +149,14 @@
             var dt = getSlotStartEnd(date, slot);
 
             var subject = encodeURIComponent('RAY OFİS Masa Rezervasyonu: ' + code + ' (' + name + ')');
-            var body = encodeURIComponent('RAY Ofis Rezervasyon Sistemi üzerinden ayrıldı.\nMasa/Oda: ' + code + ' - ' + name + '\nSaat: ' + slot + '\nOfise geldiğinizde Check-In yapmayı unutmayın.');
+            var body = encodeURIComponent('RAY Ofis Rezervasyon Sistemi üzerinden ayrıldı.\nMasa/Oda: ' + code + ' - ' + name + '\nSaat: ' + slot + '\nOfise geldiğinizde aynı gün Check-In yapmayı unutmayın.');
             var location = encodeURIComponent('RAY Merkez Ofis - ' + code);
 
             var outlookUrl = 'https://outlook.office.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject=' + subject + '&startdt=' + encodeURIComponent(dt.outlookStart) + '&enddt=' + encodeURIComponent(dt.outlookEnd) + '&body=' + body + '&location=' + location;
             window.open(outlookUrl, '_blank');
         };
 
-        // ==================== RAY AI CHATBOT STATE (USING OBJECT TO PREVENT CHILD SCOPE BUG) ====================
+        // ==================== RAY AI CHATBOT STATE ====================
         $scope.aiState = {
             open: false,
             inputText: '',
@@ -162,12 +166,12 @@
         $scope.aiMessages = [
             {
                 sender: 'bot',
-                html: $sce.trustAsHtml('Merhaba! Ben <strong>RAY Yapay Zeka Asistanınızım</strong> 🤖<br>Yapmak istediğiniz işlemi aşağıdaki butonlardan seçebilir veya doğrudan yazabilirsiniz:'),
+                html: $sce.trustAsHtml('Merhaba! Ben <strong>RAY Yapay Zeka Asistanınızım</strong> 🤖<br>Yapmak istediğiniz işlemi butonlardan seçebilir veya yazabilirsiniz:'),
                 buttons: [
                     { label: '✨ Bana Bugün Boş Masa Ayırt', command: 'Bana bugün boş masa ayırt', style: 'blue' },
-                    { label: '📅 Yarın İçin Boş Masa Ayırt', command: 'Yarın için bana boş masa ayırt', style: 'outline' },
-                    { label: '📍 Ofise Geldim, Check-In Yap', command: 'Ofise geldim, Check-In yap', style: 'blue' },
-                    { label: '🏢 Bugün Ofiste Kimler Var?', command: 'Bugün ofiste kimler var?', style: 'outline' }
+                    { label: '🏢 Toplantı Odası Ayırt', command: 'Bana bugün boş oda ayırt', style: 'outline' },
+                    { label: '📍 Ofisteyim, Check-In Yap', command: 'Ofise geldim, Check-In yap', style: 'blue' },
+                    { label: '👥 Bugün Ofiste Kimler Var?', command: 'Bugün ofiste kimler var?', style: 'outline' }
                 ]
             }
         ];
@@ -179,7 +183,7 @@
                 $timeout(function () {
                     var inp = document.getElementById('aiChatInputField');
                     if (inp) inp.focus();
-                }, 100);
+                }, 80);
             }
         };
 
@@ -187,7 +191,7 @@
             $timeout(function () {
                 var el = document.getElementById('aiChatMessagesBox');
                 if (el) el.scrollTop = el.scrollHeight;
-            }, 60);
+            }, 50);
         }
 
         $scope.clickAiActionButton = function (btn) {
@@ -198,7 +202,6 @@
         $scope.sendAiMessage = function () {
             var rawText = ($scope.aiState.inputText || '').trim();
             if (!rawText || !$scope.currentUser) return;
-            // Clear textbox immediately!
             $scope.aiState.inputText = '';
             var inp = document.getElementById('aiChatInputField');
             if (inp) inp.value = '';
@@ -227,14 +230,14 @@
                     $timeout(function () {
                         $scope.aiState.typing = false;
                         handleAiResponse(res.data);
-                    }, 260);
+                    }, 220);
                 })
                 .catch(function () {
                     $timeout(function () {
                         $scope.aiState.typing = false;
                         var localReply = processLocalAiChat(payload);
                         handleAiResponse(localReply);
-                    }, 260);
+                    }, 220);
                 });
         }
 
@@ -264,16 +267,17 @@
             scrollAiChatBottom();
         }
 
-        // ==================== LOCAL AI FALLBACK (FOR GITHUB PAGES) ====================
+        // ==================== LOCAL AI FALLBACK (GITHUB PAGES) ====================
         function processLocalAiChat(req) {
             var db = getFallbackStore();
             var user = $scope.currentUser;
             var lower = (req.message || '').toLocaleLowerCase('tr-TR');
+            var todayStr = $scope.todayDate;
 
-            var targetDate = req.selectedDate || formatDateISO(new Date());
+            var targetDate = req.selectedDate || todayStr;
             var today = new Date();
             if (lower.indexOf('bugün') !== -1 || lower.indexOf('bugun') !== -1) {
-                targetDate = formatDateISO(today);
+                targetDate = todayStr;
             } else if (lower.indexOf('öbür gün') !== -1 || lower.indexOf('2 gün sonra') !== -1) {
                 var d2 = new Date(today); d2.setDate(today.getDate() + 2);
                 targetDate = formatDateISO(d2);
@@ -287,12 +291,10 @@
 
             if (lower.indexOf('vazgeç') !== -1 && lower.indexOf('iptal') === -1) {
                 return {
-                    replyHtml: 'İşlemden vazgeçildi, mevcut masa rezervasyonunuz korundu.',
+                    replyHtml: 'İşlemden vazgeçildi, mevcut rezervasyonunuz korundu.',
                     action: 'NONE',
                     targetDate: targetDate,
-                    buttons: [
-                        { label: '📅 Rezervasyonlarımı Göster', command: 'Rezervasyonlarım neler?', style: 'outline' }
-                    ]
+                    buttons: [{ label: '📅 Rezervasyonlarımı Göster', command: 'Rezervasyonlarım neler?', style: 'outline' }]
                 };
             }
 
@@ -313,32 +315,42 @@
                 }
             }
 
-            // Check-In
+            // Check-In (TODAY ONLY!)
             if (lower.indexOf('check') !== -1 || lower.indexOf('ofisteyim') !== -1 || lower.indexOf('ofise geldim') !== -1 || lower.indexOf('doğrula') !== -1) {
-                var pending = db.reservations.find(function (r) { return r.userId === user.id && r.status === 'Active'; });
-                if (pending) {
-                    pending.status = 'CheckedIn';
+                var pendingToday = db.reservations.find(function (r) {
+                    return r.userId === user.id && r.date === todayStr && r.status === 'Active';
+                });
+                if (pendingToday) {
+                    pendingToday.status = 'CheckedIn';
                     saveFallbackStore(db);
-                    var pWs = db.workspaces.find(function (w) { return w.id === pending.workspaceItemId; });
+                    var pWs = db.workspaces.find(function (w) { return w.id === pendingToday.workspaceItemId; });
                     return {
-                        replyHtml: '✅ Harika <strong>' + user.fullName + '</strong>! <strong>' + pending.date + '</strong> tarihli <strong>' + (pWs ? pWs.code : '') + '</strong> rezervasyonunuz için <strong>Ofis Check-In</strong> doğrulamanızı tamamladım.',
+                        replyHtml: '✅ Harika <strong>' + user.fullName + '</strong>! Bugünkü (<strong>' + todayStr + '</strong>) <strong>' + (pWs ? pWs.code : '') + '</strong> rezervasyonunuz için <strong>Ofis Check-In</strong> doğrulamanızı tamamladım.',
                         action: 'CHECKED_IN',
-                        targetDate: pending.date,
+                        targetDate: todayStr,
                         showPopup: true,
                         popupTitle: 'Ofis Check-In Doğrulandı!',
-                        popupMessage: (pWs ? pWs.code : '') + ' masası için ofiste olduğunuz doğrulandı. Masanızda artık doğrulama (✓) ikonu görünmektedir.',
-                        buttons: [
-                            { label: '🏢 Ofiste Kimler Var?', command: 'Bugün ofiste kimler var?', style: 'blue' }
-                        ]
+                        popupMessage: (pWs ? pWs.code : '') + ' için bugün ofiste olduğunuz doğrulandı.',
+                        buttons: [{ label: '👥 Ofiste Kimler Var?', command: 'Bugün ofiste kimler var?', style: 'blue' }]
+                    };
+                }
+                var futureR = db.reservations.find(function (r) {
+                    return r.userId === user.id && r.status === 'Active' && r.date > todayStr;
+                });
+                if (futureR) {
+                    var fWs = db.workspaces.find(function (w) { return w.id === futureR.workspaceItemId; });
+                    return {
+                        replyHtml: '⚠️ <strong>' + futureR.date + '</strong> tarihli <strong>' + (fWs ? fWs.code : '') + '</strong> rezervasyonunuz ileri bir tarihe ait. <strong>Check-In işlemi yalnızca aynı gün içinde (' + todayStr + ') yapılabilir.</strong>',
+                        action: 'NONE',
+                        targetDate: todayStr,
+                        buttons: [{ label: '✨ Bugün İçin Masa Seç', command: 'Bana bugün boş masa ayırt', style: 'blue' }]
                     };
                 }
                 return {
-                    replyHtml: 'Şu anda Check-In bekleyen aktif bir masa rezervasyonunuz görünmüyor. Hemen boş masaları listelememi ister misiniz?',
+                    replyHtml: 'Bugün (<strong>' + todayStr + '</strong>) için Check-In bekleyen aktif bir masa rezervasyonunuz bulunmuyor.',
                     action: 'NONE',
-                    targetDate: targetDate,
-                    buttons: [
-                        { label: '✨ Bugün Boş Masaları Göster', command: 'Bana bugün boş masa ayırt', style: 'blue' }
-                    ]
+                    targetDate: todayStr,
+                    buttons: [{ label: '✨ Bugün Boş Masaları Göster', command: 'Bana bugün boş masa ayırt', style: 'blue' }]
                 };
             }
 
@@ -350,15 +362,13 @@
                     saveFallbackStore(db);
                     var cWs = db.workspaces.find(function (w) { return w.id === activeR.workspaceItemId; });
                     return {
-                        replyHtml: '🗑️ <strong>' + activeR.date + '</strong> tarihli <strong>' + (cWs ? cWs.code : '') + '</strong> rezervasyonunuzu iptal ettim.',
+                        replyHtml: '🗑️ <strong>' + activeR.date + '</strong> tarihli <strong>' + (cWs ? cWs.code : '') + '</strong> rezervasyonunuz iptal edildi.',
                         action: 'CANCELLED',
                         targetDate: activeR.date,
                         showPopup: true,
                         popupTitle: 'Rezervasyon İptal Edildi',
                         popupMessage: activeR.date + ' tarihli ' + (cWs ? cWs.code : '') + ' rezervasyonunuz iptal edildi.',
-                        buttons: [
-                            { label: '✨ Yeni Masa Seç', command: 'Bana bugün boş masa ayırt', style: 'blue' }
-                        ]
+                        buttons: [{ label: '✨ Yeni Masa Seç', command: 'Bana bugün boş masa ayırt', style: 'blue' }]
                     };
                 }
                 return {
@@ -384,9 +394,7 @@
                         : '<strong>' + targetDate + '</strong> tarihinde henüz ofiste Check-In yapmış kimse görünmüyor.',
                     action: 'SHOW_PRESENCE',
                     targetDate: targetDate,
-                    buttons: [
-                        { label: '✨ Bana Boş Masa Ayırt', command: 'Bana bugün boş masa ayırt', style: 'blue' }
-                    ]
+                    buttons: [{ label: '✨ Bana Boş Masa Ayırt', command: 'Bana bugün boş masa ayırt', style: 'blue' }]
                 };
             }
 
@@ -399,7 +407,7 @@
                     var alts = db.workspaces.filter(function (w) { return w.type === matchedWs.type && dayBusyIds.indexOf(w.id) === -1; });
                     var altBold = alts.map(function (a) { return '<strong>' + a.code + '</strong>'; }).join(', ');
                     return {
-                        replyHtml: 'Üzgünüm, <strong>' + targetDate + '</strong> tarihinde <strong>' + matchedWs.code + '</strong> dolu.<br><br>Boş olanlar: ' + altBold + '<br>Hangisini istersiniz? Seçin:',
+                        replyHtml: 'Üzgünüm, <strong>' + targetDate + '</strong> tarihinde <strong>' + matchedWs.code + '</strong> dolu.<br>Boş olanlar: ' + altBold + '<br>Hangisini istersiniz?',
                         action: 'NONE',
                         targetDate: targetDate,
                         buttons: alts.slice(0, 8).map(function (a) {
@@ -408,26 +416,42 @@
                     };
                 }
 
-                // Check 1 desk per day rule
-                if (matchedWs.type === 'Masa') {
-                    var existingSameDay = db.reservations.find(function (r) {
-                        return r.userId === user.id && r.date === targetDate && r.status !== 'Cancelled' && r.workspaceItemId <= 20;
+                // 1 item per day per type ("Masa" or "Oda") with automatic cancellation of all previous ones on swap
+                var existingSameDayList = db.reservations.filter(function (r) {
+                    if (r.userId !== user.id || r.date !== targetDate || r.status === 'Cancelled') return false;
+                    var w = db.workspaces.find(function (x) { return x.id === r.workspaceItemId; });
+                    return w && w.type === matchedWs.type;
+                });
+
+                var shouldReplace = req.replaceExisting || lower.indexOf('değiştir') !== -1 || lower.indexOf('degistir') !== -1;
+                var typeLabel = matchedWs.type === 'Oda' ? 'toplantı odası' : 'masa';
+
+                if (existingSameDayList.length > 0 && !shouldReplace) {
+                    var oldCodesList = existingSameDayList.map(function (r) {
+                        var w = db.workspaces.find(function (x) { return x.id === r.workspaceItemId; });
+                        return w ? w.code : '';
+                    }).join(', ');
+
+                    return {
+                        replyHtml: '⚠️ <strong>' + targetDate + '</strong> tarihinde zaten <strong>' + oldCodesList + '</strong> (' + typeLabel + ') rezervasyonunuz var.<br>Eski rezervasyonunuzu otomatik iptal edip <strong>' + matchedWs.code + '</strong> ile <strong>değiştirmek ister misiniz?</strong>',
+                        action: 'ASK_CHANGE',
+                        targetDate: targetDate,
+                        buttons: [
+                            { label: '🔄 Evet, ' + matchedWs.code + ' İle Değiştir', command: targetDate + ' için ' + matchedWs.code + ' koltuğunu değiştir', style: 'blue', replaceExisting: true },
+                            { label: '✕ Hayır, ' + oldCodesList + ' Kalsın', command: 'Değiştirmekten vazgeç', style: 'outline' }
+                        ]
+                    };
+                }
+
+                var cancelledCodes = null;
+                if (existingSameDayList.length > 0 && shouldReplace) {
+                    cancelledCodes = existingSameDayList.map(function (r) {
+                        var w = db.workspaces.find(function (x) { return x.id === r.workspaceItemId; });
+                        return w ? w.code : '';
+                    }).join(', ');
+                    existingSameDayList.forEach(function (r) {
+                        r.status = 'Cancelled';
                     });
-                    if (existingSameDay && !req.replaceExisting && lower.indexOf('değiştir') === -1) {
-                        var oldWs = db.workspaces.find(function (w) { return w.id === existingSameDay.workspaceItemId; });
-                        return {
-                            replyHtml: '⚠️ <strong>' + targetDate + '</strong> tarihinde zaten <strong>' + (oldWs ? oldWs.code : '') + '</strong> masasında rezervasyonunuz bulunuyor.<br><br>Bir günde 1 masa rezerve edebilirsiniz. Mevcut masanızı <strong>' + matchedWs.code + '</strong> ile <strong>değiştirmek ister misiniz?</strong>',
-                            action: 'ASK_CHANGE',
-                            targetDate: targetDate,
-                            buttons: [
-                                { label: '🔄 Evet, ' + matchedWs.code + ' İle Değiştir', command: targetDate + ' için ' + matchedWs.code + ' koltuğunu değiştir', style: 'blue', replaceExisting: true },
-                                { label: '✕ Hayır, ' + (oldWs ? oldWs.code : '') + ' Kalsın', command: 'Değiştirmekten vazgeç', style: 'outline' }
-                            ]
-                        };
-                    }
-                    if (existingSameDay && (req.replaceExisting || lower.indexOf('değiştir') !== -1)) {
-                        existingSameDay.status = 'Cancelled';
-                    }
                 }
 
                 var nextId = db.reservations.length > 0 ? Math.max.apply(null, db.reservations.map(function (r) { return r.id; })) + 1 : 1;
@@ -443,29 +467,35 @@
                 saveFallbackStore(db);
 
                 var rItem = { code: matchedWs.code, name: matchedWs.name, date: targetDate, timeSlot: timeSlot };
+                var btns = [];
+                if (targetDate === todayStr) {
+                    btns.push({ label: '📍 Ofisteyim — Check-In Yap', command: 'Ofise geldim, Check-In yap', style: 'blue' });
+                }
+                btns.push({ label: '🗑️ Rezervasyonu İptal Et', command: 'Son rezervasyonumu iptal et', style: 'red' });
+
                 return {
-                    replyHtml: '🎉 Tamamdır <strong>' + user.fullName + '</strong>! <strong>' + targetDate + '</strong> tarihi (' + timeSlot + ') için <strong>' + matchedWs.code + ' — ' + matchedWs.name + '</strong> sizin adınıza ayrıldı!',
+                    replyHtml: cancelledCodes
+                        ? '🔄 Eski rezervasyonunuz (<strong>' + cancelledCodes + '</strong>) otomatik iptal edildi ve <strong>' + targetDate + '</strong> günü için <strong>' + matchedWs.code + ' — ' + matchedWs.name + '</strong> adınıza ayrıldı!'
+                        : '🎉 Tamamdır <strong>' + user.fullName + '</strong>! <strong>' + targetDate + '</strong> tarihi için <strong>' + matchedWs.code + ' — ' + matchedWs.name + '</strong> sizin adınıza ayrıldı!',
                     action: 'RESERVED',
                     targetDate: targetDate,
                     showPopup: true,
-                    popupTitle: 'Masa Rezervasyonu Tamamlandı!',
-                    popupMessage: targetDate + ' günü (' + timeSlot + ') için ' + matchedWs.code + ' (' + matchedWs.name + ') masası adınıza ayrıldı.',
+                    popupTitle: cancelledCodes ? 'Rezervasyon Değiştirildi!' : 'Rezervasyon Tamamlandı!',
+                    popupMessage: cancelledCodes
+                        ? 'Eski rezervasyonunuz (' + cancelledCodes + ') iptal edildi ve ' + targetDate + ' günü için ' + matchedWs.code + ' (' + matchedWs.name + ') adınıza tanımlandı.'
+                        : targetDate + ' günü (' + timeSlot + ') için ' + matchedWs.code + ' (' + matchedWs.name + ') adınıza ayrıldı.',
                     reservedItem: rItem,
-                    buttons: [
-                        { label: '📍 Ofise Geldim — Check-In Yap', command: 'Ofise geldim, Check-In yap', style: 'blue' },
-                        { label: '🗑️ Rezervasyonu İptal Et', command: 'Son rezervasyonumu iptal et', style: 'red' }
-                    ]
+                    buttons: btns
                 };
             }
 
-            // List available desks in BOLD with selection buttons
             var wantsRoom = lower.indexOf('oda') !== -1 || lower.indexOf('toplantı') !== -1;
             var freeItems = db.workspaces.filter(function (w) {
                 return w.type === (wantsRoom ? 'Oda' : 'Masa') && dayBusyIds.indexOf(w.id) === -1;
             });
             var boldCodes = freeItems.map(function (w) { return '<strong>' + w.code + '</strong>'; }).join(', ');
             return {
-                replyHtml: '📅 <strong>' + targetDate + '</strong> tarihinde müsait olan boş ' + (wantsRoom ? 'oda' : 'masa') + ' numaraları:<br><br>' + boldCodes + '<br><br><strong>Hangi ' + (wantsRoom ? 'odayı' : 'masayı') + ' istersiniz? Aşağıdaki butonlardan seçin:</strong>',
+                replyHtml: '📅 <strong>' + targetDate + '</strong> için boş ' + (wantsRoom ? 'oda' : 'masa') + ' numaraları:<br>' + boldCodes + '<br><strong>Hangisini istersiniz? Seçin:</strong>',
                 action: 'LIST_OPTIONS',
                 targetDate: targetDate,
                 buttons: freeItems.map(function (w) {
@@ -474,9 +504,28 @@
             };
         }
 
-        // ==================== FALLBACK STORE ====================
+        // ==================== FALLBACK STORE WITH RICH DESK FEATURES ====================
+        function buildFallbackFeatures(deskNo, isSeatA) {
+            var list = [];
+            if ((deskNo % 2 === 1 && isSeatA) || (deskNo % 2 === 0 && !isSeatA))
+                list.push('Cam Kenarı Masa (Gün Işığı)');
+            else
+                list.push('Koridor Yanı (Kolay Erişim)');
+
+            if (deskNo <= 4) list.push('Çift Monitör (2x27" IPS)');
+            else if (deskNo <= 7) list.push('34" UltraWide Kavisli Monitör');
+            else list.push('27" 4K Monitör + Laptop Standı');
+
+            if (deskNo % 2 === 1) list.push('Yükseklik Ayarlanabilen Motorlu Masa');
+            else list.push('Geniş Ahşap Çalışma Yüzeyi');
+
+            list.push('Type-C Hızlı Şarj Dock & Ethernet');
+            list.push('Ergonomik Bel Destekli Koltuk');
+            return list;
+        }
+
         function getFallbackStore() {
-            var raw = localStorage.getItem('ray_ofis_static_db_v3');
+            var raw = localStorage.getItem('ray_ofis_static_db_v4');
             if (raw) {
                 try { return JSON.parse(raw); } catch (e) {}
             }
@@ -498,13 +547,13 @@
             for (var deskNo = 1; deskNo <= 10; deskNo++) {
                 var row = Math.floor((deskNo - 1) / 2) + 1;
                 var side = (deskNo % 2 === 1) ? 1 : 2;
-                workspaces.push({ id: idCounter++, code: deskNo + 'A', name: 'Masa ' + deskNo + ' - Koltuk ' + deskNo + 'A', type: 'Masa', zone: 'Masa ' + deskNo, capacity: 1, gridX: side, gridY: row, gridW: deskNo, gridH: 1, isActive: true });
-                workspaces.push({ id: idCounter++, code: deskNo + 'B', name: 'Masa ' + deskNo + ' - Koltuk ' + deskNo + 'B', type: 'Masa', zone: 'Masa ' + deskNo, capacity: 1, gridX: side, gridY: row, gridW: deskNo, gridH: 2, isActive: true });
+                workspaces.push({ id: idCounter++, code: deskNo + 'A', name: 'Masa ' + deskNo + ' - Sol Koltuk (' + deskNo + 'A)', type: 'Masa', zone: 'Masa ' + deskNo, capacity: 1, features: buildFallbackFeatures(deskNo, true), gridX: side, gridY: row, gridW: deskNo, gridH: 1, isActive: true });
+                workspaces.push({ id: idCounter++, code: deskNo + 'B', name: 'Masa ' + deskNo + ' - Sağ Koltuk (' + deskNo + 'B)', type: 'Masa', zone: 'Masa ' + deskNo, capacity: 1, features: buildFallbackFeatures(deskNo, false), gridX: side, gridY: row, gridW: deskNo, gridH: 2, isActive: true });
             }
-            workspaces.push({ id: idCounter++, code: 'ODA-1', name: 'Toplantı Odası 1', type: 'Oda', zone: 'Toplantı Odaları', capacity: 6, isActive: true });
-            workspaces.push({ id: idCounter++, code: 'ODA-2', name: 'Toplantı Odası 2', type: 'Oda', zone: 'Toplantı Odaları', capacity: 8, isActive: true });
-            workspaces.push({ id: idCounter++, code: 'ODA-3', name: 'Toplantı Odası 3', type: 'Oda', zone: 'Toplantı Odaları', capacity: 4, isActive: true });
-            workspaces.push({ id: idCounter++, code: 'ODA-4', name: 'Büyük Konferans Odası', type: 'Oda', zone: 'Toplantı Odaları', capacity: 12, isActive: true });
+            workspaces.push({ id: idCounter++, code: 'ODA-1', name: 'Toplantı Odası 1 (Sprint)', type: 'Oda', zone: 'Toplantı Odaları', capacity: 6, features: ['65" 4K Akıllı Ekran', 'Cam Yazı Tahtası', 'Ses Yalıtımlı Kabin', 'Kablosuz HDMI Sunum'], isActive: true });
+            workspaces.push({ id: idCounter++, code: 'ODA-2', name: 'Toplantı Odası 2 (İnovasyon)', type: 'Oda', zone: 'Toplantı Odaları', capacity: 8, features: ['Polycom Video Konferans', 'Çift Projeksiyon', 'Cam Kenarı Manzaralı', 'Akustik Panel'], isActive: true });
+            workspaces.push({ id: idCounter++, code: 'ODA-3', name: 'Toplantı Odası 3 (Hızlı Görüşme)', type: 'Oda', zone: 'Toplantı Odaları', capacity: 4, features: ['55" LED TV', 'Yükseklik Ayarlanabilir Masa', 'Hızlı Şarj İstasyonu'], isActive: true });
+            workspaces.push({ id: idCounter++, code: 'ODA-4', name: 'Büyük Konferans Odası', type: 'Oda', zone: 'Toplantı Odaları', capacity: 12, features: ['85" İnteraktif Ekran', '360° Mikrofon & Ses Sistemi', 'Panoramik Cam Cephe', 'İkram & Kahve Köşesi'], isActive: true });
 
             var reservations = [
                 { id: 1, workspaceItemId: 1, userId: 2, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Sprint geliştirme', status: 'CheckedIn' },
@@ -517,12 +566,12 @@
             ];
 
             var db = { users: users, workspaces: workspaces, reservations: reservations };
-            localStorage.setItem('ray_ofis_static_db_v3', JSON.stringify(db));
+            localStorage.setItem('ray_ofis_static_db_v4', JSON.stringify(db));
             return db;
         }
 
         function saveFallbackStore(db) {
-            localStorage.setItem('ray_ofis_static_db_v3', JSON.stringify(db));
+            localStorage.setItem('ray_ofis_static_db_v4', JSON.stringify(db));
         }
 
         $scope.showToast = function (message, isError) {
@@ -531,7 +580,7 @@
             $timeout(function () {
                 var idx = $scope.toasts.indexOf(toast);
                 if (idx !== -1) $scope.toasts.splice(idx, 1);
-            }, 3800);
+            }, 3200);
         };
 
         function formatDateISO(d) {
@@ -590,7 +639,9 @@
                     if (!desksMap[deskNo]) {
                         desksMap[deskNo] = {
                             deskNo: deskNo,
-                            title: 'MASA ' + deskNo + ' (2 Kişilik)',
+                            title: 'MASA ' + deskNo,
+                            specBadge: (deskNo % 2 === 1) ? 'Yükseklik Ayarlı' : 'Geniş Yüzey',
+                            monitorBadge: (deskNo <= 4) ? 'Çift Monitör' : (deskNo <= 7 ? '34" UltraWide' : '4K Ekran'),
                             seats: []
                         };
                     }
@@ -818,7 +869,7 @@
             $scope.bookingForm.note = '';
         };
 
-        // ==================== CREATE / REPLACE RESERVATION ====================
+        // ==================== CREATE / REPLACE RESERVATION (BOTH DESKS & ROOMS) ====================
         $scope.createReservation = function () {
             if (!$scope.selectedItem || !$scope.currentUser) return;
 
@@ -845,6 +896,7 @@
                             newWorkspaceId: data.newWorkspaceId,
                             newCode: data.newCode,
                             newName: data.newName,
+                            itemType: data.itemType || 'Masa',
                             date: data.date,
                             timeSlot: data.timeSlot,
                             note: payload.note,
@@ -864,7 +916,7 @@
                         timeSlot: payload.timeSlot
                     };
                     $scope.openResultPopup(
-                        data.replaced ? 'Masa Değişikliği Tamamlandı!' : 'Masa Rezervasyonu Tamamlandı!',
+                        data.replaced ? 'Rezervasyon Değiştirildi!' : 'Rezervasyon Tamamlandı!',
                         data.message,
                         reservedInfo
                     );
@@ -873,33 +925,45 @@
                     if ($scope.currentUser.role === 'Admin') loadAdminDashboard();
                 })
                 .catch(function () {
-                    // Fallback store handling
                     var db = getFallbackStore();
                     var targetWs = db.workspaces.find(function (w) { return w.id === payload.workspaceItemId; });
                     if (!targetWs) return;
 
-                    if (targetWs.type === 'Masa') {
-                        var existingSameDay = db.reservations.find(function (r) {
-                            return r.userId === payload.userId && r.date === payload.date && r.status !== 'Cancelled' && r.workspaceItemId <= 20;
+                    var existingSameDayList = db.reservations.filter(function (r) {
+                        if (r.userId !== payload.userId || r.date !== payload.date || r.status === 'Cancelled') return false;
+                        var w = db.workspaces.find(function (x) { return x.id === r.workspaceItemId; });
+                        return w && w.type === targetWs.type;
+                    });
+
+                    if (existingSameDayList.length > 0 && !payload.replaceExisting) {
+                        var oldCodes = existingSameDayList.map(function (r) {
+                            var w = db.workspaces.find(function (x) { return x.id === r.workspaceItemId; });
+                            return w ? w.code : '';
+                        }).join(', ');
+                        $scope.changeConfirmPopup = {
+                            visible: true,
+                            existingCode: oldCodes,
+                            newWorkspaceId: targetWs.id,
+                            newCode: targetWs.code,
+                            newName: targetWs.name,
+                            itemType: targetWs.type,
+                            date: payload.date,
+                            timeSlot: payload.timeSlot,
+                            note: payload.note,
+                            message: payload.date + ' tarihinde zaten ' + oldCodes + ' (' + (targetWs.type === 'Oda' ? 'toplantı odası' : 'masa') + ') rezervasyonunuz bulunuyor. Eski rezervasyonunuzu otomatik iptal edip ' + targetWs.code + ' ile değiştirmek ister misiniz?'
+                        };
+                        return;
+                    }
+
+                    var cancelledOld = null;
+                    if (existingSameDayList.length > 0 && payload.replaceExisting) {
+                        cancelledOld = existingSameDayList.map(function (r) {
+                            var w = db.workspaces.find(function (x) { return x.id === r.workspaceItemId; });
+                            return w ? w.code : '';
+                        }).join(', ');
+                        existingSameDayList.forEach(function (r) {
+                            r.status = 'Cancelled';
                         });
-                        if (existingSameDay && !payload.replaceExisting) {
-                            var oldWs = db.workspaces.find(function (w) { return w.id === existingSameDay.workspaceItemId; });
-                            $scope.changeConfirmPopup = {
-                                visible: true,
-                                existingCode: oldWs ? oldWs.code : '',
-                                newWorkspaceId: targetWs.id,
-                                newCode: targetWs.code,
-                                newName: targetWs.name,
-                                date: payload.date,
-                                timeSlot: payload.timeSlot,
-                                note: payload.note,
-                                message: payload.date + ' tarihinde zaten ' + (oldWs ? oldWs.code : '') + ' masasında rezervasyonunuz bulunuyor. Mevcut masanızı ' + targetWs.code + ' ile değiştirmek ister misiniz?'
-                            };
-                            return;
-                        }
-                        if (existingSameDay && payload.replaceExisting) {
-                            existingSameDay.status = 'Cancelled';
-                        }
                     }
 
                     var nextId = db.reservations.length > 0 ? Math.max.apply(null, db.reservations.map(function (r) { return r.id; })) + 1 : 1;
@@ -915,8 +979,10 @@
                     saveFallbackStore(db);
 
                     $scope.openResultPopup(
-                        payload.replaceExisting ? 'Masa Değişikliği Tamamlandı!' : 'Masa Rezervasyonu Tamamlandı!',
-                        payload.date + ' tarihli ' + targetWs.code + ' (' + targetWs.name + ') rezervasyonunuz başarıyla tamamlandı!',
+                        cancelledOld ? 'Rezervasyon Değiştirildi!' : 'Rezervasyon Tamamlandı!',
+                        cancelledOld
+                            ? 'Eski rezervasyonunuz (' + cancelledOld + ') otomatik iptal edildi ve ' + payload.date + ' günü için ' + targetWs.code + ' (' + targetWs.name + ') adınıza tanımlandı!'
+                            : payload.date + ' tarihli ' + targetWs.code + ' (' + targetWs.name + ') rezervasyonunuz başarıyla tamamlandı!',
                         { code: targetWs.code, name: targetWs.name, date: payload.date, timeSlot: payload.timeSlot }
                     );
                     loadWorkspaces();
@@ -925,8 +991,13 @@
                 });
         }
 
-        $scope.checkInReservation = function (reservationId) {
+        // ==================== CHECK-IN (TODAY ONLY) ====================
+        $scope.checkInReservation = function (reservationId, resDate) {
             if (!$scope.currentUser) return;
+            if (resDate && resDate !== $scope.todayDate) {
+                $scope.showToast('Check-In işlemi yalnızca aynı gün (' + $scope.todayDate + ') içindeki rezervasyonlar için yapılabilir!', true);
+                return;
+            }
             $http.post('/api/reservations/' + reservationId + '/checkin?userId=' + $scope.currentUser.id, {})
                 .then(function (res) {
                     $scope.openResultPopup('Ofis Check-In Doğrulandı!', res.data.message, null);
@@ -934,12 +1005,22 @@
                     loadMyReservations();
                     if ($scope.currentUser.role === 'Admin') loadAdminDashboard();
                 })
-                .catch(function () {
+                .catch(function (err) {
+                    if (err.status === 400 && err.data && err.data.message) {
+                        $scope.showToast(err.data.message, true);
+                        return;
+                    }
                     var db = getFallbackStore();
                     var r = db.reservations.find(function (x) { return x.id === reservationId; });
-                    if (r) r.status = 'CheckedIn';
+                    if (r) {
+                        if (r.date !== $scope.todayDate) {
+                            $scope.showToast('Check-In yalnızca rezervasyon gününde (' + r.date + ') yapılabilir!', true);
+                            return;
+                        }
+                        r.status = 'CheckedIn';
+                    }
                     saveFallbackStore(db);
-                    $scope.openResultPopup('Ofis Check-In Doğrulandı!', 'Check-In işleminiz tamamlandı! Masanızda artık doğrulama (✓) ikonu görünmektedir.', null);
+                    $scope.openResultPopup('Ofis Check-In Doğrulandı!', 'Bugünkü Ofis Check-In işleminiz başarıyla doğrulandı!', null);
                     loadWorkspaces();
                     loadMyReservations();
                     if ($scope.currentUser.role === 'Admin') loadAdminDashboard();
@@ -960,7 +1041,7 @@
                     var r = db.reservations.find(function (x) { return x.id === reservationId; });
                     if (r) r.status = 'Cancelled';
                     saveFallbackStore(db);
-                    $scope.openResultPopup('Rezervasyon İptal Edildi', 'Rezervasyonunuz iptal edildi ve koltuk boşa çıkarıldı.', null);
+                    $scope.openResultPopup('Rezervasyon İptal Edildi', 'Rezervasyonunuz iptal edildi ve koltuk/oda tekrar boşa çıkarıldı.', null);
                     loadWorkspaces();
                     loadMyReservations();
                     if ($scope.currentUser.role === 'Admin') loadAdminDashboard();

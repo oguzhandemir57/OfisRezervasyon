@@ -21,7 +21,7 @@ public class ReservationStore
     {
         var dataDir = Path.Combine(env.ContentRootPath, "App_Data");
         Directory.CreateDirectory(dataDir);
-        _filePath = Path.Combine(dataDir, "store_v3.json");
+        _filePath = Path.Combine(dataDir, "store_v4.json");
         LoadOrSeed();
     }
 
@@ -59,6 +59,34 @@ public class ReservationStore
         File.WriteAllText(_filePath, json);
     }
 
+    private static List<string> GetDeskFeatures(int deskNo, bool isSeatA)
+    {
+        var list = new List<string>();
+        // Window-side vs Aisle-side
+        if ((deskNo % 2 == 1 && isSeatA) || (deskNo % 2 == 0 && !isSeatA))
+            list.Add("Cam Kenarı Masa (Gün Işığı)");
+        else
+            list.Add("Koridor Yanı (Kolay Erişim)");
+
+        // Monitor config
+        if (deskNo <= 4)
+            list.Add("Çift Monitör (2x27\" IPS)");
+        else if (deskNo <= 7)
+            list.Add("34\" UltraWide Kavisli Monitör");
+        else
+            list.Add("27\" 4K Monitör + Laptop Standı");
+
+        // Height adjustable & ergonomics
+        if (deskNo % 2 == 1)
+            list.Add("Yükseklik Ayarlanabilen Motorlu Masa");
+        else
+            list.Add("Geniş Ahşap Çalışma Yüzeyi");
+
+        list.Add("Type-C Hızlı Şarj Dock & Ethernet");
+        list.Add("Ergonomik Bel Destekli Koltuk");
+        return list;
+    }
+
     private void SeedDefaultData()
     {
         _data.Users = new List<User>
@@ -84,11 +112,11 @@ public class ReservationStore
             {
                 Id = idCounter++,
                 Code = $"{deskNo}A",
-                Name = $"Masa {deskNo} - Koltuk {deskNo}A",
+                Name = $"Masa {deskNo} - Sol Koltuk ({deskNo}A)",
                 Type = "Masa",
                 Zone = zoneName,
                 Capacity = 1,
-                Features = new() { "Monitör", "Priz" },
+                Features = GetDeskFeatures(deskNo, true),
                 GridX = side,
                 GridY = row,
                 GridW = deskNo,
@@ -99,11 +127,11 @@ public class ReservationStore
             {
                 Id = idCounter++,
                 Code = $"{deskNo}B",
-                Name = $"Masa {deskNo} - Koltuk {deskNo}B",
+                Name = $"Masa {deskNo} - Sağ Koltuk ({deskNo}B)",
                 Type = "Masa",
                 Zone = zoneName,
                 Capacity = 1,
-                Features = new() { "Monitör", "Priz" },
+                Features = GetDeskFeatures(deskNo, false),
                 GridX = side,
                 GridY = row,
                 GridW = deskNo,
@@ -111,10 +139,54 @@ public class ReservationStore
             });
         }
 
-        workspaces.Add(new WorkspaceItem { Id = idCounter++, Code = "ODA-1", Name = "Toplantı Odası 1", Type = "Oda", Zone = "Toplantı Odaları", Capacity = 6, Features = new() { "TV Ekran", "Beyaz Tahta" }, GridX = 1, GridY = 6 });
-        workspaces.Add(new WorkspaceItem { Id = idCounter++, Code = "ODA-2", Name = "Toplantı Odası 2", Type = "Oda", Zone = "Toplantı Odaları", Capacity = 8, Features = new() { "Projeksiyon", "Video Konferans" }, GridX = 2, GridY = 6 });
-        workspaces.Add(new WorkspaceItem { Id = idCounter++, Code = "ODA-3", Name = "Toplantı Odası 3", Type = "Oda", Zone = "Toplantı Odaları", Capacity = 4, Features = new() { "Akıllı Ekran" }, GridX = 3, GridY = 6 });
-        workspaces.Add(new WorkspaceItem { Id = idCounter++, Code = "ODA-4", Name = "Büyük Konferans Odası", Type = "Oda", Zone = "Toplantı Odaları", Capacity = 12, Features = new() { "Ses Sistemi", "75\" Ekran" }, GridX = 4, GridY = 6 });
+        workspaces.Add(new WorkspaceItem
+        {
+            Id = idCounter++,
+            Code = "ODA-1",
+            Name = "Toplantı Odası 1 (Sprint)",
+            Type = "Oda",
+            Zone = "Toplantı Odaları",
+            Capacity = 6,
+            Features = new() { "65\" 4K Akıllı Ekran", "Cam Yazı Tahtası", "Ses Yalıtımlı Kabin", "Kablosuz HDMI Sunum" },
+            GridX = 1,
+            GridY = 6
+        });
+        workspaces.Add(new WorkspaceItem
+        {
+            Id = idCounter++,
+            Code = "ODA-2",
+            Name = "Toplantı Odası 2 (İnovasyon)",
+            Type = "Oda",
+            Zone = "Toplantı Odaları",
+            Capacity = 8,
+            Features = new() { "Polycom Video Konferans", "Çift Projeksiyon", "Cam Kenarı Manzaralı", "Akustik Panel" },
+            GridX = 2,
+            GridY = 6
+        });
+        workspaces.Add(new WorkspaceItem
+        {
+            Id = idCounter++,
+            Code = "ODA-3",
+            Name = "Toplantı Odası 3 (Hızlı Görüşme)",
+            Type = "Oda",
+            Zone = "Toplantı Odaları",
+            Capacity = 4,
+            Features = new() { "55\" LED TV", "Yükseklik Ayarlanabilir Masa", "Hızlı Şarj İstasyonu" },
+            GridX = 3,
+            GridY = 6
+        });
+        workspaces.Add(new WorkspaceItem
+        {
+            Id = idCounter++,
+            Code = "ODA-4",
+            Name = "Büyük Konferans Odası",
+            Type = "Oda",
+            Zone = "Toplantı Odaları",
+            Capacity = 12,
+            Features = new() { "85\" İnteraktif Ekran", "360° Mikrofon & Ses Sistemi", "Panoramik Cam Cephe", "İkram & Kahve Köşesi" },
+            GridX = 4,
+            GridY = 6
+        });
 
         _data.Workspaces = workspaces;
 
@@ -256,38 +328,44 @@ public class ReservationStore
                 return new { success = false, message = $"{workspace.Code} seçilen tarihte ({req.Date}) zaten dolu." };
             }
 
-            // RULE: 1 user can reserve at most 1 desk ("Masa") per day. If they try a 2nd desk, ask if they want to change!
+            // RULE: 1 user can reserve at most 1 item of the same type ("Masa" or "Oda") per day.
+            // If they already have one on that day, ask to swap, and when confirmed, automatically cancel ALL previous active ones of that type on that day!
             string? replacedOldCode = null;
-            if (workspace.Type == "Masa")
-            {
-                var userSameDayDesk = _data.Reservations
-                    .Where(r => r.UserId == req.UserId && r.Date == req.Date && r.Status != "Cancelled")
-                    .Select(r => new { Res = r, Ws = _data.Workspaces.FirstOrDefault(w => w.Id == r.WorkspaceItemId) })
-                    .FirstOrDefault(x => x.Ws != null && x.Ws.Type == "Masa");
+            var userSameDayItems = _data.Reservations
+                .Where(r => r.UserId == req.UserId && r.Date == req.Date && r.Status != "Cancelled")
+                .Select(r => new { Res = r, Ws = _data.Workspaces.FirstOrDefault(w => w.Id == r.WorkspaceItemId) })
+                .Where(x => x.Ws != null && x.Ws.Type == workspace.Type)
+                .ToList();
 
-                if (userSameDayDesk != null)
+            if (userSameDayItems.Count > 0)
+            {
+                var oldCodes = string.Join(", ", userSameDayItems.Select(x => x.Ws!.Code));
+                string typeText = workspace.Type == "Oda" ? "toplantı odası" : "masa";
+
+                if (!req.ReplaceExisting)
                 {
-                    if (!req.ReplaceExisting)
+                    return new
                     {
-                        return new
-                        {
-                            success = false,
-                            requiresChangeConfirmation = true,
-                            existingReservationId = userSameDayDesk.Res.Id,
-                            existingCode = userSameDayDesk.Ws!.Code,
-                            existingName = userSameDayDesk.Ws.Name,
-                            newWorkspaceId = workspace.Id,
-                            newCode = workspace.Code,
-                            newName = workspace.Name,
-                            date = req.Date,
-                            timeSlot = req.TimeSlot,
-                            message = $"{req.Date} tarihinde zaten {userSameDayDesk.Ws.Code} masasında rezervasyonunuz bulunuyor. Mevcut masanızı {workspace.Code} ile değiştirmek ister misiniz?"
-                        };
-                    }
-                    else
+                        success = false,
+                        requiresChangeConfirmation = true,
+                        existingReservationId = userSameDayItems[0].Res.Id,
+                        existingCode = oldCodes,
+                        existingName = userSameDayItems[0].Ws!.Name,
+                        newWorkspaceId = workspace.Id,
+                        newCode = workspace.Code,
+                        newName = workspace.Name,
+                        itemType = workspace.Type,
+                        date = req.Date,
+                        timeSlot = req.TimeSlot,
+                        message = $"{req.Date} tarihinde zaten {oldCodes} ({typeText}) rezervasyonunuz bulunuyor. Eski rezervasyonunuzu otomatik iptal edip {workspace.Code} ile değiştirmek ister misiniz?"
+                    };
+                }
+                else
+                {
+                    replacedOldCode = oldCodes;
+                    foreach (var oldItem in userSameDayItems)
                     {
-                        replacedOldCode = userSameDayDesk.Ws!.Code;
-                        userSameDayDesk.Res.Status = "Cancelled";
+                        oldItem.Res.Status = "Cancelled";
                     }
                 }
             }
@@ -309,7 +387,7 @@ public class ReservationStore
             Save();
 
             string msg = replacedOldCode != null
-                ? $"{req.Date} tarihli masa rezervasyonunuz {replacedOldCode} yerine {workspace.Code} ({workspace.Name}) olarak başarıyla değiştirildi!"
+                ? $"Eski rezervasyonunuz ({replacedOldCode}) otomatik iptal edildi ve {req.Date} günü için {workspace.Code} ({workspace.Name}) adınıza tanımlandı!"
                 : $"{workspace.Code} ({workspace.Name}) için {req.Date} tarihli rezervasyonunuz başarıyla tamamlandı!";
 
             return new
@@ -361,10 +439,16 @@ public class ReservationStore
             if (res == null || res.Status == "Cancelled")
                 return (false, "Aktif rezervasyon bulunamadı.");
 
+            var today = DateTime.Today.ToString("yyyy-MM-dd");
+            if (res.Date != today)
+            {
+                return (false, $"Check-In işlemi yalnızca rezervasyon gününde ({res.Date}) yapılabilir. Yarın veya ileri tarihli masalar önceden Check-In yapılamaz.");
+            }
+
             res.Status = "CheckedIn";
             Save();
             var ws = _data.Workspaces.FirstOrDefault(w => w.Id == res.WorkspaceItemId);
-            return (true, $"{ws?.Code ?? "Masa"} için Ofis Check-In doğrulamanız tamamlandı! Artık haritada doğrulanmış ikonuyla ve Ofistekiler sayfasında görünüyorsunuz.");
+            return (true, $"{ws?.Code ?? "Masa"} için bugünkü Ofis Check-In doğrulamanız tamamlandı! Artık Ofistekiler sayfasında görünüyorsunuz.");
         }
     }
 
@@ -444,13 +528,14 @@ public class ReservationStore
             var user = _data.Users.FirstOrDefault(u => u.Id == req.UserId) ?? _data.Users.First();
             var text = (req.Message ?? "").Trim();
             var lower = text.ToLower(new System.Globalization.CultureInfo("tr-TR"));
+            var todayStr = DateTime.Today.ToString("yyyy-MM-dd");
 
             string targetDate = string.IsNullOrWhiteSpace(req.SelectedDate)
-                ? DateTime.Today.ToString("yyyy-MM-dd")
+                ? todayStr
                 : req.SelectedDate;
 
             if (lower.Contains("bugün") || lower.Contains("bugun"))
-                targetDate = DateTime.Today.ToString("yyyy-MM-dd");
+                targetDate = todayStr;
             else if (lower.Contains("öbür gün") || lower.Contains("obur gun") || lower.Contains("2 gün sonra"))
                 targetDate = DateTime.Today.AddDays(2).ToString("yyyy-MM-dd");
             else if (lower.Contains("yarın") || lower.Contains("yarin"))
@@ -472,7 +557,7 @@ public class ReservationStore
             {
                 return new
                 {
-                    replyHtml = "İşlemden vazgeçildi. Mevcut rezervasyonunuz korundu. Başka bir konuda yardımcı olabilir miyim?",
+                    replyHtml = "İşlemden vazgeçildi, mevcut rezervasyonunuz korundu.",
                     action = "NONE",
                     targetDate = targetDate,
                     buttons = new List<AiActionButton>
@@ -483,7 +568,6 @@ public class ReservationStore
                 };
             }
 
-            // Detect Specific Seat/Room Code (e.g. "1A", "10B", "ODA-1")
             WorkspaceItem? matchedWorkspace = null;
             var roomMatch = Regex.Match(lower, @"oda[\s\-]*([1-4])");
             if (roomMatch.Success)
@@ -501,27 +585,25 @@ public class ReservationStore
                 }
             }
 
-            // INTENT A: CHECK-IN / VERIFICATION
+            // INTENT A: CHECK-IN / VERIFICATION (ONLY TODAY ALLOWED!)
             if (lower.Contains("check") || lower.Contains("ofisteyim") || lower.Contains("ofise geldim") || lower.Contains("doğrula") || lower.Contains("dogrula"))
             {
-                var pending = _data.Reservations
-                    .Where(r => r.UserId == user.Id && r.Status == "Active")
-                    .OrderBy(r => r.Date)
-                    .FirstOrDefault();
+                var pendingToday = _data.Reservations
+                    .FirstOrDefault(r => r.UserId == user.Id && r.Date == todayStr && r.Status == "Active");
 
-                if (pending != null)
+                if (pendingToday != null)
                 {
-                    pending.Status = "CheckedIn";
+                    pendingToday.Status = "CheckedIn";
                     Save();
-                    var ws = _data.Workspaces.FirstOrDefault(w => w.Id == pending.WorkspaceItemId);
+                    var ws = _data.Workspaces.FirstOrDefault(w => w.Id == pendingToday.WorkspaceItemId);
                     return new
                     {
-                        replyHtml = $"✅ Harika <strong>{user.FullName}</strong>! <strong>{pending.Date}</strong> tarihli <strong>{ws?.Code} ({ws?.Name})</strong> rezervasyonunuz için <strong>Ofis Check-In</strong> doğrulamanızı tamamladım.",
+                        replyHtml = $"✅ Harika <strong>{user.FullName}</strong>! Bugünkü (<strong>{todayStr}</strong>) <strong>{ws?.Code} ({ws?.Name})</strong> rezervasyonunuz için <strong>Ofis Check-In</strong> doğrulamanızı tamamladım.",
                         action = "CHECKED_IN",
-                        targetDate = pending.Date,
+                        targetDate = todayStr,
                         showPopup = true,
                         popupTitle = "Ofis Check-In Doğrulandı!",
-                        popupMessage = $"{ws?.Code} ({ws?.Name}) masası için ofiste olduğunuz doğrulandı. Masanızda artık doğrulama (✓) ikonu görünmektedir.",
+                        popupMessage = $"{ws?.Code} ({ws?.Name}) için bugün ofiste olduğunuz doğrulandı.",
                         buttons = new List<AiActionButton>
                         {
                             new() { Label = "🏢 Ofiste Kimler Var?", Command = "Bugün ofiste kimler var?", Style = "blue" },
@@ -530,36 +612,53 @@ public class ReservationStore
                     };
                 }
 
-                var alreadyChecked = _data.Reservations
-                    .Where(r => r.UserId == user.Id && r.Status == "CheckedIn")
-                    .OrderByDescending(r => r.Date)
-                    .FirstOrDefault();
+                var alreadyCheckedToday = _data.Reservations
+                    .FirstOrDefault(r => r.UserId == user.Id && r.Date == todayStr && r.Status == "CheckedIn");
 
-                if (alreadyChecked != null)
+                if (alreadyCheckedToday != null)
                 {
-                    var ws = _data.Workspaces.FirstOrDefault(w => w.Id == alreadyChecked.WorkspaceItemId);
+                    var ws = _data.Workspaces.FirstOrDefault(w => w.Id == alreadyCheckedToday.WorkspaceItemId);
                     return new
                     {
-                        replyHtml = $"Zaten <strong>{alreadyChecked.Date}</strong> günü için <strong>{ws?.Code}</strong> masasında Check-In doğrulamanız yapılmış durumda! Ne yapmak istersiniz?",
+                        replyHtml = $"Bugün (<strong>{todayStr}</strong>) için <strong>{ws?.Code}</strong> masasında Check-In doğrulamanız zaten yapılmış durumda!",
                         action = "NONE",
-                        targetDate = alreadyChecked.Date,
+                        targetDate = todayStr,
                         buttons = new List<AiActionButton>
                         {
-                            new() { Label = "✨ Yarın İçin Boş Masa Ayırt", Command = "Yarın için bana boş masa ayırt", Style = "blue" },
+                            new() { Label = "📅 Yarın İçin Boş Masa Ayırt", Command = "Yarın için bana boş masa ayırt", Style = "blue" },
                             new() { Label = "🏢 Ofiste Kimler Var?", Command = "Bugün ofiste kimler var?", Style = "outline" }
+                        }
+                    };
+                }
+
+                var futureRes = _data.Reservations
+                    .Where(r => r.UserId == user.Id && r.Status == "Active" && string.Compare(r.Date, todayStr) > 0)
+                    .OrderBy(r => r.Date)
+                    .FirstOrDefault();
+
+                if (futureRes != null)
+                {
+                    var ws = _data.Workspaces.FirstOrDefault(w => w.Id == futureRes.WorkspaceItemId);
+                    return new
+                    {
+                        replyHtml = $"⚠️ <strong>{futureRes.Date}</strong> tarihli <strong>{ws?.Code}</strong> rezervasyonunuz ileri bir tarihe ait. <strong>Check-In işlemi yalnızca aynı gün içinde ({todayStr}) yapılabilir.</strong><br>Bugün için masa ayırtmak ister misiniz?",
+                        action = "NONE",
+                        targetDate = todayStr,
+                        buttons = new List<AiActionButton>
+                        {
+                            new() { Label = "✨ Bugün İçin Boş Masa Ayırt", Command = "Bana bugün boş masa ayırt", Style = "blue" }
                         }
                     };
                 }
 
                 return new
                 {
-                    replyHtml = "Şu anda Check-In bekleyen aktif bir masa rezervasyonunuz görünmüyor. Hemen bugün için boş masaları listelememi ister misiniz?",
+                    replyHtml = $"Bugün (<strong>{todayStr}</strong>) için aktif bir masa rezervasyonunuz bulunmüyor. Önce bugün için boş bir masa seçmek ister misiniz?",
                     action = "NONE",
-                    targetDate = targetDate,
+                    targetDate = todayStr,
                     buttons = new List<AiActionButton>
                     {
-                        new() { Label = "✨ Bugün Boş Masaları Göster", Command = "Bana bugün boş masa ayırt", Style = "blue" },
-                        new() { Label = "📅 Yarın Boş Masaları Göster", Command = "Yarın için bana boş masa ayırt", Style = "outline" }
+                        new() { Label = "✨ Bugün Boş Masaları Göster", Command = "Bana bugün boş masa ayırt", Style = "blue" }
                     }
                 };
             }
@@ -569,7 +668,7 @@ public class ReservationStore
             {
                 var activeUserRes = _data.Reservations
                     .Where(r => r.UserId == user.Id && r.Status != "Cancelled")
-                    .OrderByDescending(r => r.Date)
+                    .OrderByDescending(r => r.Id)
                     .FirstOrDefault();
 
                 if (activeUserRes != null)
@@ -579,12 +678,12 @@ public class ReservationStore
                     var ws = _data.Workspaces.FirstOrDefault(w => w.Id == activeUserRes.WorkspaceItemId);
                     return new
                     {
-                        replyHtml = $"🗑️ <strong>{activeUserRes.Date}</strong> tarihli <strong>{ws?.Code} ({ws?.Name})</strong> rezervasyonunuzu iptal ettim.",
+                        replyHtml = $"🗑️ <strong>{activeUserRes.Date}</strong> tarihli <strong>{ws?.Code} ({ws?.Name})</strong> rezervasyonunuz iptal edildi.",
                         action = "CANCELLED",
                         targetDate = activeUserRes.Date,
                         showPopup = true,
                         popupTitle = "Rezervasyon İptal Edildi",
-                        popupMessage = $"{activeUserRes.Date} tarihli {ws?.Code} rezervasyonunuz iptal edildi ve koltuk boşa çıkarıldı.",
+                        popupMessage = $"{activeUserRes.Date} tarihli {ws?.Code} rezervasyonunuz iptal edildi ve boşa çıkarıldı.",
                         buttons = new List<AiActionButton>
                         {
                             new() { Label = "✨ Yeni Masa Seç", Command = "Bana bugün boş masa ayırt", Style = "blue" }
@@ -662,7 +761,7 @@ public class ReservationStore
                 {
                     return new
                     {
-                        replyHtml = "Henüz aktif bir masa veya oda rezervasyonunuz bulunmuyor. Hangi gün için masa seçmek istersiniz?",
+                        replyHtml = "Henüz aktif bir masa veya oda rezervasyonunuz bulunmuyor.",
                         action = "NONE",
                         targetDate = targetDate,
                         buttons = new List<AiActionButton>
@@ -686,7 +785,7 @@ public class ReservationStore
                 };
             }
 
-            // INTENT E: SPECIFIC SEAT/ROOM SELECTION (e.g. User clicked a button "2026-11-06 için 4A koltuğunu ayırt" or typed "4A koltuğunu ayırt")
+            // INTENT E: SPECIFIC SEAT/ROOM SELECTION (WITH AUTOMATIC OLD RESERVATION CANCELLATION ON SWAP FOR BOTH DESKS & ROOMS)
             var reservedIds = _data.Reservations
                 .Where(r => r.Date == targetDate && r.Status != "Cancelled")
                 .Select(r => r.WorkspaceItemId)
@@ -703,7 +802,7 @@ public class ReservationStore
                     var altBold = string.Join(", ", alts.Select(a => $"<strong>{a.Code}</strong>"));
                     return new
                     {
-                        replyHtml = $"Üzgünüm, <strong>{targetDate}</strong> tarihinde <strong>{matchedWorkspace.Code}</strong> dolu.<br><br>Müsait olan numaralar: {altBold}<br>Hangi masayı istersiniz? Seçin:",
+                        replyHtml = $"Üzgünüm, <strong>{targetDate}</strong> tarihinde <strong>{matchedWorkspace.Code}</strong> dolu.<br>Boş olanlar: {altBold}<br>Hangisini istersiniz?",
                         action = "NONE",
                         targetDate = targetDate,
                         buttons = alts.Take(8).Select(a => new AiActionButton
@@ -715,39 +814,40 @@ public class ReservationStore
                     };
                 }
 
-                // Check if user already has a desk on targetDate
-                if (matchedWorkspace.Type == "Masa")
-                {
-                    var existingSameDay = _data.Reservations
-                        .Where(r => r.UserId == user.Id && r.Date == targetDate && r.Status != "Cancelled")
-                        .Select(r => new { Res = r, Ws = _data.Workspaces.FirstOrDefault(w => w.Id == r.WorkspaceItemId) })
-                        .FirstOrDefault(x => x.Ws != null && x.Ws.Type == "Masa");
-
-                    if (existingSameDay != null && !req.ReplaceExisting && !lower.Contains("değiştir") && !lower.Contains("degistir"))
-                    {
-                        return new
-                        {
-                            replyHtml = $"⚠️ <strong>{targetDate}</strong> tarihinde zaten <strong>{existingSameDay.Ws!.Code}</strong> masasında rezervasyonunuz bulunuyor.<br><br>Bir günde 1 masa rezerve edebilirsiniz. Mevcut masanızı <strong>{matchedWorkspace.Code}</strong> ile <strong>değiştirmek ister misiniz?</strong>",
-                            action = "ASK_CHANGE",
-                            targetDate = targetDate,
-                            buttons = new List<AiActionButton>
-                            {
-                                new() { Label = $"🔄 Evet, {matchedWorkspace.Code} İle Değiştir", Command = $"{targetDate} için {matchedWorkspace.Code} koltuğunu değiştir", Style = "blue", ReplaceExisting = true },
-                                new() { Label = $"✕ Hayır, {existingSameDay.Ws.Code} Kalsın", Command = "Değiştirmekten vazgeç", Style = "outline" }
-                            }
-                        };
-                    }
-                }
+                // Check if user already has an active reservation of the SAME TYPE ("Masa" or "Oda") on targetDate
+                var existingSameDayItems = _data.Reservations
+                    .Where(r => r.UserId == user.Id && r.Date == targetDate && r.Status != "Cancelled")
+                    .Select(r => new { Res = r, Ws = _data.Workspaces.FirstOrDefault(w => w.Id == r.WorkspaceItemId) })
+                    .Where(x => x.Ws != null && x.Ws.Type == matchedWorkspace.Type)
+                    .ToList();
 
                 bool shouldReplace = req.ReplaceExisting || lower.Contains("değiştir") || lower.Contains("degistir");
-                if (shouldReplace && matchedWorkspace.Type == "Masa")
+                string typeLabel = matchedWorkspace.Type == "Oda" ? "toplantı odası" : "masa";
+
+                if (existingSameDayItems.Count > 0 && !shouldReplace)
                 {
-                    var oldRes = _data.Reservations
-                        .Where(r => r.UserId == user.Id && r.Date == targetDate && r.Status != "Cancelled")
-                        .Select(r => new { Res = r, Ws = _data.Workspaces.FirstOrDefault(w => w.Id == r.WorkspaceItemId) })
-                        .FirstOrDefault(x => x.Ws != null && x.Ws.Type == "Masa");
-                    if (oldRes != null)
-                        oldRes.Res.Status = "Cancelled";
+                    var oldCodes = string.Join(", ", existingSameDayItems.Select(x => x.Ws!.Code));
+                    return new
+                    {
+                        replyHtml = $"⚠️ <strong>{targetDate}</strong> tarihinde zaten <strong>{oldCodes}</strong> ({typeLabel}) rezervasyonunuz var.<br>Eski rezervasyonunuzu otomatik iptal edip <strong>{matchedWorkspace.Code}</strong> ile <strong>değiştirmek ister misiniz?</strong>",
+                        action = "ASK_CHANGE",
+                        targetDate = targetDate,
+                        buttons = new List<AiActionButton>
+                        {
+                            new() { Label = $"🔄 Evet, {matchedWorkspace.Code} İle Değiştir", Command = $"{targetDate} için {matchedWorkspace.Code} koltuğunu değiştir", Style = "blue", ReplaceExisting = true },
+                            new() { Label = $"✕ Hayır, {oldCodes} Kalsın", Command = "Değiştirmekten vazgeç", Style = "outline" }
+                        }
+                    };
+                }
+
+                string? cancelledOldCodes = null;
+                if (existingSameDayItems.Count > 0 && shouldReplace)
+                {
+                    cancelledOldCodes = string.Join(", ", existingSameDayItems.Select(x => x.Ws!.Code));
+                    foreach (var old in existingSameDayItems)
+                    {
+                        old.Res.Status = "Cancelled";
+                    }
                 }
 
                 var nextId = _data.Reservations.Any() ? _data.Reservations.Max(r => r.Id) + 1 : 1;
@@ -765,14 +865,27 @@ public class ReservationStore
                 _data.Reservations.Add(newRes);
                 Save();
 
+                string replyText = cancelledOldCodes != null
+                    ? $"🔄 Eski rezervasyonunuz (<strong>{cancelledOldCodes}</strong>) otomatik iptal edildi ve <strong>{targetDate}</strong> günü için <strong>{matchedWorkspace.Code} — {matchedWorkspace.Name}</strong> adınıza ayrıldı!"
+                    : $"🎉 Tamamdır <strong>{user.FullName}</strong>! <strong>{targetDate}</strong> tarihi için <strong>{matchedWorkspace.Code} — {matchedWorkspace.Name}</strong> sizin adınıza ayrıldı!";
+
+                var actionBtns = new List<AiActionButton>();
+                if (targetDate == todayStr)
+                {
+                    actionBtns.Add(new AiActionButton { Label = "📍 Ofisteyim — Check-In Yap", Command = "Ofise geldim, Check-In yap", Style = "blue" });
+                }
+                actionBtns.Add(new AiActionButton { Label = "🗑️ Rezervasyonu İptal Et", Command = "Son rezervasyonumu iptal et", Style = "red" });
+
                 return new
                 {
-                    replyHtml = $"🎉 Tamamdır <strong>{user.FullName}</strong>! <strong>{targetDate}</strong> tarihi ({timeSlot}) için <strong>{matchedWorkspace.Code} — {matchedWorkspace.Name}</strong> sizin adınıza ayrıldı!",
+                    replyHtml = replyText,
                     action = "RESERVED",
                     targetDate = targetDate,
                     showPopup = true,
-                    popupTitle = shouldReplace ? "Masa Değişikliği Tamamlandı!" : "Masa Rezervasyonu Tamamlandı!",
-                    popupMessage = $"{targetDate} günü ({timeSlot}) için {matchedWorkspace.Code} ({matchedWorkspace.Name}) masası adınıza ayrıldı.",
+                    popupTitle = cancelledOldCodes != null ? "Rezervasyon Değiştirildi!" : "Rezervasyon Tamamlandı!",
+                    popupMessage = cancelledOldCodes != null
+                        ? $"Eski rezervasyonunuz ({cancelledOldCodes}) iptal edildi ve {targetDate} günü için {matchedWorkspace.Code} ({matchedWorkspace.Name}) adınıza tanımlandı."
+                        : $"{targetDate} günü ({timeSlot}) için {matchedWorkspace.Code} ({matchedWorkspace.Name}) adınıza ayrıldı.",
                     reservedItem = new
                     {
                         code = matchedWorkspace.Code,
@@ -780,15 +893,11 @@ public class ReservationStore
                         date = targetDate,
                         timeSlot = timeSlot
                     },
-                    buttons = new List<AiActionButton>
-                    {
-                        new() { Label = "📍 Ofise Geldim — Check-In Yap", Command = "Ofise geldim, Check-In yap", Style = "blue" },
-                        new() { Label = "🗑️ Rezervasyonu İptal Et", Command = "Son rezervasyonumu iptal et", Style = "red" }
-                    }
+                    buttons = actionBtns
                 };
             }
 
-            // INTENT F: USER ASKS "Bana boş masa ayırt" / "Boş masalar hangileri?" -> LIST AVAILABLE DESKS IN BOLD & GIVE SELECTION BUTTONS!
+            // INTENT F: LIST AVAILABLE DESKS / ROOMS IN BOLD WITH SELECTION BUTTONS
             if (lower.Contains("masa") || lower.Contains("koltuk") || lower.Contains("boş") || lower.Contains("bos") || lower.Contains("ayırt") || lower.Contains("ayirt") || lower.Contains("rezerv") || lower.Contains("oda"))
             {
                 bool wantsRoom = lower.Contains("oda") || lower.Contains("toplantı");
@@ -800,7 +909,7 @@ public class ReservationStore
                 {
                     return new
                     {
-                        replyHtml = $"<strong>{targetDate}</strong> tarihinde boş {(wantsRoom ? "oda" : "masa")} kalmamış görünüyor. Yarın için bakmamı ister misiniz?",
+                        replyHtml = $"<strong>{targetDate}</strong> tarihinde boş {(wantsRoom ? "oda" : "masa")} kalmamış. Yarın için bakmamı ister misiniz?",
                         action = "NONE",
                         targetDate = targetDate,
                         buttons = new List<AiActionButton>
@@ -820,25 +929,24 @@ public class ReservationStore
 
                 return new
                 {
-                    replyHtml = $"📅 <strong>{targetDate}</strong> tarihinde müsait olan boş {(wantsRoom ? "oda" : "masa")} numaraları:<br><br>{boldList}<br><br><strong>Hangi {(wantsRoom ? "odayı" : "masayı")} istersiniz? Aşağıdaki butonlardan seçin:</strong>",
+                    replyHtml = $"📅 <strong>{targetDate}</strong> için boş {(wantsRoom ? "oda" : "masa")} numaraları:<br>{boldList}<br><strong>Hangisini istersiniz? Seçin:</strong>",
                     action = "LIST_OPTIONS",
                     targetDate = targetDate,
                     buttons = seatButtons
                 };
             }
 
-            // DEFAULT GREETING WITH ACTION BUTTONS
             return new
             {
-                replyHtml = $"Merhaba <strong>{user.FullName}</strong>! Ben <strong>RAY Yapay Zeka Asistanınızım</strong>.<br>Yapmak istediğiniz işlemi aşağıdaki butonlardan seçebilir veya doğrudan yazabilirsiniz:",
+                replyHtml = $"Merhaba <strong>{user.FullName}</strong>! Ne yapmak istersiniz? Aşağıdaki butonlardan seçebilirsiniz:",
                 action = "NONE",
                 targetDate = targetDate,
                 buttons = new List<AiActionButton>
                 {
-                    new() { Label = "✨ Bana Bugün Boş Masa Ayırt", Command = "Bana bugün boş masa ayırt", Style = "blue" },
-                    new() { Label = "📅 Yarın İçin Boş Masa Ayırt", Command = "Yarın için bana boş masa ayırt", Style = "outline" },
-                    new() { Label = "📍 Ofise Geldim, Check-In Yap", Command = "Ofise geldim, Check-In yap", Style = "blue" },
-                    new() { Label = "🏢 Bugün Ofiste Kimler Var?", Command = "Bugün ofiste kimler var?", Style = "outline" }
+                    new() { Label = "✨ Bugün Boş Masa Seç", Command = "Bana bugün boş masa ayırt", Style = "blue" },
+                    new() { Label = "🏢 Toplantı Odası Seç", Command = "Bana bugün boş oda ayırt", Style = "outline" },
+                    new() { Label = "📍 Ofisteyim, Check-In Yap", Command = "Ofise geldim, Check-In yap", Style = "blue" },
+                    new() { Label = "👥 Bugün Ofiste Kimler Var?", Command = "Bugün ofiste kimler var?", Style = "outline" }
                 }
             };
         }
