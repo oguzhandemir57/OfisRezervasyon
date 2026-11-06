@@ -245,7 +245,6 @@
                                         <div class="desk-surface-2d">
                                             <div class="desk-surface-header">
                                                 <span>{{desk.title}} ({{desk.seats.length}} Kişilik &bull; Yatay Masa)</span>
-                                                <span style="font-size: 9.5px; color: var(--ray-blue);">{{desk.monitorBadge}}</span>
                                             </div>
                                             <div class="desk-monitors-row">
                                                 <div class="monitor-2d-rig" ng-repeat="s in desk.seats track by $index">
@@ -956,7 +955,6 @@
 
                                     <div class="canvas-desk-drag-handle">
                                         <span>✋ {{desk.title}} ({{desk.seats.length}}K &bull; {{desk.orientation === 'vertical' ? 'Dikey' : 'Yatay'}})</span>
-                                        <span style="color: var(--ray-blue); font-size: 10px;">⚙️ {{desk.features.length}} Özellik</span>
                                     </div>
 
                                     <!-- HORIZONTAL (YATAY) DESK: Table on Top, Armchair Seats in Horizontal Row Below -->
@@ -964,7 +962,6 @@
                                         <div class="desk-surface-2d" style="margin-bottom: 10px; padding: 8px 10px;">
                                             <div class="desk-surface-header">
                                                 <span>YATAY MASA</span>
-                                                <span style="color: var(--ray-blue);">{{desk.monitorBadge}}</span>
                                             </div>
                                             <div class="desk-monitors-row">
                                                 <div class="monitor-2d-rig" ng-repeat="s in desk.seats track by $index">
