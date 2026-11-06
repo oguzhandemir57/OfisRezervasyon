@@ -105,7 +105,7 @@
                     </button>
                     <button class="nav-tab" ng-class="{'active': activeTab === 'officePresence'}" ng-click="switchTab('officePresence')">
                         <span>Ofistekiler</span>
-                        <span class="nav-badge">{{getCheckedInCount()}}</span>
+                        <span class="nav-badge">{{peopleInOffice.length}}</span>
                     </button>
                     <button class="nav-tab admin-tab" ng-if="currentUser.role === 'Admin'" ng-class="{'active': activeTab === 'layoutDesigner'}" ng-click="switchTab('layoutDesigner')">
                         <span>🎨 Kat &amp; Masa Tasarımı</span>
@@ -530,29 +530,54 @@
 
             <!-- ==================== TAB 3: ALL-FLOORS "WHO IS IN THE OFFICE" PAGE ==================== -->
             <div ng-if="activeTab === 'officePresence'" class="presence-container">
+                <div class="summary-strip" style="margin-bottom: 18px;">
+                    <div class="stat-card">
+                        <h4>Toplam Masa Ayırtan &amp; Check-In</h4>
+                        <div class="stat-val" style="color: var(--ray-blue);">{{peopleInOffice.length}} Kişi</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Ofiste Check-In Yapanlar</h4>
+                        <div class="stat-val" style="color: var(--green-live);">{{getCheckedInCount()}} Kişi</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Masa Ayırtanlar (Check-In Beklenen)</h4>
+                        <div class="stat-val" style="color: #D97706;">{{getReservedOnlyCount()}} Kişi</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Seçili Tarih</h4>
+                        <div class="stat-val" style="font-size: 20px;">{{selectedDate}}</div>
+                    </div>
+                </div>
+
                 <div class="presence-header-card">
                     <div>
                         <span style="font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: var(--green-live); letter-spacing: 0.8px;">
                             ● TÜM OFİS KATLARI CANLI DURUMU ({{selectedDate}})
                         </span>
-                        <h2 style="font-size: 24px; font-weight: 800; margin-top: 4px;">Bugün Ofiste Kimler Var? (Bütün Katlar)</h2>
+                        <h2 style="font-size: 23px; font-weight: 800; margin-top: 4px;">Ofistekiler &amp; Masa Ayırtanlar (Bütün Katlar)</h2>
                         <p style="font-size: 13.5px; color: var(--text-secondary);">
-                            Binadaki <strong>tüm ofis katlarında</strong> Check-In yapmış veya rezervasyonu bulunan ekip arkadaşlarınızın kat ve masa dağılımı.
+                            Binadaki <strong>tüm ofis katlarında</strong> masa ayırtan ve ofise gelip Check-In yapan ekip arkadaşlarınızı aşağıda görebilirsiniz.
                         </p>
                     </div>
 
-                    <div style="display: flex; gap: 8px; background: var(--bg-subtle); padding: 5px; border-radius: 14px; border: 1px solid var(--border-color);">
-                        <button class="btn btn-sm"
-                                ng-class="presenceFilter === 'CHECKED_IN' ? 'btn-ray-blue' : ''"
-                                ng-style="presenceFilter !== 'CHECKED_IN' && {'background':'transparent','color':'var(--text-secondary)'}"
-                                ng-click="presenceFilter = 'CHECKED_IN'">
-                            Şu An Ofistekiler ({{getCheckedInCount()}})
-                        </button>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; background: var(--bg-subtle); padding: 5px; border-radius: 14px; border: 1px solid var(--border-color);">
                         <button class="btn btn-sm"
                                 ng-class="presenceFilter === 'ALL' ? 'btn-ray-blue' : ''"
                                 ng-style="presenceFilter !== 'ALL' && {'background':'transparent','color':'var(--text-secondary)'}"
                                 ng-click="presenceFilter = 'ALL'">
-                            Tüm Rezervasyonlular ({{peopleInOffice.length}})
+                            Tümü: Masa Ayırtan &amp; Check-In ({{peopleInOffice.length}})
+                        </button>
+                        <button class="btn btn-sm"
+                                ng-class="presenceFilter === 'CHECKED_IN' ? 'btn-ray-blue' : ''"
+                                ng-style="presenceFilter !== 'CHECKED_IN' && {'background':'transparent','color':'var(--text-secondary)'}"
+                                ng-click="presenceFilter = 'CHECKED_IN'">
+                            ✓ Check-In Yapanlar ({{getCheckedInCount()}})
+                        </button>
+                        <button class="btn btn-sm"
+                                ng-class="presenceFilter === 'RESERVED' ? 'btn-ray-blue' : ''"
+                                ng-style="presenceFilter !== 'RESERVED' && {'background':'transparent','color':'var(--text-secondary)'}"
+                                ng-click="presenceFilter = 'RESERVED'">
+                            🪑 Masa Ayırtanlar ({{getReservedOnlyCount()}})
                         </button>
                     </div>
                 </div>
@@ -582,7 +607,7 @@
                 </div>
 
                 <div ng-if="getFilteredPresence().length === 0" class="panel-card" style="text-align: center; padding: 48px 20px; color: var(--text-secondary);">
-                    Seçili günde ve filtrede henüz ofise Check-In yapmış çalışan bulunmuyor.
+                    Seçili günde ve filtrede masa ayırtmış veya Check-In yapmış çalışan bulunmuyor.
                 </div>
 
                 <div class="presence-minimal-grid">
@@ -591,7 +616,7 @@
                             <div class="person-avatar-circle">{{p.initials}}</div>
                             <span class="live-status-dot"
                                   ng-style="p.status !== 'CheckedIn' && {'background':'#D97706'}"
-                                  title="{{p.status === 'CheckedIn' ? 'Ofiste (Check-In Yaptı)' : 'Rezerve (Bekleniyor)'}}"></span>
+                                  title="{{p.status === 'CheckedIn' ? 'Ofiste (Check-In Yaptı)' : 'Masa Ayırttı (Check-In Bekleniyor)'}}"></span>
                         </div>
                         <div>
                             <div style="font-size: 15.5px; font-weight: 800; color: var(--text-main);">{{p.fullName}}</div>
@@ -603,9 +628,9 @@
                         <div class="person-desk-pill">
                             <span>Masa / Oda: {{p.workspaceCode}}</span>
                         </div>
-                        <div style="font-size: 11px; font-weight: 800;"
-                             ng-style="{'color': p.status === 'CheckedIn' ? 'var(--green-live)' : '#D97706'}">
-                            {{p.status === 'CheckedIn' ? '✓ Ofiste Doğrulandı' : '○ Check-In Bekleniyor'}}
+                        <div style="font-size: 11.5px; font-weight: 800; padding: 4px 10px; border-radius: 99px;"
+                             ng-style="p.status === 'CheckedIn' ? {'color': 'var(--green-live)', 'background': 'var(--green-soft)'} : {'color': '#D97706', 'background': 'rgba(217, 119, 6, 0.12)'}">
+                            {{p.status === 'CheckedIn' ? '✓ Check-In Yaptı (Ofiste)' : '🪑 Masa Ayırttı (Rezervasyonlu)'}}
                         </div>
                     </div>
                 </div>

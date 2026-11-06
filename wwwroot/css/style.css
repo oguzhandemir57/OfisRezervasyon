@@ -431,7 +431,7 @@ body {
     max-width: 1760px;
     width: 96%;
     margin: 0 auto;
-    padding: 22px 16px 80px;
+    padding: 22px 18px 80px;
 }
 
 /* ==================== 14-DAY CALENDAR STRIP ==================== */
@@ -1088,15 +1088,19 @@ body {
 .step-dot.done { background: var(--green-live); box-shadow: 0 0 0 3px var(--green-soft); }
 .step-dot.wait { background: #F59E0B; }
 
-/* ==================== MINIMALIST "WHO IS IN THE OFFICE" PAGE ==================== */
-.presence-container { max-width: 960px; margin: 0 auto; }
+/* ==================== "WHO IS IN THE OFFICE" PAGE (FULL-WIDTH SYMMETRICAL WITH NAVBAR) ==================== */
+.presence-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+}
 
 .presence-header-card {
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: 24px;
     padding: 24px 28px;
-    margin-bottom: 22px;
+    margin-bottom: 20px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -1107,8 +1111,8 @@ body {
 
 .presence-minimal-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
 }
 
 .person-bubble-card {

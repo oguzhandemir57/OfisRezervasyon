@@ -53,7 +53,7 @@
         $scope.deskRows = [];
         $scope.meetingRooms = [];
         $scope.peopleInOffice = [];
-        $scope.presenceFilter = 'CHECKED_IN';
+        $scope.presenceFilter = 'ALL';
         $scope.summary = { total: 0, available: 0, reserved: 0, checkedIn: 0, occupancyRate: 0 };
 
         $scope.selectedItem = null;
@@ -812,20 +812,30 @@
                             }
                         });
                         var todayCheck = formatDateISO(new Date());
-                        var hasTodayCheckedIn = (parsed.reservations || []).some(function (r) {
+                        parsed.reservations = parsed.reservations || [];
+                        var f2Seats = (parsed.workspaces || []).filter(function (w) { return w.floorId === 2 && w.type === 'Masa' && w.isActive !== false; });
+                        var f2WsId1 = f2Seats.length > 0 ? f2Seats[0].id : 25;
+                        var f2WsId2 = f2Seats.length > 3 ? f2Seats[3].id : 28;
+                        var nextRId = parsed.reservations.length > 0
+                            ? Math.max.apply(null, parsed.reservations.map(function (r) { return r.id; })) + 1
+                            : 1;
+
+                        var hasTodayCheckedIn = parsed.reservations.some(function (r) {
                             return r.date === todayCheck && r.status === 'CheckedIn';
                         });
                         if (!hasTodayCheckedIn) {
-                            var f2Seat = (parsed.workspaces || []).find(function (w) { return w.floorId === 2 && w.type === 'Masa' && w.isActive !== false; });
-                            var f2WsId = f2Seat ? f2Seat.id : 25;
-                            var nextRId = (parsed.reservations && parsed.reservations.length > 0)
-                                ? Math.max.apply(null, parsed.reservations.map(function (r) { return r.id; })) + 1
-                                : 1;
-                            parsed.reservations = parsed.reservations || [];
                             parsed.reservations.push({ id: nextRId++, workspaceItemId: 1, userId: 2, date: todayCheck, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Sprint geliştirme', status: 'CheckedIn' });
-                            parsed.reservations.push({ id: nextRId++, workspaceItemId: f2WsId, userId: 3, date: todayCheck, timeSlot: 'Tam Gün (09:00 - 18:00)', note: '2. Kat UI/UX Tasarım', status: 'CheckedIn' });
+                            parsed.reservations.push({ id: nextRId++, workspaceItemId: f2WsId1, userId: 3, date: todayCheck, timeSlot: 'Tam Gün (09:00 - 18:00)', note: '2. Kat UI/UX Tasarım', status: 'CheckedIn' });
                             parsed.reservations.push({ id: nextRId++, workspaceItemId: 5, userId: 4, date: todayCheck, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Veri Raporlama', status: 'CheckedIn' });
-                            parsed.reservations.push({ id: nextRId++, workspaceItemId: 11, userId: 6, date: todayCheck, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Kampanya Planı', status: 'CheckedIn' });
+                            migrated = true;
+                        }
+
+                        var hasTodayActive = parsed.reservations.some(function (r) {
+                            return r.date === todayCheck && r.status === 'Active';
+                        });
+                        if (!hasTodayActive) {
+                            parsed.reservations.push({ id: nextRId++, workspaceItemId: 6, userId: 5, date: todayCheck, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Mülakatlar (Masa Ayırtıldı)', status: 'Active' });
+                            parsed.reservations.push({ id: nextRId++, workspaceItemId: f2WsId2, userId: 6, date: todayCheck, timeSlot: 'Tam Gün (09:00 - 18:00)', note: '2. Kat Kampanya Planı (Masa Ayırtıldı)', status: 'Active' });
                             migrated = true;
                         }
                         if (migrated) {
@@ -892,10 +902,10 @@
 
             var reservations = [
                 { id: 1, workspaceItemId: 1, userId: 2, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Sprint geliştirme', status: 'CheckedIn' },
-                { id: 2, workspaceItemId: 4, userId: 3, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'UI/UX Tasarım', status: 'CheckedIn' },
+                { id: 2, workspaceItemId: 25, userId: 3, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: '2. Kat UI/UX Tasarım', status: 'CheckedIn' },
                 { id: 3, workspaceItemId: 5, userId: 4, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Veri Raporlama', status: 'CheckedIn' },
-                { id: 4, workspaceItemId: 6, userId: 5, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Mülakatlar', status: 'Active' },
-                { id: 5, workspaceItemId: 11, userId: 6, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Kampanya Planı', status: 'CheckedIn' },
+                { id: 4, workspaceItemId: 6, userId: 5, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Mülakatlar (Masa Ayırtıldı)', status: 'Active' },
+                { id: 5, workspaceItemId: 28, userId: 6, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: '2. Kat Kampanya Planı (Masa Ayırtıldı)', status: 'Active' },
                 { id: 6, workspaceItemId: 21, userId: 1, date: today, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Yönetim Toplantısı', status: 'CheckedIn' },
                 { id: 7, workspaceItemId: 2, userId: 2, date: tomorrow, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Ofis çalışması', status: 'Active' }
             ];
@@ -1037,12 +1047,22 @@
 
             $scope.deskRows = rows;
             $scope.meetingRooms = rooms;
-            $scope.peopleInOffice = Array.isArray(allFloorsPresence) ? allFloorsPresence : presenceList;
+            var rawPresence = Array.isArray(allFloorsPresence) ? allFloorsPresence : presenceList;
+            rawPresence.sort(function (a, b) {
+                var aCheck = a.status === 'CheckedIn' ? 0 : 1;
+                var bCheck = b.status === 'CheckedIn' ? 0 : 1;
+                if (aCheck !== bCheck) return aCheck - bCheck;
+                return (a.floorId || 1) - (b.floorId || 1);
+            });
+            $scope.peopleInOffice = rawPresence;
         }
 
         $scope.getFilteredPresence = function () {
             return ($scope.peopleInOffice || []).filter(function (p) {
                 if ($scope.presenceFilter === 'CHECKED_IN' && p.status !== 'CheckedIn') {
+                    return false;
+                }
+                if ($scope.presenceFilter === 'RESERVED' && p.status === 'CheckedIn') {
                     return false;
                 }
                 if ($scope.presenceFloorFilter && p.floorId !== $scope.presenceFloorFilter) {
@@ -1057,12 +1077,19 @@
                 if ($scope.presenceFilter === 'CHECKED_IN' && p.status !== 'CheckedIn') {
                     return false;
                 }
+                if ($scope.presenceFilter === 'RESERVED' && p.status === 'CheckedIn') {
+                    return false;
+                }
                 return floorId ? (p.floorId === floorId) : true;
             }).length;
         };
 
         $scope.getCheckedInCount = function () {
             return ($scope.peopleInOffice || []).filter(function (p) { return p.status === 'CheckedIn'; }).length;
+        };
+
+        $scope.getReservedOnlyCount = function () {
+            return ($scope.peopleInOffice || []).filter(function (p) { return p.status !== 'CheckedIn'; }).length;
         };
 
         function init() {

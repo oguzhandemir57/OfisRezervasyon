@@ -55,15 +55,23 @@ public class ReservationStore
                             }
                         }
                         var todayIso = DateTime.Today.ToString("yyyy-MM-dd");
-                        if (!_data.Reservations.Any(r => r.Date == todayIso && r.Status == "CheckedIn"))
+                        var floor2Seats = _data.Workspaces.Where(w => w.FloorId == 2 && w.Type == "Masa" && w.IsActive).ToList();
+                        int f2Seat1 = floor2Seats.Count > 0 ? floor2Seats[0].Id : 25;
+                        int f2Seat2 = floor2Seats.Count > 1 ? floor2Seats[1].Id : 26;
+                        if (!_data.Reservations.Any(r => r.Date == todayIso && r.Status != "Cancelled"))
                         {
-                            var floor2Seat = _data.Workspaces.FirstOrDefault(w => w.FloorId == 2 && w.Type == "Masa" && w.IsActive);
-                            int f2Id = floor2Seat?.Id ?? 25;
                             int nextResId = _data.Reservations.Any() ? _data.Reservations.Max(r => r.Id) + 1 : 1;
                             _data.Reservations.Add(new Reservation { Id = nextResId++, WorkspaceItemId = 1, UserId = 2, Date = todayIso, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Sprint geliştirme", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-2) });
-                            _data.Reservations.Add(new Reservation { Id = nextResId++, WorkspaceItemId = f2Id, UserId = 3, Date = todayIso, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "2. Kat UI/UX Tasarım", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-2) });
+                            _data.Reservations.Add(new Reservation { Id = nextResId++, WorkspaceItemId = f2Seat1, UserId = 3, Date = todayIso, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "2. Kat UI/UX Tasarım", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-2) });
                             _data.Reservations.Add(new Reservation { Id = nextResId++, WorkspaceItemId = 5, UserId = 4, Date = todayIso, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Veri Raporlama", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-1) });
-                            _data.Reservations.Add(new Reservation { Id = nextResId++, WorkspaceItemId = 11, UserId = 6, Date = todayIso, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Kampanya Planı", Status = "CheckedIn", CreatedAt = DateTime.Now.AddMinutes(-45) });
+                            _data.Reservations.Add(new Reservation { Id = nextResId++, WorkspaceItemId = 6, UserId = 5, Date = todayIso, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Mülakatlar (Masa Ayırtıldı)", Status = "Active", CreatedAt = DateTime.Now.AddHours(-1) });
+                            _data.Reservations.Add(new Reservation { Id = nextResId++, WorkspaceItemId = f2Seat2, UserId = 6, Date = todayIso, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "2. Kat Kampanya Planı (Masa Ayırtıldı)", Status = "Active", CreatedAt = DateTime.Now.AddMinutes(-45) });
+                            migratedCoords = true;
+                        }
+                        else if (!_data.Reservations.Any(r => r.Date == todayIso && r.Status == "Active"))
+                        {
+                            int nextResId = _data.Reservations.Any() ? _data.Reservations.Max(r => r.Id) + 1 : 1;
+                            _data.Reservations.Add(new Reservation { Id = nextResId++, WorkspaceItemId = 6, UserId = 5, Date = todayIso, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Mülakatlar (Masa Ayırtıldı)", Status = "Active", CreatedAt = DateTime.Now.AddHours(-1) });
                             migratedCoords = true;
                         }
                         if (migratedCoords)
@@ -322,13 +330,17 @@ public class ReservationStore
         var today = DateTime.Today.ToString("yyyy-MM-dd");
         var tomorrow = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
 
+        var f2Desks = workspaces.Where(w => w.FloorId == 2 && w.Type == "Masa").ToList();
+        int f2FirstId = f2Desks.Count > 0 ? f2Desks[0].Id : 25;
+        int f2SecondId = f2Desks.Count > 3 ? f2Desks[3].Id : 28;
+
         _data.Reservations = new List<Reservation>
         {
             new() { Id = 1, WorkspaceItemId = 1, UserId = 2, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Sprint geliştirme", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-3) },
-            new() { Id = 2, WorkspaceItemId = 4, UserId = 3, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "UI/UX Tasarım", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-2) },
+            new() { Id = 2, WorkspaceItemId = f2FirstId, UserId = 3, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "2. Kat UI/UX Tasarım", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-2) },
             new() { Id = 3, WorkspaceItemId = 5, UserId = 4, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Veri Raporlama", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-2) },
-            new() { Id = 4, WorkspaceItemId = 6, UserId = 5, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Mülakatlar", Status = "Active", CreatedAt = DateTime.Now.AddHours(-1) },
-            new() { Id = 5, WorkspaceItemId = 11, UserId = 6, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Kampanya Planı", Status = "CheckedIn", CreatedAt = DateTime.Now.AddMinutes(-45) },
+            new() { Id = 4, WorkspaceItemId = 6, UserId = 5, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Mülakatlar (Masa Ayırtıldı)", Status = "Active", CreatedAt = DateTime.Now.AddHours(-1) },
+            new() { Id = 5, WorkspaceItemId = f2SecondId, UserId = 6, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "2. Kat Kampanya Planı (Masa Ayırtıldı)", Status = "Active", CreatedAt = DateTime.Now.AddMinutes(-45) },
             new() { Id = 6, WorkspaceItemId = 21, UserId = 1, Date = today, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Yönetim Toplantısı", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-4) },
             new() { Id = 7, WorkspaceItemId = 2, UserId = 2, Date = tomorrow, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Ofis çalışması", Status = "Active", CreatedAt = DateTime.Now.AddMinutes(-30) },
             new() { Id = 8, WorkspaceItemId = 22, UserId = 3, Date = tomorrow, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Tasarım Sunumu", Status = "Active", CreatedAt = DateTime.Now.AddMinutes(-20) }
