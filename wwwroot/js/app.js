@@ -811,6 +811,23 @@
                                 migrated = true;
                             }
                         });
+                        var todayCheck = formatDateISO(new Date());
+                        var hasTodayCheckedIn = (parsed.reservations || []).some(function (r) {
+                            return r.date === todayCheck && r.status === 'CheckedIn';
+                        });
+                        if (!hasTodayCheckedIn) {
+                            var f2Seat = (parsed.workspaces || []).find(function (w) { return w.floorId === 2 && w.type === 'Masa' && w.isActive !== false; });
+                            var f2WsId = f2Seat ? f2Seat.id : 25;
+                            var nextRId = (parsed.reservations && parsed.reservations.length > 0)
+                                ? Math.max.apply(null, parsed.reservations.map(function (r) { return r.id; })) + 1
+                                : 1;
+                            parsed.reservations = parsed.reservations || [];
+                            parsed.reservations.push({ id: nextRId++, workspaceItemId: 1, userId: 2, date: todayCheck, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Sprint geliştirme', status: 'CheckedIn' });
+                            parsed.reservations.push({ id: nextRId++, workspaceItemId: f2WsId, userId: 3, date: todayCheck, timeSlot: 'Tam Gün (09:00 - 18:00)', note: '2. Kat UI/UX Tasarım', status: 'CheckedIn' });
+                            parsed.reservations.push({ id: nextRId++, workspaceItemId: 5, userId: 4, date: todayCheck, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Veri Raporlama', status: 'CheckedIn' });
+                            parsed.reservations.push({ id: nextRId++, workspaceItemId: 11, userId: 6, date: todayCheck, timeSlot: 'Tam Gün (09:00 - 18:00)', note: 'Kampanya Planı', status: 'CheckedIn' });
+                            migrated = true;
+                        }
                         if (migrated) {
                             localStorage.setItem('ray_ofis_static_db_v5', JSON.stringify(parsed));
                         }
@@ -916,11 +933,11 @@
         }
 
         function buildDaysStrip() {
-            var dayNames = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+            var dayNames = ['Pazar', 'Pzt', 'Salı', 'Çar', 'Per', 'Cuma', 'Cmt'];
             var monthNames = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
             var list = [];
             var today = new Date();
-            for (var i = 0; i < 7; i++) {
+            for (var i = 0; i < 14; i++) {
                 var d = new Date(today);
                 d.setDate(today.getDate() + i);
                 var iso = formatDateISO(d);
@@ -937,14 +954,20 @@
             $scope.selectedDateObj = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         }
 
-        function buildBusLayoutAndPresence(items) {
+        $scope.presenceFloorFilter = 0;
+
+        function buildBusLayoutAndPresence(items, allFloorsPresence) {
             var desksMap = {};
             var rooms = [];
             var presenceList = [];
 
             items.forEach(function (item) {
-                if (item.isReserved && item.reservation) {
+                if (!allFloorsPresence && item.isReserved && item.reservation) {
+                    var flObj = ($scope.floors || []).find(function (f) { return f.id === (item.floorId || 1); });
                     presenceList.push({
+                        floorId: item.floorId || 1,
+                        floorCode: flObj ? flObj.code : ('KAT-' + (item.floorId || 1)),
+                        floorName: flObj ? flObj.name : ((item.floorId || 1) + '. Kat'),
                         workspaceCode: item.code,
                         workspaceName: item.name,
                         workspaceType: item.type,
@@ -1014,20 +1037,32 @@
 
             $scope.deskRows = rows;
             $scope.meetingRooms = rooms;
-            $scope.peopleInOffice = presenceList;
+            $scope.peopleInOffice = Array.isArray(allFloorsPresence) ? allFloorsPresence : presenceList;
         }
 
         $scope.getFilteredPresence = function () {
-            return $scope.peopleInOffice.filter(function (p) {
-                if ($scope.presenceFilter === 'CHECKED_IN') {
-                    return p.status === 'CheckedIn';
+            return ($scope.peopleInOffice || []).filter(function (p) {
+                if ($scope.presenceFilter === 'CHECKED_IN' && p.status !== 'CheckedIn') {
+                    return false;
+                }
+                if ($scope.presenceFloorFilter && p.floorId !== $scope.presenceFloorFilter) {
+                    return false;
                 }
                 return true;
             });
         };
 
+        $scope.getFloorPresenceCount = function (floorId) {
+            return ($scope.peopleInOffice || []).filter(function (p) {
+                if ($scope.presenceFilter === 'CHECKED_IN' && p.status !== 'CheckedIn') {
+                    return false;
+                }
+                return floorId ? (p.floorId === floorId) : true;
+            }).length;
+        };
+
         $scope.getCheckedInCount = function () {
-            return $scope.peopleInOffice.filter(function (p) { return p.status === 'CheckedIn'; }).length;
+            return ($scope.peopleInOffice || []).filter(function (p) { return p.status === 'CheckedIn'; }).length;
         };
 
         function init() {
@@ -1165,7 +1200,7 @@
             });
         }
 
-        function applyWorkspacesData(items, summary, floorsList, currentFloor) {
+        function applyWorkspacesData(items, summary, floorsList, currentFloor, allFloorsPresence) {
             $scope.workspaces = items || [];
             $scope.summary = summary || {};
             if (floorsList) {
@@ -1179,7 +1214,7 @@
                 $scope.selectedFloor = foundF;
                 $scope.selectedFloorId = foundF.id;
             }
-            buildBusLayoutAndPresence($scope.workspaces);
+            buildBusLayoutAndPresence($scope.workspaces, allFloorsPresence);
 
             if ($scope.selectedItem) {
                 var updated = $scope.workspaces.find(function (w) { return w.id === $scope.selectedItem.id; });
@@ -1195,13 +1230,34 @@
             var url = '/api/workspaces?date=' + encodeURIComponent($scope.selectedDate) + '&floorId=' + encodeURIComponent($scope.selectedFloorId || 1);
             $http.get(url)
                 .then(function (res) {
-                    applyWorkspacesData(res.data.items, res.data.summary, res.data.floors, res.data.floor);
+                    applyWorkspacesData(res.data.items, res.data.summary, res.data.floors, res.data.floor, res.data.allFloorsPresence);
                 })
                 .catch(function () {
                     var db = getFallbackStore();
                     var floorsSummary = computeFallbackFloorsSummary(db);
                     var activeF = floorsSummary.find(function (f) { return f.id === $scope.selectedFloorId; }) || floorsSummary.find(function (f) { return f.isActive; }) || floorsSummary[0];
                     var dayRes = db.reservations.filter(function (r) { return r.date === $scope.selectedDate && r.status !== 'Cancelled'; });
+                    var allFloorsPresence = [];
+                    dayRes.forEach(function (res) {
+                        var ws = db.workspaces.find(function (w) { return w.id === res.workspaceItemId && w.isActive !== false; });
+                        if (!ws) return;
+                        var fl = floorsSummary.find(function (f) { return f.id === (ws.floorId || 1); });
+                        var u = db.users.find(function (x) { return x.id === res.userId; });
+                        allFloorsPresence.push({
+                            floorId: ws.floorId || 1,
+                            floorCode: fl ? fl.code : ('KAT-' + (ws.floorId || 1)),
+                            floorName: fl ? fl.name : ((ws.floorId || 1) + '. Kat'),
+                            workspaceCode: ws.code,
+                            workspaceName: ws.name,
+                            workspaceType: ws.type,
+                            userId: res.userId,
+                            fullName: u ? u.fullName : 'Çalışan',
+                            department: u ? u.department : 'Ofis',
+                            initials: u ? u.avatarInitials : 'Ç',
+                            timeSlot: res.timeSlot,
+                            status: res.status
+                        });
+                    });
                     var items = db.workspaces
                         .filter(function (w) { return w.isActive !== false && (w.floorId || 1) === activeF.id; })
                         .map(function (w) {
@@ -1224,14 +1280,14 @@
                         });
                     var reserved = items.filter(function (i) { return i.isReserved; }).length;
                     var avail = items.length - reserved;
-                    var checkedIn = dayRes.filter(function (r) { return r.status === 'CheckedIn'; }).length;
+                    var checkedIn = allFloorsPresence.filter(function (p) { return p.status === 'CheckedIn'; }).length;
                     applyWorkspacesData(items, {
                         total: items.length,
                         available: avail,
                         reserved: reserved,
                         checkedIn: checkedIn,
                         occupancyRate: items.length > 0 ? Math.round((reserved / items.length) * 100) : 0
-                    }, floorsSummary, activeF);
+                    }, floorsSummary, activeF, allFloorsPresence);
                 });
         }
 

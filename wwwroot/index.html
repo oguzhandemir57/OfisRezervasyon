@@ -6,7 +6,7 @@
     <title>RAY OFİS | Hibrit Masa Rezervasyon &amp; Check-In</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="js/app.js"></script>
@@ -84,75 +84,84 @@
     <!-- ==================== AUTHENTICATED APP ==================== -->
     <div ng-if="currentUser">
 
-        <!-- TOP NAVBAR -->
+        <!-- ARCHITECTURAL EDITORIAL TOP NAVBAR -->
         <header class="top-navbar">
             <div class="navbar-inner">
                 <a href="javascript:void(0)" class="ray-logo" ng-click="switchTab('floorplan')">
                     <div class="ray-logo-mark"><span>R</span></div>
                     <div class="ray-logo-text">
                         <div class="ray-logo-title"><span class="brand-ray">RAY</span>OFİS<span class="brand-dot">.</span></div>
-                        <div class="ray-logo-subtitle">Hibrit Ofis Sistemi</div>
+                        <div class="ray-logo-subtitle">Mimari Çalışma &amp; Rezervasyon Stüdyosu</div>
                     </div>
                 </a>
 
-                <div class="nav-tabs">
+                <nav class="nav-tabs" aria-label="Ana Menü">
                     <button class="nav-tab" ng-class="{'active': activeTab === 'floorplan'}" ng-click="switchTab('floorplan')">
+                        <span class="nav-tab-index">01</span>
                         <span>Masa Seçimi</span>
                     </button>
                     <button class="nav-tab" ng-class="{'active': activeTab === 'checkIn'}" ng-click="switchTab('checkIn')">
+                        <span class="nav-tab-index">02</span>
                         <span>Ofis Check-In</span>
                         <span class="nav-badge" ng-if="myReservations.length > 0">{{myReservations.length}}</span>
                     </button>
                     <button class="nav-tab" ng-class="{'active': activeTab === 'officePresence'}" ng-click="switchTab('officePresence')">
+                        <span class="nav-tab-index">03</span>
                         <span>Ofistekiler</span>
                         <span class="nav-badge">{{getCheckedInCount()}}</span>
                     </button>
                     <button class="nav-tab admin-tab" ng-if="currentUser.role === 'Admin'" ng-class="{'active': activeTab === 'layoutDesigner'}" ng-click="switchTab('layoutDesigner')">
-                        <span>🎨 Kat &amp; Masa Tasarımı</span>
+                        <span class="nav-tab-index">04</span>
+                        <span>Kat &amp; Masa Tasarımı</span>
                     </button>
                     <button class="nav-tab admin-tab" ng-if="currentUser.role === 'Admin'" ng-class="{'active': activeTab === 'adminDashboard'}" ng-click="switchTab('adminDashboard')">
-                        <span>Admin Rapor</span>
+                        <span class="nav-tab-index">05</span>
+                        <span>Yönetici Raporu</span>
                     </button>
-                    <button class="nav-tab" ng-click="toggleAiChat()" style="color: var(--ray-blue);">
-                        <span>🤖 AI Asistan</span>
+                    <button class="nav-tab nav-tab-ai" ng-click="toggleAiChat()">
+                        <span class="ai-dot-live"></span>
+                        <span>AI Asistan</span>
                     </button>
-                </div>
+                </nav>
 
                 <div class="navbar-user-actions">
                     <button type="button" class="btn btn-theme-toggle" ng-click="toggleTheme()" title="Tema Değiştir">
-                        {{theme === 'light' ? '🌙 Dark' : '☀️ Beyaz'}}
+                        {{theme === 'light' ? 'Koyu Tema' : 'Açık Tema'}}
                     </button>
-                    <div style="text-align: right; line-height: 1.15; white-space: nowrap;">
-                        <div style="font-size: 12.5px; font-weight: 800;">{{currentUser.fullName}}</div>
-                        <div style="font-size: 10.5px; color: var(--text-secondary);">{{currentUser.role === 'Admin' ? 'Admin' : currentUser.department}}</div>
+                    <div class="user-profile-pill">
+                        <div class="user-profile-avatar">{{currentUser.avatarInitials || currentUser.fullName.substring(0,2)}}</div>
+                        <div style="text-align: left; line-height: 1.15; white-space: nowrap;">
+                            <div style="font-size: 13px; font-weight: 800;">{{currentUser.fullName}}</div>
+                            <div style="font-size: 10.5px; color: var(--text-secondary);">{{currentUser.role === 'Admin' ? 'Sistem Yöneticisi' : currentUser.department}}</div>
+                        </div>
                     </div>
-                    <button class="btn btn-soft-red btn-sm" style="padding: 7px 12px;" ng-click="logout()">Çıkış</button>
+                    <button class="btn btn-soft-red btn-sm" style="padding: 9px 14px;" ng-click="logout()">Çıkış</button>
                 </div>
             </div>
         </header>
 
         <main class="main-content">
 
-            <!-- DAY SELECTOR BAR -->
+            <!-- 14-DAY ARCHITECTURAL CALENDAR STRIP (NO RIGHT COMBOBOX) -->
             <div class="date-bar" ng-if="activeTab !== 'checkIn'">
-                <div>
-                    <div style="font-size: 11.5px; font-weight: 800; color: var(--ray-blue); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
-                        Günü Seçin (Aynı Günde 1 Masa &amp; 1 Toplantı Odası Ayırtılabilir)
+                <div style="width: 100%;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                        <div style="font-size: 11.5px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px;">
+                            Rezervasyon Takvimi &mdash; 14 Günlük Planlama (Aynı Günde 1 Masa &amp; 1 Oda)
+                        </div>
+                        <div style="font-size: 12px; font-weight: 700; color: var(--ray-blue); font-family: 'JetBrains Mono', monospace;">
+                            Seçili Tarih: {{selectedDate}}
+                        </div>
                     </div>
                     <div class="day-strip">
                         <div class="day-pill"
                              ng-repeat="d in daysStrip"
                              ng-class="{'active': selectedDate === d.iso}"
                              ng-click="selectDate(d.iso)">
-                            <div style="font-size: 10.5px; font-weight: 700; opacity: 0.85;">{{d.dayName}}</div>
-                            <div style="font-size: 15px; font-weight: 800;">{{d.dayNum}} {{d.monthName}}</div>
+                            <div class="day-pill-name">{{d.dayName}}</div>
+                            <div class="day-pill-num">{{d.dayNum}} {{d.monthName}}</div>
                         </div>
                     </div>
-                </div>
-
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="date" class="form-control" style="width: auto; padding: 8px 12px;"
-                           ng-model="selectedDateObj" ng-change="onDateInputChange()">
                 </div>
             </div>
 
@@ -525,16 +534,16 @@
                 </div>
             </div>
 
-            <!-- ==================== TAB 3: MINIMALIST "WHO IS IN THE OFFICE" PAGE ==================== -->
+            <!-- ==================== TAB 3: ALL-FLOORS "WHO IS IN THE OFFICE" PAGE ==================== -->
             <div ng-if="activeTab === 'officePresence'" class="presence-container">
                 <div class="presence-header-card">
                     <div>
-                        <span style="font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: var(--green-live); letter-spacing: 0.6px;">
-                            ● CANLI OFİS DURUMU ({{selectedDate}})
+                        <span style="font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: var(--green-live); letter-spacing: 0.8px;">
+                            ● TÜM OFİS KATLARI CANLI DURUMU ({{selectedDate}})
                         </span>
-                        <h2 style="font-size: 22px; font-weight: 800; margin-top: 2px;">Bugün Ofiste Kimler Var?</h2>
-                        <p style="font-size: 13px; color: var(--text-secondary);">
-                            Ofise gelerek Check-In yapmış ekip arkadaşlarınızı burada görebilirsiniz.
+                        <h2 style="font-size: 24px; font-weight: 800; margin-top: 4px;">Bugün Ofiste Kimler Var? (Bütün Katlar)</h2>
+                        <p style="font-size: 13.5px; color: var(--text-secondary);">
+                            Binadaki <strong>tüm ofis katlarında</strong> Check-In yapmış veya rezervasyonu bulunan ekip arkadaşlarınızın kat ve masa dağılımı.
                         </p>
                     </div>
 
@@ -554,8 +563,32 @@
                     </div>
                 </div>
 
+                <!-- FLOOR-BY-FLOOR PRESENCE SUMMARY BAR (ALL FLOORS) -->
+                <div class="floor-selector-bar" style="margin-bottom: 20px;">
+                    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; width: 100%;">
+                        <span style="font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: var(--text-secondary); margin-right: 4px;">
+                            Katlara Göre Dağılım:
+                        </span>
+                        <button type="button"
+                                class="floor-pill"
+                                ng-class="{'active': presenceFloorFilter === 0}"
+                                ng-click="presenceFloorFilter = 0">
+                            <span>Bütün Katlar</span>
+                            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px;">({{getFloorPresenceCount(0)}} Kişi)</span>
+                        </button>
+                        <button type="button"
+                                class="floor-pill"
+                                ng-repeat="f in floors"
+                                ng-class="{'active': presenceFloorFilter === f.id}"
+                                ng-click="presenceFloorFilter = f.id">
+                            <span>{{f.name}}</span>
+                            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px;">({{getFloorPresenceCount(f.id)}} Kişi)</span>
+                        </button>
+                    </div>
+                </div>
+
                 <div ng-if="getFilteredPresence().length === 0" class="panel-card" style="text-align: center; padding: 48px 20px; color: var(--text-secondary);">
-                    Seçili günde henüz ofise Check-In yapmış çalışan bulunmuyor.
+                    Seçili günde ve filtrede henüz ofise Check-In yapmış çalışan bulunmuyor.
                 </div>
 
                 <div class="presence-minimal-grid">
@@ -563,18 +596,21 @@
                         <div class="person-avatar-wrap">
                             <div class="person-avatar-circle">{{p.initials}}</div>
                             <span class="live-status-dot"
-                                  ng-style="p.status !== 'CheckedIn' && {'background':'#F59E0B'}"
+                                  ng-style="p.status !== 'CheckedIn' && {'background':'#D97706'}"
                                   title="{{p.status === 'CheckedIn' ? 'Ofiste (Check-In Yaptı)' : 'Rezerve (Bekleniyor)'}}"></span>
                         </div>
                         <div>
-                            <div style="font-size: 15px; font-weight: 800; color: var(--text-main);">{{p.fullName}}</div>
+                            <div style="font-size: 15.5px; font-weight: 800; color: var(--text-main);">{{p.fullName}}</div>
                             <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">{{p.department}}</div>
+                        </div>
+                        <div style="font-size: 11px; font-weight: 800; color: var(--text-secondary); background: var(--bg-subtle); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+                            {{p.floorName || (p.floorId + '. Kat')}}
                         </div>
                         <div class="person-desk-pill">
                             <span>Masa / Oda: {{p.workspaceCode}}</span>
                         </div>
-                        <div style="font-size: 11px; font-weight: 700;"
-                             ng-style="{'color': p.status === 'CheckedIn' ? 'var(--green-live)' : '#F59E0B'}">
+                        <div style="font-size: 11px; font-weight: 800;"
+                             ng-style="{'color': p.status === 'CheckedIn' ? 'var(--green-live)' : '#D97706'}">
                             {{p.status === 'CheckedIn' ? '✓ Ofiste Doğrulandı' : '○ Check-In Bekleniyor'}}
                         </div>
                     </div>

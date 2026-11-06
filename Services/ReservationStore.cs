@@ -54,6 +54,18 @@ public class ReservationStore
                                 migratedCoords = true;
                             }
                         }
+                        var todayIso = DateTime.Today.ToString("yyyy-MM-dd");
+                        if (!_data.Reservations.Any(r => r.Date == todayIso && r.Status == "CheckedIn"))
+                        {
+                            var floor2Seat = _data.Workspaces.FirstOrDefault(w => w.FloorId == 2 && w.Type == "Masa" && w.IsActive);
+                            int f2Id = floor2Seat?.Id ?? 25;
+                            int nextResId = _data.Reservations.Any() ? _data.Reservations.Max(r => r.Id) + 1 : 1;
+                            _data.Reservations.Add(new Reservation { Id = nextResId++, WorkspaceItemId = 1, UserId = 2, Date = todayIso, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Sprint geliştirme", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-2) });
+                            _data.Reservations.Add(new Reservation { Id = nextResId++, WorkspaceItemId = f2Id, UserId = 3, Date = todayIso, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "2. Kat UI/UX Tasarım", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-2) });
+                            _data.Reservations.Add(new Reservation { Id = nextResId++, WorkspaceItemId = 5, UserId = 4, Date = todayIso, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Veri Raporlama", Status = "CheckedIn", CreatedAt = DateTime.Now.AddHours(-1) });
+                            _data.Reservations.Add(new Reservation { Id = nextResId++, WorkspaceItemId = 11, UserId = 6, Date = todayIso, TimeSlot = "Tam Gün (09:00 - 18:00)", Note = "Kampanya Planı", Status = "CheckedIn", CreatedAt = DateTime.Now.AddMinutes(-45) });
+                            migratedCoords = true;
+                        }
                         if (migratedCoords)
                         {
                             Save();
@@ -431,14 +443,40 @@ public class ReservationStore
                     };
                 }).ToList();
 
+            var allFloorsPresence = dayReservations
+                .Select(r =>
+                {
+                    var ws = _data.Workspaces.FirstOrDefault(w => w.Id == r.WorkspaceItemId && w.IsActive);
+                    if (ws == null) return null;
+                    var fl = _data.Floors.FirstOrDefault(f => f.Id == ws.FloorId);
+                    var usr = _data.Users.FirstOrDefault(u => u.Id == r.UserId);
+                    var fullName = usr?.FullName ?? "Çalışan";
+                    return new
+                    {
+                        FloorId = ws.FloorId,
+                        FloorCode = fl?.Code ?? $"KAT-{ws.FloorId}",
+                        FloorName = fl?.Name ?? $"{ws.FloorId}. Kat",
+                        WorkspaceCode = ws.Code,
+                        WorkspaceName = ws.Name,
+                        WorkspaceType = ws.Type,
+                        UserId = r.UserId,
+                        FullName = fullName,
+                        Department = usr?.Department ?? "Ofis",
+                        Title = usr?.Title ?? "",
+                        Initials = !string.IsNullOrWhiteSpace(usr?.AvatarInitials)
+                            ? usr!.AvatarInitials
+                            : (fullName.Length >= 2 ? fullName.Substring(0, 2).ToUpperInvariant() : "Ç"),
+                        TimeSlot = r.TimeSlot,
+                        Status = r.Status
+                    };
+                })
+                .Where(x => x != null)
+                .ToList();
+
             var totalActive = items.Count(i => i.IsActive);
             var reservedCount = items.Count(i => i.IsActive && i.IsReserved);
             var availableCount = items.Count(i => i.IsActive && !i.IsReserved);
-            var checkedInCount = dayReservations.Count(r =>
-            {
-                var ws = _data.Workspaces.FirstOrDefault(w => w.Id == r.WorkspaceItemId);
-                return ws != null && ws.FloorId == selectedFloor.Id && r.Status == "CheckedIn";
-            });
+            var checkedInCount = allFloorsPresence.Count(p => p != null && p.Status == "CheckedIn");
 
             return new
             {
@@ -446,6 +484,7 @@ public class ReservationStore
                 FloorId = selectedFloor.Id,
                 Floor = selectedFloor,
                 Floors = GetFloors(),
+                AllFloorsPresence = allFloorsPresence,
                 Summary = new
                 {
                     Total = items.Count,
